@@ -17,6 +17,15 @@
       "skills": [
         "./setup-economico"
       ]
+    },
+    {
+      "name": "financial-analyst",
+      "description": "Read Economico's ledger and turn it into financial analysis — reports plus ratios, trends, aging, concentration, burn, and runway, drilling into the journal when the reports don't say enough. Read-only.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./financial-analyst"
+      ]
     }
   ]
 }

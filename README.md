@@ -14,6 +14,7 @@ Economico's MCP tools provide the *system of record* underneath.
 | Skill | What it does |
 |-------|--------------|
 | [`setup-economico`](./setup-economico) | Connect & authenticate Economico (MCP or `@economico/cli`); verify the connection before doing CFO work |
+| [`financial-analyst`](./financial-analyst) | Read-only analysis of the books — reports plus ratios, trends, aging, concentration, burn, and runway, drilling into the journal when needed |
 
 ## Planned skills
 
