@@ -9,9 +9,11 @@ agent-native general ledger. Economico exposes its books primarily over MCP
 the playbooks, the double-entry reasoning, the period-close discipline — while
 Economico's MCP tools provide the *system of record* underneath.
 
-> **Status:** scaffold only. No skills have been authored yet. The marketplace
-> manifest, structure, and contribution rules below are ready for skills to be
-> added.
+## Skills
+
+| Skill | What it does |
+|-------|--------------|
+| [`setup-economico`](./setup-economico) | Connect & authenticate Economico (MCP or `@economico/cli`); verify the connection before doing CFO work |
 
 ## Planned skills
 

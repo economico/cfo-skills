@@ -8,5 +8,15 @@
     "description": "Agent skills for CFO tasks — pricing, expense tracking, invoicing & billing, forecasting, and reporting — built to run against Economico's MCP ledger",
     "version": "0.1.0"
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "setup-economico",
+      "description": "Connect and authenticate Economico (the agent-native ledger the other cfo-skills run against) via MCP or the @economico/cli, including unattended confidential clients",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./setup-economico"
+      ]
+    }
+  ]
 }
