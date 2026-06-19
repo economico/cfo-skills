@@ -95,3 +95,45 @@ with `summarize_revenue` windows.
   income-statement revenue movement should roughly agree; a large divergence
   means deferred revenue, voids, or backdated entries — investigate before
   reporting a number you can't defend.
+
+## Spine analyses (parties, contracts, obligations)
+
+These read commitments and structure the P&L can't show. Source: `list_contracts`
+(each row has `role` customer/vendor), `list_obligations` (each has `account_code`,
+`sku`, `type`, `interval`, `amount_minor_units` / `price_per_unit_minor`,
+`source_obligation_id`), and `list_parties`.
+
+### Committed run-rate (forward spend & revenue)
+
+Normalize every **recurring** obligation to a monthly figure: monthly →
+`amount_minor_units`; yearly → `amount_minor_units / 12`. Then:
+
+- **Committed monthly spend** = sum over `role=vendor` recurring obligations. This
+  is your locked-in burn *before* any bill posts — compare it to actual posted
+  expense to spot under/over-running categories.
+- **MRR** = sum over `role=customer` recurring obligations; **ARR** = MRR × 12.
+- Bucket either side by `account_code` (spend) or `sku` (revenue) to see the mix.
+- `usage` obligations are pricing definitions, not committed amounts — report them
+  as rate cards (`metric_name` @ `price_per_unit_minor`), don't sum them into the
+  run-rate.
+
+### Unit economics / gross margin by customer or SKU
+
+The `source_obligation_id` on a vendor obligation points at the customer revenue
+obligation it serves. To compute true margin:
+
+1. Group customer revenue obligations by customer (or `sku`).
+2. For each, gather the vendor obligations whose `source_obligation_id` points to
+   it — those are the directly-attributable costs.
+3. **Contribution margin** = `revenue − attributable cost`; **margin %** =
+   `contribution / revenue`. This beats blended gross margin because it ties cost
+   to the revenue it produced.
+Costs with no `source_obligation_id` are shared/overhead — report them separately,
+don't force-allocate.
+
+### Concentration & dependency
+
+- **Revenue concentration**: top customer's MRR ÷ total MRR (from customer
+  obligations), cross-checked against `get_invoices` actuals.
+- **Vendor dependency**: top vendor's committed spend ÷ total committed spend.
+- Flag either when one name exceeds ~30–40% — it's a continuity risk.
