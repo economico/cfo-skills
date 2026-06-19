@@ -1,0 +1,12 @@
+{
+  "name": "cfo-skills",
+  "owner": {
+    "name": "Economico",
+    "email": "support@economi.co"
+  },
+  "metadata": {
+    "description": "Agent skills for CFO tasks — pricing, expense tracking, invoicing & billing, forecasting, and reporting — built to run against Economico's MCP ledger",
+    "version": "0.1.0"
+  },
+  "plugins": []
+}

@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+
+# Editor / tooling
+.idea/
+*.swp
+
+# Local environment
+.env
+.env.local
