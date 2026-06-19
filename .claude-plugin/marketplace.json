@@ -26,6 +26,15 @@
       "skills": [
         "./financial-analyst"
       ]
+    },
+    {
+      "name": "expense-tracking",
+      "description": "Ramp-style accounts payable: find vendor receipts/invoices in connected email and record them as bills, first building each vendor's party → contract → obligation spine so every line maps to the right chart-of-accounts code and feeds unit economics.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./expense-tracking"
+      ]
     }
   ]
 }

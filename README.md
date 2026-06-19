@@ -15,13 +15,13 @@ Economico's MCP tools provide the *system of record* underneath.
 |-------|--------------|
 | [`setup-economico`](./setup-economico) | Connect & authenticate Economico (MCP or `@economico/cli`); verify the connection before doing CFO work |
 | [`financial-analyst`](./financial-analyst) | Read-only analysis of the books — reports plus ratios, trends, aging, concentration, burn, and runway, drilling into the journal when needed |
+| [`expense-tracking`](./expense-tracking) | Ramp-style AP: find receipts/invoices in email and record them as bills, building each vendor's party → contract → obligation spine so every line maps to an account and feeds unit economics |
 
 ## Planned skills
 
 | Skill | What it does |
 |-------|--------------|
 | `pricing` | Model and set usage-based / subscription pricing; preview platform fees |
-| `expense-tracking` | Record vendor bills, categorize spend, run accounts payable |
 | `invoicing-billing` | Draft, send, and reconcile customer invoices; run recurring billing |
 | `forecasting` | Build revenue, cash, and runway forecasts off ledger history |
 | `reporting` | Produce P&L, balance-sheet, AR/AP, and revenue summaries for a period |

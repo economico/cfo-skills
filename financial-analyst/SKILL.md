@@ -61,7 +61,8 @@ Voided journals are excluded automatically.
 | Invoiced / paid / outstanding / recognized for a period | `summarize_revenue(period_start, period_end)` | `economico revenue summary --from … --to … --human` |
 | Receivables detail + aging (filter by status, due date, party) | `get_invoices(status?, party_id?, due_from?, due_until?)` | — |
 | Payables detail (filter by status, vendor) | `get_bills(status?, party_id?)` | — |
-| Recurring revenue / commitments | `list_contracts`, `list_obligations` | — |
+| Contracts by counterparty (customer = revenue, vendor = spend) | `list_contracts(party_id?)` | — |
+| Obligations — the priced lines under a contract (carry `account_code`, `sku`, cadence, and `source_obligation_id`) | `list_obligations(contract_id?, party_id?)` | — |
 | Account map (codes → ledger account_id) | `list_chart_of_accounts(currency)` | `economico accounts list --currency USD --human` |
 | A single journal with all its debit/credit lines | `get_journal(id)` | `economico journals get <id> --human` |
 | Customers / vendors (for concentration) | `list_parties` | — |
@@ -69,6 +70,29 @@ Voided journals are excluded automatically.
 There is **no** "list all journals" tool. Reach a specific entry with
 `get_journal(id)` using an id surfaced by an invoice, bill, or payment; reach
 account-level activity through `get_balances` + `list_chart_of_accounts`.
+
+## The party → contract → obligation spine
+
+Don't stop at the reports — Economico carries a **structured spine** that the P&L
+flattens away, and it's where the richest analysis lives. Each counterparty is a
+**party**; each `list_contracts` row carries a `role` (`customer` = revenue,
+`vendor` = spend); and each `list_obligations` row is a priced commitment under a
+contract carrying an `account_code`, an optional `sku`, a cadence (`recurring` +
+`interval`, `usage`, or `one_off`), and a `source_obligation_id`. Read it for:
+
+- **Committed run-rate, not just actuals.** Recurring vendor obligations give the
+  forward monthly/annual spend you're locked into (before any bill arrives);
+  recurring customer obligations give MRR/ARR. The income statement only shows
+  what's already posted — obligations show what's coming.
+- **Unit economics.** A vendor obligation's `source_obligation_id` ties a cost to
+  the specific customer-revenue obligation it serves — follow it to compute true
+  gross margin per customer / SKU, not just blended margin.
+- **Concentration & dependency.** `list_parties` + obligations reveal how
+  concentrated revenue is in one customer and how concentrated spend is in one
+  vendor — both are risks worth naming.
+
+When a question is about *commitments, run-rate, MRR/ARR, or per-unit margin*,
+go to the spine; when it's about *what actually happened*, go to the reports.
 
 ## Workflow
 
