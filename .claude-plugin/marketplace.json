@@ -35,6 +35,42 @@
       "skills": [
         "./expense-tracking"
       ]
+    },
+    {
+      "name": "pricing",
+      "description": "Create a customer-facing pricing.md and map the model into Economico contracts, obligations, revenue accounts, and platform-fee previews.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./pricing"
+      ]
+    },
+    {
+      "name": "creating-contracts",
+      "description": "Create order forms, choose standard terms, and set up customer contracts plus billable obligations before invoicing.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./creating-contracts"
+      ]
+    },
+    {
+      "name": "invoicing",
+      "description": "Create, send, void, and reconcile customer invoices, preferring active contracts and obligation-linked invoice lines.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./invoicing"
+      ]
+    },
+    {
+      "name": "investor-reporting",
+      "description": "Produce read-only investor updates and board metrics from Economico: MRR, ARR, ACV, NDR, burn, runway, default-alive, margin, concentration, and model KPIs.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./investor-reporting"
+      ]
     }
   ]
 }

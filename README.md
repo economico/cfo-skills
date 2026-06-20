@@ -16,13 +16,15 @@ Economico's MCP tools provide the *system of record* underneath.
 | [`setup-economico`](./setup-economico) | Connect & authenticate Economico (MCP or `@economico/cli`); verify the connection before doing CFO work |
 | [`financial-analyst`](./financial-analyst) | Read-only analysis of the books — reports plus ratios, trends, aging, concentration, burn, and runway, drilling into the journal when needed |
 | [`expense-tracking`](./expense-tracking) | Ramp-style AP: find receipts/invoices in email and record them as bills, building each vendor's party → contract → obligation spine so every line maps to an account and feeds unit economics |
+| [`pricing`](./pricing) | Create a customer-facing `pricing.md` and map its charges into Economico contracts, obligations, account codes, and platform-fee previews |
+| [`creating-contracts`](./creating-contracts) | Create order forms, choose standard terms, and set up customer contracts plus billable obligations before invoicing |
+| [`invoicing`](./invoicing) | Create, send, void, and reconcile customer invoices, preferring active contracts and obligation-linked lines |
+| [`investor-reporting`](./investor-reporting) | Read-only investor updates and board metrics: MRR, ARR, ACV, NDR, burn, runway, default-alive, margin, concentration, and model-specific KPIs |
 
 ## Planned skills
 
 | Skill | What it does |
 |-------|--------------|
-| `pricing` | Model and set usage-based / subscription pricing; preview platform fees |
-| `invoicing-billing` | Draft, send, and reconcile customer invoices; run recurring billing |
 | `forecasting` | Build revenue, cash, and runway forecasts off ledger history |
 | `reporting` | Produce P&L, balance-sheet, AR/AP, and revenue summaries for a period |
 
