@@ -47,19 +47,35 @@ that these skills build on.
 
 ## Installation
 
-### Option 1: `npx skills add` (recommended)
+These are plain `SKILL.md` folders, so they work in any agent that reads a skills
+directory.
+
+### `npx skills add` (recommended — works across agents)
 
 ```sh
 npx skills add economico/cfo-skills
 ```
 
-### Option 2: Claude Code marketplace
+Installs into the cross-agent `~/.agents/skills/` directory (plus per-host paths),
+so the one command is picked up by Claude Code, Codex, Hermes, and OpenClaw.
 
-```sh
-/plugin marketplace add economico/cfo-skills
-```
+### Host-native paths
 
-Then install individual skills from the marketplace with `/plugin`.
+- **Claude Code** — add the plugin marketplace, then install skills with `/plugin`:
+
+  ```sh
+  /plugin marketplace add economico/cfo-skills
+  ```
+
+- **Hermes** — add the repo as a tap (its Skills Hub also federates the skills.sh
+  listing):
+
+  ```sh
+  hermes skills tap add economico/cfo-skills
+  ```
+
+- **OpenClaw** — reads `~/.agents/skills/`, so the `npx skills` install is
+  discovered automatically.
 
 ## Repository structure
 
