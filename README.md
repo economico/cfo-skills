@@ -20,6 +20,7 @@ Economico's MCP tools provide the *system of record* underneath.
 | [`creating-contracts`](./creating-contracts) | Create order forms, choose standard terms, and set up customer contracts plus billable obligations before invoicing |
 | [`invoicing`](./invoicing) | Create, send, void, and reconcile customer invoices, preferring active contracts and obligation-linked lines |
 | [`investor-reporting`](./investor-reporting) | Read-only investor updates and board metrics: MRR, ARR, ACV, NDR, burn, runway, default-alive, margin, concentration, and model-specific KPIs |
+| [`cpa`](./cpa) | Read-only CPA books audit: tie out the statements and surface misstatements, misclassifications, missing accruals, and GAAP departures as ranked findings, each with evidence and the correcting entry to recommend |
 
 ## Planned skills
 

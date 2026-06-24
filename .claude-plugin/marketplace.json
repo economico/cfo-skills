@@ -71,6 +71,15 @@
       "skills": [
         "./investor-reporting"
       ]
+    },
+    {
+      "name": "cpa",
+      "description": "Audit Economico's books for correctness and US GAAP conformance — tie out the statements and surface misstatements, misclassifications, missing accruals, and control gaps as ranked findings with evidence and the correcting entry. Read-only.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./cpa"
+      ]
     }
   ]
 }
