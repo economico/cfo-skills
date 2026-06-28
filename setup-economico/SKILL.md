@@ -9,8 +9,9 @@ description: >
   "install the economico cli", "@economico/cli", "https://economi.co/mcp", "economico oauth",
   "authenticate the ledger", "headless / unattended economico agent", "confidential client",
   "private_key_jwt", "service account for economico", "verify economico connection",
-  "which economico account am I on". Pick this skill before any other cfo-skill when the
-  ledger isn't connected yet — the money-loop skills assume an authenticated Economico.
+  "which economico account am I on", "try economico safely", "test scenario / sandbox".
+  Pick this skill before any other cfo-skill when the ledger isn't connected yet — the
+  money-loop skills assume an authenticated Economico.
 ---
 
 # Setup Economico
@@ -158,14 +159,17 @@ billing), register a confidential OAuth client and authenticate with RFC 7523
 
 1. Generate an RSA or P-256 EC keypair locally (`openssl genrsa` / `openssl ecparam`).
    Publish only the JWKS; keep the private key secret.
-2. From an already-authenticated session (MCP or CLI), call `create_oauth_client` with
+2. From an already-authenticated session, register the client by submitting the JWKS —
+   `economico oauth clients create` (CLI) or `POST /v1/oauth/clients` (REST) with
    `{ name, jwks }`. The response includes `client_id`, `token_endpoint`, `resource`, `issuer`.
+   (Client registration is an **owner REST/CLI** operation — there is no MCP tool for it.)
 3. The agent signs a short-lived JWT assertion (`alg=RS256` or `ES256`,
    `iss = sub = <client_id>`, `aud = <token_endpoint>`, fresh `jti`, `exp ≤ 60s`) and POSTs to
    `/oauth/token` with `grant_type=client_credentials` to receive a short-lived access token.
 4. Use that access token as the `Bearer` on `/mcp` (or REST) requests.
 
-Companion tools: `list_oauth_clients`, `revoke_oauth_client`.
+Companion commands: `economico oauth clients list` / `economico oauth clients revoke <client_id>`
+(REST: `GET /v1/oauth/clients`, `DELETE /v1/oauth/clients/{client_id}`).
 
 Discovery endpoints:
 
@@ -177,10 +181,42 @@ Spec: <https://github.com/modelcontextprotocol/ext-auth/blob/main/specification/
 
 ---
 
+## Practice in the `test` scenario before touching the real books
+
+Every business is seeded a **`test` sandbox scenario** at signup — a disposable what-if
+overlay on the real ledger. Use it to learn the tools and try things out **before** writing
+anything real: any activity run "in" a scenario is layered on top of reality and **never
+modifies the real books**, and the whole overlay can be wiped at any time. Sending an invoice
+inside a scenario even posts its journal but **never delivers** (no email, no payment link),
+so you can rehearse the full money loop without reaching a real customer.
+
+The rule of thumb for both the agent and the user:
+
+> **Experiment in `test` first; only put real data on the real ledger.** The real ledger is
+> the default — *omitting* the scenario means reality. Reach for it only once you're confident
+> the entries are correct.
+
+Run any tool against the sandbox by naming the scenario:
+
+```bash
+# CLI — global flag scopes the command to the overlay
+economico --scenario test invoices create …      # rehearse, real books untouched
+economico invoices create …                       # no flag → the REAL ledger
+economico scenarios list                           # see your scenarios (test + any you add)
+economico scenarios reset test                     # wipe the sandbox and start clean
+```
+
+Over MCP, pass the optional `scenario` parameter (e.g. `"scenario": "test"`) on a tool call to
+target the sandbox; omit it to write to the real ledger. `create_scenario` / `list_scenarios` /
+`clone_scenario` / `reset_scenario` / `delete_scenario` manage them. For building forward
+projections and what-ifs (price changes, new deals, churn, runway) inside scenarios, hand off to
+the **`forecasting`** cfo-skill.
+
 ## You're connected — what next
 
 Once `tools/list` (MCP) or `economico accounts list` (CLI) returns cleanly, the books are
-live and authenticated. Hand off to the task-specific cfo-skill:
+live and authenticated. When in doubt, rehearse in the `test` scenario first (above); then hand
+off to the task-specific cfo-skill for real entries:
 
 - **invoicing & billing** → `create_party` → `create_contract` → `create_obligation` →
   `create_invoice` → `send_invoice` → `record_payment`

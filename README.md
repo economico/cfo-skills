@@ -21,12 +21,12 @@ Economico's MCP tools provide the *system of record* underneath.
 | [`invoicing`](./invoicing) | Create, send, void, and reconcile customer invoices, preferring active contracts and obligation-linked lines |
 | [`investor-reporting`](./investor-reporting) | Read-only investor updates and board metrics: MRR, ARR, ACV, NDR, burn, runway, default-alive, margin, concentration, and model-specific KPIs |
 | [`cpa`](./cpa) | Read-only CPA books audit: tie out the statements and surface misstatements, misclassifications, missing accruals, and GAAP departures as ranked findings, each with evidence and the correcting entry to recommend |
+| [`forecasting`](./forecasting) | Project future cash, runway, MRR/ARR, and committed inflows/outflows — running what-ifs (price change, new deal, churn) and forward-dated draft entries inside disposable planning scenarios, so the real ledger stays untouched |
 
 ## Planned skills
 
 | Skill | What it does |
 |-------|--------------|
-| `forecasting` | Build revenue, cash, and runway forecasts off ledger history |
 | `reporting` | Produce P&L, balance-sheet, AR/AP, and revenue summaries for a period |
 
 This list is a starting point, not a contract — see
