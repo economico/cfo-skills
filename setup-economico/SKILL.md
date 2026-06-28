@@ -24,11 +24,28 @@ There are two mutually-exclusive connection paths. Pick **one**.
 | Path | When to use | What you talk to |
 |---|---|---|
 | **MCP** (preferred for this agent) | MCP-capable host: Claude Code, Claude Desktop, Cursor, ChatGPT, Lindy, OpenAI Agents. | `https://economi.co/mcp` over HTTP with bearer auth |
-| **CLI** | Shell / CI runner / coding agent with shell access but no MCP. | `@economico/cli` npm package — `economico <command>` |
+| **CLI** | Shell / CI runner / coding agent with shell access but no MCP — **and the best path when you run more than one business** (see below). | `@economico/cli` npm package — `economico <command>` |
 
 Both expose the same surface — the same money-loop verbs and JSON shapes — and both
 authenticate via OAuth 2.1. Default to **MCP** when this host supports it; fall back to the
 CLI only when it doesn't.
+
+### Tradeoff: multiple businesses → use the CLI with per-project credentials
+
+One person often runs several companies. The two paths isolate them differently:
+
+- **MCP** stores its token keyed by the **server URL**. Since every business lives behind the
+  same `https://economi.co/mcp`, an MCP host keeps **one** Economico identity at a time —
+  re-authenticating for company B overwrites company A. Good for a single business, awkward
+  for many.
+- **CLI** can scope credentials **per directory**. Run `economico login --local` from a
+  project folder and the tokens land in a gitignored `./.economico/config.json` there instead
+  of the global `~/.config` file. Every command run from that folder — or any subfolder —
+  auto-discovers the local config (walking up the tree like `git`), so each project stays
+  signed in to **its own** business with no flags to remember.
+
+So: **one business → either path; several businesses you switch between by directory → the
+CLI is the better fit.** See "Per-project credentials" under Path B.
 
 Override the deployment with `ECONOMICO_API_URL` (CLI) or by swapping the `/mcp` host —
 default is `https://economi.co`.
@@ -100,6 +117,24 @@ economico login
 On hosts without a browser (CI, SSH), pass `--no-browser` and the CLI prints the URL for the
 user to open manually. The CLI silently rotates the access token via `grant_type=refresh_token`
 once on a `401`, so long-running agents don't re-authenticate every hour.
+
+### Per-project credentials (multiple businesses)
+
+When you manage more than one business, sign each into its own project directory instead of
+sharing the global config:
+
+```bash
+cd ~/companies/acme
+economico login --local
+# → Writes tokens to ./.economico/config.json (mode 0600) and adds .economico/ to .gitignore.
+# → {"ok":true,"api_url":"https://economi.co","client_id":"cli_pub_…","config_path":"…/acme/.economico/config.json",…}
+```
+
+Every later command run from `~/companies/acme` (or a subfolder) resolves that local config
+automatically; do the same in `~/companies/globex` and the two never collide. Resolution
+precedence is: `ECONOMICO_CONFIG_FILE` / `--config <path>` → the discovered local
+`.economico/config.json` → the global `~/.config/economico/config.json`. The local file holds
+real tokens, so keep it gitignored (the `--local` login does this for you).
 
 ### Verify
 
