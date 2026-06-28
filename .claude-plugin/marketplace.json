@@ -80,6 +80,15 @@
       "skills": [
         "./cpa"
       ]
+    },
+    {
+      "name": "forecasting",
+      "description": "Project Economico's future state — cash, runway, MRR/ARR, and committed inflows/outflows — by running what-ifs and forward-dated draft entries inside disposable planning scenarios, so reports show base + scenario and the real ledger stays untouched.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./forecasting"
+      ]
     }
   ]
 }
