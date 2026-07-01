@@ -218,6 +218,9 @@ Once `tools/list` (MCP) or `economico accounts list` (CLI) returns cleanly, the 
 live and authenticated. When in doubt, rehearse in the `test` scenario first (above); then hand
 off to the task-specific cfo-skill for real entries:
 
+- **first-run company setup** → **`company-setup`** — the guided next step: fill the
+  legal-entity profile, register bank/wallet accounts, and stand up the cap table before the
+  money loop starts.
 - **invoicing & billing** → `create_party` → `create_contract` → `create_obligation` →
   `create_invoice` → `send_invoice` → `record_payment`
 - **expense tracking** → `receive_bill` → `approve_bill` → `pay_bill`

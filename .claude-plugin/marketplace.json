@@ -19,6 +19,15 @@
       ]
     },
     {
+      "name": "company-setup",
+      "description": "Guided first-run setup once Economico is connected: fill the legal-entity profile, register named bank/wallet accounts, and stand up the cap table (share classes, founder issuance, early SAFEs), then hand off to pricing, creating-contracts, and expense-tracking for the rest.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./company-setup"
+      ]
+    },
+    {
       "name": "financial-analyst",
       "description": "Read Economico's ledger and turn it into financial analysis — reports plus ratios, trends, aging, concentration, burn, and runway, drilling into the journal when the reports don't say enough. Read-only.",
       "source": "./",

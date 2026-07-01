@@ -14,6 +14,7 @@ Economico's MCP tools provide the *system of record* underneath.
 | Skill | What it does |
 |-------|--------------|
 | [`setup-economico`](./setup-economico) | Connect & authenticate Economico (MCP or `@economico/cli`); verify the connection before doing CFO work |
+| [`company-setup`](./company-setup) | Guided first-run setup once connected — legal-entity profile, named bank/wallet accounts, and the cap table (share classes, founder issuance, early SAFEs) — then hand off to pricing, contracts, and expense-tracking |
 | [`financial-analyst`](./financial-analyst) | Read-only analysis of the books — reports plus ratios, trends, aging, concentration, burn, and runway, drilling into the journal when needed |
 | [`expense-tracking`](./expense-tracking) | Ramp-style AP: find receipts/invoices in email and record them as bills, building each vendor's party → contract → obligation spine so every line maps to an account and feeds unit economics |
 | [`pricing`](./pricing) | Create a customer-facing `pricing.md` and map its charges into Economico contracts, obligations, account codes, and platform-fee previews |
