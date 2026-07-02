@@ -29,6 +29,18 @@ deletable in one cascade. The scenario *is* your isolation boundary and your
 "draft" mechanism: forward-dated entries you post inside it project the timeline
 without ever becoming real.
 
+**Always forecast through a scenario — never from arithmetic in your head.** This
+holds even for a plain "just tell me the runway" ask with no explicit what-if:
+the user asking you to *project the numbers forward* is the trigger. Run the full
+loop every time — open a scenario, post the projection entries into it, then read
+the numbers back under the scenario. Every figure you report must come from an
+Economico report run with the `scenario` parameter (`base ∪ scenario`), not from
+mental math on the baseline. Concretely: `create_scenario` is your **first write,
+right after the baseline read and before you compute anything** — if you have not
+created a scenario yet, you are not ready to answer. Eyeballing a runway off the
+baseline instead of projecting into a scenario is the most common way to get this
+wrong; do not do it.
+
 ## Iron rule — never forecast on the real ledger
 
 Every projection entry **must** carry a `scenario` (MCP `scenario` parameter /
@@ -68,8 +80,12 @@ to compare variants from the same starting point (e.g. clone `base-case` into
    obligations are the forward inflows (customer) and outflows (vendor) you're
    already locked into before any invoice/bill exists. This is the spine every
    projection builds on. Note the currency; never mix currencies.
-2. **Open a scenario.** `create_scenario` (or `clone_scenario` from a base case).
-   Name it for the question.
+2. **Open the scenario — always, and before any projection.** `create_scenario`
+   (or `clone_scenario` from a base case), named for the question. This step is
+   mandatory even for a quick runway read; it is the only place your forward
+   entries may live and the only way the reports in step 4 can show the projected
+   numbers. Never skip from the baseline (step 1) straight to computing — if you
+   have not called `create_scenario`, you are not ready for step 3.
 3. **Project forward, dated.** Post the future entries *into the scenario*, each
    `external_timestamp` set to its expected book date so they land on the timeline
    (see [`references/playbook.md`](references/playbook.md) for the derivation and
