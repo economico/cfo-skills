@@ -1,20 +1,19 @@
 ---
 name: company-setup
 description: >
-  Guided first-run setup for a new business on Economico — after the ledger is
-  connected, walk a founder through what every company needs done right at the
-  start: the legal-entity profile and one-line description, named bank/wallet
-  accounts, and the cap table (share classes, founder issuance, early SAFEs). It
-  orchestrates the setup tools in order and confirms before anything posts, so the
-  founder never has to know which tool to call when. Use when someone wants to
-  "set up my company / business", "onboard my business", "do first-run setup",
-  "set up my cap table", "issue founder shares", "add my bank account / Mercury /
-  my wallet", or "set our company profile / legal entity type". If the ledger
-  isn't connected yet, use setup-economico first.
-  It sets the company up, then hands off — pricing to pricing, customer contracts
-  to creating-contracts, vendors and email receipts to expense-tracking. Not for
-  connecting (setup-economico), billing customers (invoicing), or reading the
-  books (financial-analyst).
+  Set up and configure a business on Economico — the guided first-run flow once
+  the ledger is connected, and the home for each setup task it covers: the
+  legal-entity profile and one-line description, named bank/wallet accounts, and
+  the cap table (share classes, founder share issuance, early SAFEs). Use this
+  skill rather than hand-running the tools whenever someone wants to set up or
+  configure any of these — a full onboarding or just one piece; it sequences the
+  tools and confirms before anything posts. Triggers: "set up my company /
+  business", "onboard my business", "first-run setup", "set up my cap table",
+  "issue founder shares", "record a SAFE", "add my bank account / Mercury / my
+  wallet", "set our legal entity type / company profile". If the ledger isn't
+  connected yet, use setup-economico first. Sets the company up, then hands off —
+  pricing to pricing, contracts to creating-contracts, vendor receipts to
+  expense-tracking. Not for connecting, billing customers, or reading the books.
 ---
 
 # Company Setup (guided first-run)
