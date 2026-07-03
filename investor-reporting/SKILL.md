@@ -18,6 +18,17 @@ or obligations from this skill. Pull the books and explain the metrics.
 
 Use:
 
+- `get_saas_metrics(year?, month?, metrics?, currency?, trend?)` **first** for
+  the standard operating metrics — it computes them deterministically from the
+  ledger and snapshot history so you never hand-assemble them: point-in-time
+  (`arr`, `mrr`, `acv`, `run_rate`, `gross_margin`, `burn`, `runway`, `cac`)
+  and month-over-month (`net_new_arr` — the waterfall decomposed into
+  new / resurrected / expansion / contraction / churn with per-contract
+  drilldown — plus `nrr`, `grr`, `logo_churn`, `burn_multiple`, `rule_of_40`,
+  `ltv`). Pass `trend: true` for 12-month sparkline series. Every metric
+  carries its basis and confidence notes — quote them, don't strip them. A
+  month with no snapshot returns null values with a gap note (history is
+  forward-only and never backfilled); present the gap honestly.
 - `summarize_revenue(period_start, period_end)` for period revenue.
 - `get_income_statement(currency)`, `get_balance_sheet(currency)`, and
   `get_balances(currency)` for current books and burn.
@@ -46,21 +57,42 @@ separately unless the user explicitly provides a conversion policy.
 
 ## Core Formulas
 
+Prefer the figures `get_saas_metrics` returns over recomputing these by hand —
+the definitions below are what it implements (so you can explain them), not a
+worksheet:
+
 - MRR: monthly recurring obligation revenue from active customer contracts.
 - ARR: MRR * 12, plus annualized committed subscription contracts when present.
 - ACV: annualized contract value for a customer contract; exclude one-time fees.
-- NDR: starting recurring revenue + expansion - contraction - churn, divided by
-  starting recurring revenue.
-- Burn rate: monthly cash operating loss. Use income statement as a proxy if
-  cash-flow data is unavailable and label it as a proxy.
-- Burn multiple: net burn divided by net new ARR for the same period.
-- Runway: cash balance divided by monthly burn.
+- NDR/NRR (`nrr`): starting recurring revenue + expansion - contraction -
+  churn, divided by starting recurring revenue — month-over-month at contract
+  level from the snapshot diff. GRR (`grr`) is the same without expansion.
+- Burn rate (`burn`): operating burn on an accrual basis (COGS + opex −
+  revenue) — labeled, not true cash burn.
+- Burn multiple (`burn_multiple`): monthly operating burn divided by net new
+  ARR for the same month; null against shrinkage.
+- Runway (`runway`): cash balance divided by monthly burn; null when not
+  burning.
+- Rule of 40 (`rule_of_40`): growth% + operating margin%; growth is YoY once
+  12 months of snapshots exist, else labeled month-over-month annualized.
+- LTV (`ltv`): coarse blended — ARPA × gross-margin ratio ÷ monthly
+  revenue-churn rate; null while no churn has been observed.
 - Default alive: cash plus expected gross profit covers expected burn before
-  the business reaches breakeven; state assumptions explicitly.
+  the business reaches breakeven; state assumptions explicitly (not computed
+  by the tool).
 
 ## Output
 
 Investor reports should include: headline metrics, movement since the prior
-period, what changed, risks, and the exact data gaps. If the ledger does not
-contain churn, usage ingestion, cohort history, or cash-flow timing, say so and
-show the best defensible proxy rather than pretending the metric is exact.
+period (lead with the net-new-ARR waterfall — name the customers behind each
+bucket from the drilldown), what changed, risks, and the exact data gaps. If
+the ledger does not contain usage ingestion, cohort history, or cash-flow
+timing, say so and show the best defensible proxy rather than pretending the
+metric is exact.
+
+To hand the numbers to an investor directly, mint a live link instead of a
+stale PDF: `create_report_share(reports: ["saas_metrics"], description: ...)`
+returns an unguessable URL rendering the dashboard (headline figures, the
+waterfall, supporting metrics with their confidence notes). It can be scoped
+to a planning scenario, given an expiry, and revoked any time with
+`revoke_report_share`.
