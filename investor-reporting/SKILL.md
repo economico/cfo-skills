@@ -37,6 +37,13 @@ Use:
 - `get_bills(status?, party_id?)` for payables and vendor cost context.
 - `list_contracts`, `list_obligations`, and `list_parties` for customer,
   contract, obligation, SKU, and pricing-model context.
+- `get_usage(obligation_id?, from?, until?)` for metered-usage revenue, usage
+  growth, and the unit-economics rollup — metered cost tied to the revenue it
+  serves via `source_obligation_id` (true gross margin per SKU/customer, not
+  blended).
+- `get_cap_table` for ownership by holder/class, authorized-vs-issued, and
+  outstanding SAFEs — the dilution picture investors ask for alongside the
+  operating metrics.
 - `list_chart_of_accounts(currency)` to verify account names and codes.
 
 Amounts are minor units. Do not sum across currencies; report USD and USDC

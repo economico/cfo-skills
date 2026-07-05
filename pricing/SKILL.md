@@ -45,11 +45,29 @@ Use these defaults unless the user's facts say otherwise:
 | Monthly SaaS plans | One `recurring` monthly plan obligation, `4110` Subscription Revenue; optional onboarding as `one_off`, `4200` Service Revenue |
 | Annual or quarterly SaaS | `recurring` subscription, `4110`; implementation as `one_off`, `4200`; mention deferred revenue (`2150`) for upfront annual billing |
 | Metered API | Platform fee as `recurring`, `4110`; per-unit meter as `usage`, `4120`, with `metric_name` and `price_per_unit_minor` |
-| AI credits | Plan as `recurring`, `4110`; credit top-up as prepaid `one_off` with revenue recognized to `4120` as consumed; token usage is the metric |
+| AI credits | Plan as `recurring`, `4110`; metered consumption as a `usage` obligation, `4120`, `billing_mode="prepaid"`, with the credit pool granted via `grant_usage_credits`; token usage is the metric |
 | x402 / MPP per-call | Per-call `usage`, `4120`; settlement rail determines the cash/payment-fee leg |
 | Solo consulting | Retainer as `recurring`, hourly/project/milestones as `one_off`, all usually `4210` Consulting Revenue |
 | Consulting agency | Client retainer/milestones/rebilled specialists as `4210`; vendor subcontractor costs belong to `expense-tracking` under `5200` or another expense account |
 | Grant-funded studio | Grant tranches as `one_off`, `4500` Grant and Award Revenue; protocol retainers/bounties as `4210` |
+
+## Usage & Prepaid Credits
+
+A `usage` obligation only *prices* the unit (`metric_name` +
+`price_per_unit_minor`); metering records what's consumed and derives the bill.
+Pick a `billing_mode` when you define it:
+
+- **Arrears** (default) — each consumption event posts its P&L leg immediately
+  and accrues the offset in `1125` Unbilled Receivable until the period is
+  invoiced from the `get_usage` rollup.
+- **Prepaid** — grant a credit pool up front with `grant_usage_credits`; usage
+  draws it down FIFO-by-expiry and `list_usage_credits` shows what's left. This
+  is the AI-credit / prepaid-pack model — use it instead of a one-off "top-up"
+  revenue line.
+
+`pricing` just sets the obligation up to meter; the metering verbs
+(`record_usage`, `grant_usage_credits`, `get_usage`) run in the `invoicing`
+money-loop.
 
 ## Reusable Plans
 
@@ -82,7 +100,10 @@ the contract and each distinct billable obligation directly:
 
 - `create_contract(role="customer", currency, msa_url, order_form_url?, term_length?, payment_terms?, services_scope?)`
 - `update_contract_status(id, "active")` only after the user confirms the order form is accepted.
-- `create_obligation(contract_id, type, name, sku?, amount_minor_units?, interval?, metric_name?, price_per_unit_minor?, account_code)`
+- `create_obligation(contract_id, type, name, sku?, amount_minor_units?, interval?, metric_name?, price_per_unit_minor?, billing_mode?, account_code)`
+  — `billing_mode` (`arrears` / `prepaid`) applies to `usage` obligations; set
+  `auto_invoice` on a `recurring` customer obligation to have the scheduled
+  sweep bill and send it each period.
 
 Use minor units: `$49.00` is `4900`. Usage prices that are less than one cent
 may need product-level pricing units, e.g. price per 1,000 calls, because
@@ -92,4 +113,8 @@ may need product-level pricing units, e.g. price per 1,000 calls, because
 
 - Need a legal/order-form workflow: use `creating-contracts`.
 - Need to invoice a period or customer: use `invoicing`.
+- Changing a live customer's plan (upsell, downgrade, renewal): don't edit the
+  obligations in place — `amend_contract` records a new dated version and
+  `replace_contract` re-papers it, keeping prior versions for point-in-time
+  history. See `creating-contracts`.
 - Need investor metrics from the resulting books: use `investor-reporting`.

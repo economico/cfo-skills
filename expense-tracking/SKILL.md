@@ -94,7 +94,26 @@ interval?, metric_name?, price_per_unit_minor?, source_obligation_id?)`
 Reuse existing obligations on the contract for repeat charges; only create new
 ones for genuinely new line types.
 
-## 5. Record the **bill**
+## 5. Record it — receipt (already paid) or bill (owed)
+
+Route by whether the money has already left the account:
+
+- **Already paid** — the thing in the inbox is a *paid* receipt (a card
+  auto-charge, a Stripe/processor receipt). Use **`record_receipt(party_id,
+  amount, currency, lines[], contract_id?, issue_date?, external_id?,
+  document_url?, financial_account_id?, memo?)`** — one step, no approval, no AP:
+  it posts Dr expense/COGS / Cr cash and lands `paid`. This is the default for
+  "process my receipts". `financial_account_id` names which registry cash account
+  it was paid from (omit for the currency's default). `external_id` carries the
+  vendor's receipt number.
+- **Owed, will pay later** — a net-30 vendor invoice with an open payable. Use
+  the bill path below (`receive_bill` → `approve_bill` → `pay_bill`).
+
+Both paths share `get_bills` (filter `kind` = `bill` / `receipt`) and both take
+line-level `obligation_id`s, so each line still posts to the right account + SKU.
+`get_bills(party_id)` first either way to avoid double-recording.
+
+### The bill path (owed)
 
 `receive_bill(party_id, contract_id, amount, currency, due_date, memo?, lines[])`
 where each line is `{description, quantity_micros, unit_price_minor,
@@ -119,6 +138,23 @@ make sure you're not double-recording a receipt you already booked (see
 When a payment actually clears, `pay_bill(id, amount, currency, idempotency_key)`
 posts Dr accounts payable / Cr cash. This **moves money** — confirm first, and
 note the payment refuses to overdraw the source cash account.
+`pay_bill` also takes an optional `financial_account_id` to pick the source cash
+account (omit for the currency's default).
+
+## 7. Vendor credits (startup programs)
+
+Startups run on promotional credits — AWS Activate, OpenAI/Anthropic startup
+programs, a Resend credit. Record them so approved bills draw them down instead
+of overstating cash spend:
+
+- `record_vendor_credit(party_id, amount, currency, expiry_date?, issuer?, source_url?)`
+  books the grant. It then draws down **FIFO-by-expiry** against that vendor's
+  approved bills via the `5950` contra-expense — so the P&L shows the credit
+  offsetting the cost, not phantom cash going out.
+- `list_credits` is the credit-runway view: remaining balance and expiry per
+  credit. Nearing-expiry credits also surface in `get_inbox`.
+- Cite the grant email / terms in `source_url` and label the program in
+  `issuer` (e.g. `"AWS Activate"`).
 
 ## Discipline
 
