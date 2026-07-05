@@ -49,9 +49,16 @@ incurred-but-unbilled costs not accrued, capitalized assets never depreciated,
 and stale AR with no allowance are all **real misstatements** on these books —
 report them as findings, not as "what GAAP would additionally require". The one
 thing accrual posting *doesn't* do for you is the period-end judgment entries
-(amortizing a prepaid, accruing month-end usage, booking depreciation, reserving
-for bad debt) — those are management estimates the ledger won't post on its own,
-so their absence is exactly what this audit exists to catch.
+(amortizing a prepaid, booking depreciation, reserving for bad debt) — those are
+management estimates the ledger won't post on its own, so their absence is
+exactly what this audit exists to catch. Two recognitions it *does* automate —
+verify they actually ran rather than assume they're missing: **annual
+subscriptions** defer to `2150` Unearned Revenue on send and recognize
+straight-line each month via the recognition sweep (tie the schedule out with
+`get_revenue_recognition`; a stalled sweep leaves revenue unrecognized), and
+**metered usage** posts its P&L leg immediately with a `1125` Unbilled
+Receivable (customer) offset that rests there until billed (reconcile with
+`get_usage`).
 
 ## Know the shape of the data
 
@@ -79,17 +86,23 @@ aggregated.
 | Balance sheet (Assets/Liabilities/Equity) | `get_balance_sheet(currency)` | `economico reports balance-sheet --currency USD --human` |
 | Income statement (Revenue/Expenses/Net) | `get_income_statement(currency)` | `economico reports income-statement --currency USD --human` |
 | Invoiced/paid/outstanding/recognized for a period | `summarize_revenue(period_start, period_end)` | `economico revenue summary --from … --to … --human` |
+| Deferred-revenue schedule (annual subs booked to `2150`, recognized to date, remaining) | `get_revenue_recognition(party_id?, contract_id?, invoice_id?)` | `economico revenue recognition` |
+| Metered usage — totals, events, unit-economics rollup, `1125` unbilled position | `get_usage(obligation_id?, from?, until?)` | `economico usage list` |
 | Receivables + aging (status, due date, party) | `get_invoices(status?, party_id?, due_from?, due_until?)` | — |
 | Payables (status, vendor) | `get_bills(status?, party_id?)` | — |
 | Contracts by counterparty | `list_contracts(party_id?)` | — |
 | Obligations (carry `account_code`, `sku`, cadence) | `list_obligations(contract_id?, party_id?)` | — |
 | Account map (codes → ledger account_id, types, contra flags) | `list_chart_of_accounts(currency)` | `economico accounts list --currency USD --human` |
 | A single journal with all its lines | `get_journal(id)` | `economico journals get <id> --human` |
+| Every posted journal, newest-effective first, paginated (whole-ledger scan, effective-date filterable) | `list_journals(effective_from?, effective_until?, limit?, offset?)` | `economico journals list --human` |
 | Customers / vendors | `list_parties` | — |
 
-There is **no** "list all journals" tool. Reach a specific entry with
-`get_journal(id)` using an id surfaced by an invoice, bill, or payment. Test
-account-level activity through `get_balances` + `list_chart_of_accounts`.
+For a completeness or cutoff test that needs the raw entries, `list_journals`
+walks the whole ledger (newest-effective first, paginated, filterable by an
+effective-date window) — advance by `limit` while `has_more` is true. Reach a
+specific entry with `get_journal(id)` using an id surfaced by an invoice, bill,
+or payment. Test account-level activity through `get_balances` +
+`list_chart_of_accounts`.
 
 ## Audit workflow
 

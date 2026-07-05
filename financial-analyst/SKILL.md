@@ -59,17 +59,22 @@ Voided journals are excluded automatically.
 | Structured balance sheet (Assets/Liabilities/Equity) | `get_balance_sheet(currency)` | `economico reports balance-sheet --currency USD --human` |
 | Income statement / P&L (Revenue/Expenses/Net) | `get_income_statement(currency)` | `economico reports income-statement --currency USD --human` |
 | Invoiced / paid / outstanding / recognized for a period | `summarize_revenue(period_start, period_end)` | `economico revenue summary --from … --to … --human` |
+| Deferred-revenue schedule for annual subscriptions (booked to `2150`, recognized to date, remaining) | `get_revenue_recognition(party_id?, contract_id?, invoice_id?)` | `economico revenue recognition` |
+| Metered usage — totals, events, and the unit-economics rollup (metered cost tied to the revenue it serves via `source_obligation_id`) | `get_usage(obligation_id?, from?, until?)` | `economico usage list` |
 | Receivables detail + aging (filter by status, due date, party) | `get_invoices(status?, party_id?, due_from?, due_until?)` | — |
 | Payables detail (filter by status, vendor) | `get_bills(status?, party_id?)` | — |
 | Contracts by counterparty (customer = revenue, vendor = spend) | `list_contracts(party_id?)` | — |
 | Obligations — the priced lines under a contract (carry `account_code`, `sku`, cadence, and `source_obligation_id`) | `list_obligations(contract_id?, party_id?)` | — |
 | Account map (codes → ledger account_id) | `list_chart_of_accounts(currency)` | `economico accounts list --currency USD --human` |
 | A single journal with all its debit/credit lines | `get_journal(id)` | `economico journals get <id> --human` |
+| Every posted journal, newest-effective first, paginated (whole-ledger scan, filterable by effective-date window) | `list_journals(effective_from?, effective_until?, limit?, offset?)` | `economico journals list --human` |
 | Customers / vendors (for concentration) | `list_parties` | — |
 
-There is **no** "list all journals" tool. Reach a specific entry with
-`get_journal(id)` using an id surfaced by an invoice, bill, or payment; reach
-account-level activity through `get_balances` + `list_chart_of_accounts`.
+To scan raw GL activity a report flattens away, `list_journals` walks the whole
+ledger — newest-effective first, paginated, filterable by an effective-date
+window; advance by `limit` while `has_more` is true. For a single entry
+surfaced by an invoice, bill, or payment, go straight to `get_journal(id)`; for
+account-level rollups use `get_balances` + `list_chart_of_accounts`.
 
 ## The party → contract → obligation spine
 

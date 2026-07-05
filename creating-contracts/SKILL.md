@@ -59,6 +59,25 @@ that the legal paper may live outside the current allowlist.
 - Milestone, hourly invoice, bounty, grant tranche: `one_off`, usually `4210`
   for services or `4500` for grants.
 
+## Amendments & Renewals
+
+When a live deal changes, don't edit its obligations in place — contracts are
+append-only and versioned so the recurring base is reconstructable at any past
+date. Pick by whether the paper stays the same:
+
+- **`amend_contract(id, effective_date, obligations)`** — same contract, new
+  dated terms (an upsell, downgrade, added meter). `obligations` is the
+  *complete* new set effective from that date (not a delta); the current set is
+  retained as a closed prior version. Use for a mid-term change under the same
+  order form.
+- **`replace_contract(id, effective_date, obligations, msa_url?, order_form_url?, …)`**
+  — the old contract is closed out and linked to a fresh superseding one. Use for
+  a renewal or re-paper on new terms.
+
+Both require an **active** contract. Prior versions stay queryable, and
+`list_obligations(as_of=<date>)` returns the obligation set in force on that
+date.
+
 ## Guardrails
 
 Never bill against a draft or offer contract. `invoicing` should use an active

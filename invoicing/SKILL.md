@@ -28,8 +28,9 @@ obligations -> invoice lines -> send -> payment.
 4. `create_invoice(party_id, contract_id, amount, currency, due_date, memo, lines)`.
 5. Show the draft invoice and ask before external delivery unless the user has
    explicitly told you to send it.
-6. `send_invoice(id, channel)` posts AR/revenue and sends through `flow`,
-   `email`, or `link`.
+6. `send_invoice(id, channel)` posts AR and revenue and sends through `flow`,
+   `email`, or `link` — but annual-plan lines defer to Unearned Revenue instead
+   of recognizing on send (see Model Notes).
 7. Use `record_payment` only when the user provides a real payment event.
    Use `get_invoices` before reconciling or voiding; use `void_invoice` for
    corrections with a reason.
@@ -46,12 +47,32 @@ obligations -> invoice lines -> send -> payment.
 For usage prices below one cent, invoice in billing units the obligation can
 represent precisely, such as "1,000 API calls" rather than one call.
 
+## Metered Usage
+
+Don't invoice usage from a guess — record the consumption as it happens and bill
+the rollup:
+
+- `record_usage(obligation_id, quantity_micros, idempotency_key, recorded_at?)`
+  logs each consumption event against its `usage` obligation and posts the P&L
+  leg immediately. An **arrears** obligation parks the offset in `1125` Unbilled
+  Receivable; a **prepaid** one draws down its credit pool. The idempotency key
+  makes re-sending an event a no-op — never double-count.
+- Prepaid plans: seed the pool with `grant_usage_credits(obligation_id,
+  quantity_micros, expires_at?)` and watch remaining with `list_usage_credits`.
+- When you bill the period, `get_usage(obligation_id, from, until)` returns the
+  metered total — build the usage invoice line from it, reclassing `1125` to AR.
+
 ## Model Notes
 
 - SaaS monthly and annual plans are usually billed in advance.
 - Usage and hourly work are usually billed in arrears.
-- Annual upfront invoices may create deferred revenue; mention the accounting
-  implication even though `send_invoice` posts revenue when sent today.
+- Annual upfront invoices **auto-defer**: when `send_invoice` bills a line whose
+  obligation is `recurring` + yearly, it credits `2150` Unearned Revenue
+  (party-keyed) instead of the revenue account, and the recognition sweep
+  releases it to revenue straight-line over 12 months. Read the schedule with
+  `get_revenue_recognition`; post any due month on demand with
+  `run_revenue_recognition`. Monthly/quarterly plans and one-offs still
+  recognize on send.
 - x402/MPP per-call revenue may arrive as settlement data rather than a normal
   invoice; if the user asks for settlement accounting, verify the current
   Economico tool surface before inventing a workflow.
