@@ -40,6 +40,19 @@ Use these when the spend runs the company rather than delivering the product.
   6390 Accounting and Tax, 6420 Equipment and Hardware, 6430 Travel and
   Entertainment, 6440 Bank Charges and Fees.
 
+## Split infrastructure vendors by environment
+
+The same infra vendor often serves both production and development. Classify by
+environment, not by vendor: the production footprint serving customers → **5300**
+(COGS); dev/staging/CI environments → **6130 R&D Cloud and Dev Tools** (opex).
+Model them as separate obligations on the same contract (e.g. a `prod-compute`
+obligation on 5300 and a `dev-compute` obligation on 6130) so gross margin
+carries only customer-serving cost. Usage lines (egress, bandwidth) default to
+5300 when the traffic is overwhelmingly production. Where the vendor has a CLI
+or console, read the actual running footprint and per-resource list prices to
+size each environment's line instead of estimating one blended amount from the
+last bill.
+
 ## SKU sub-keys (unit economics)
 
 Only the COGS accounts **5300, 5400, 5600, 5900** (and revenue accounts) carry a
