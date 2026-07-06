@@ -145,6 +145,10 @@ their absence is the misstatement to catch.
    - The spine helps: a vendor obligation with a `source_obligation_id` pointing
      at a customer-revenue obligation is *cost of revenue* by definition —
      confirm it's in 5xxx.
+   - Infra vendors serving multiple environments (prod + dev/staging) booked to
+     a single code: the production footprint belongs in 5300 (COGS), dev/staging
+     in 6130 (R&D opex). One blended line on either side misstates gross margin —
+     expect separate per-environment obligations on the vendor's contract.
 2. **Current vs non-current.** Confirm assets/liabilities land in the right
    current (1100/2100) vs non-current (1200/2200) parent. A long-term note in
    2130 (short-term) or a current obligation in 2210 misstates working capital
