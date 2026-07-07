@@ -79,10 +79,11 @@ contract, and the obligation is where the **GL account code** lives:
 interval?, metric_name?, price_per_unit_minor?, source_obligation_id?)`
 
 - `account_code` — the expense/COGS code for this spend (vendor obligations must
-  use a 5xxx/6xxx code). Pick it from the receipt + pricing page; default
-  sensibly when unsure. `list_chart_of_accounts(currency)` is the authoritative
-  live list of codes; the categorized map is in
-  [`references/account-codes.md`](references/account-codes.md).
+  use a 5xxx/6xxx code). Pick it from the receipt + pricing page. When the right
+  bucket is genuinely unclear — or one invoice mixes buckets — **ask the owner
+  rather than guessing** (see "When the account is ambiguous, ask" below).
+  `list_chart_of_accounts(currency)` is the authoritative live list of codes; the
+  categorized map is in [`references/account-codes.md`](references/account-codes.md).
 - `sku` — set it on SKU-keyed COGS accounts (5300/5400/5600/5900) so spend tracks
   per product for unit economics (e.g. `sku="ec2"` on 5300).
 - `type` — `recurring` (with `interval`) for subscriptions, `usage` (with
@@ -93,6 +94,28 @@ interval?, metric_name?, price_per_unit_minor?, source_obligation_id?)`
 
 Reuse existing obligations on the contract for repeat charges; only create new
 ones for genuinely new line types.
+
+### When the account is ambiguous, ask — and explain why
+
+The account you pick isn't cosmetic; it changes the reports the owner reads. When
+a line's bucket is genuinely unclear, **stop and ask the owner in plain language,
+spelling out what each choice means for their numbers** — a founder who isn't an
+accountant needs the *why*, not just the question:
+
+- **COGS (5xxx) vs OpEx (6xxx)** changes gross margin and unit economics.
+  Production infra that serves paying customers is COGS 5300; the *same vendor's*
+  dev/staging footprint is R&D 6130. If one invoice mixes both (e.g. a prod
+  machine + a dev machine, or a prod app + its shared dev database), split the
+  lines and map each to its own code — don't lump the whole bill to one account.
+- **Which OpEx bucket** changes how burn reads — e.g. an AI-search / brand-
+  visibility tool is marketing (6240), not general SaaS (6350); a dev tool is R&D
+  cloud/tools (6130), not G&A.
+- **Company cash vs founder-paid** changes the balance sheet (see §5).
+
+The invoice usually bills by *resource*, not by *purpose* (which machine, not
+which app), so you often can't infer the split from the document — that's exactly
+when to ask. Record the owner's answer on the obligation/contract so the next bill
+maps itself.
 
 ## 5. Record it — receipt (already paid) or bill (owed)
 
@@ -112,6 +135,23 @@ Route by whether the money has already left the account:
 Both paths share `get_bills` (filter `kind` = `bill` / `receipt`) and both take
 line-level `obligation_id`s, so each line still posts to the right account + SKU.
 `get_bills(party_id)` first either way to avoid double-recording.
+
+### Paid on a personal card? (founder-paid expenses)
+
+Early-stage founders often pay vendors on a **personal** card. Then the company
+did **not** spend its cash — the founder did, on its behalf — so **never credit
+company cash**. Pass `paid_by_party_id=<founder party>` to `record_receipt`: it
+credits **`2135 Due to Related Parties`** instead of cash and creates no company
+payment row. Then settle that balance with `settle_related_party_payable`, and
+**ask the owner which way** (it changes the balance sheet, so don't assume):
+
+- `resolution='reimburse'` → `Dr 2135 / Cr cash` — the company repays the founder
+  later (a payable it owes them).
+- `resolution='equity'` → `Dr 2135 / Cr 3100 Owners Equity` — a capital
+  contribution; the money stays in the business and is not repaid.
+
+If a batch of founder-paid receipts was already reconciled this way, **don't do it
+again** — check the ledger first (see Discipline).
 
 ### The bill path (owed)
 
@@ -163,6 +203,16 @@ of overstating cash spend:
 - **Confirm before the books move**: creating parties/contracts/obligations and
   `receive_bill` (draft) are safe; `approve_bill` posts the GL and `pay_bill`
   moves cash — confirm those with the user.
+- **Check for prior reconciliation before correcting history**: founder-paid
+  balances may already have been reclassified to equity / related-party in a bulk
+  entry — re-issuing on top double-counts. Read the relevant journals first.
+- **A paid receipt is immutable**: `void_bill` refuses a receipt that has a
+  payment, and its lines can't be edited. To itemize or re-classify an
+  already-paid lump receipt you either (a) reverse its journal with `void_journal`
+  and re-issue itemized (the original lingers as an empty `paid` doc — expected),
+  or (b) post an adjusting journal with `create_journal`. Note a **deleted or
+  archived cash sub-account can't be posted to via `create_journal`** ("not
+  found") — only `void_journal` reaches it, by inverting an existing line.
 - **Idempotent**: one bill per (vendor, invoice number / period). Rely on
   `receive_bill`'s external-ref idempotency and your `get_bills` check.
 - **Cite your sources**: reference the email/receipt and the pricing/ToS pages you
