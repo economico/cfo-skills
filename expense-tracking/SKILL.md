@@ -181,6 +181,27 @@ note the payment refuses to overdraw the source cash account.
 `pay_bill` also takes an optional `financial_account_id` to pick the source cash
 account (omit for the currency's default).
 
+**Cheapest / fastest route + the processor fee.** If the vendor's payment
+instructions are on file (see below), `quote_payment_routes(direction="out",
+amount, party_id, optimize?)` ranks the ways to pay them by cost or speed before
+you move anything. When the rail charges, pass the fee to `pay_bill` so the bill
+still settles at **gross** while cash goes out at **`amount + fee`**:
+`pay_bill(..., payment_endpoint_id?, fee_amount?, fee_account_code?)` posts a
+separate fee leg (default `5500` Payment Processing Fees; `6440` Bank Charges for
+wire/ACH fees). Registering rails, routing, and the fee model in depth is the
+**`payment-rails`** skill.
+
+### Save the vendor's payment instructions
+
+To pay a vendor outside Flow you need where to send it. Store their bank/wallet
+details as a **party-owned** endpoint so routing can use them:
+`add_payment_endpoint(party_id, uri, label?, methods[])` — `uri` is an RFC 8905
+`payto://` (IBAN/ACH) or a CAIP-10 address; the methods carry the vendor's
+receiving capability (rail, asset, `eta_seconds`) — leave the fee fields empty
+(their fees are theirs). For a vendor paid via Flow, capture their `agent_did` +
+settlement address from the first transfer and that endpoint alone suffices. See
+**`payment-rails`** for the full model.
+
 ## 7. Vendor credits (startup programs)
 
 Startups run on promotional credits — AWS Activate, OpenAI/Anthropic startup

@@ -79,6 +79,16 @@ For each account:
 Two accounts in the same currency (Mercury **checking** + **savings**) each keep a
 distinct balance — register both. `list_financial_accounts` to confirm.
 
+**One pool, many identifiers.** An account is one balance; the ACH details, IBAN,
+or blockchain addresses that reach it — and their per-rail fees and speeds — are a
+separate layer. A modern custodial account (Stripe's financial account) holds one
+balance reachable via ACH *and* several chains; register it as **one**
+`create_financial_account`, then add its identifiers and priced in/out methods
+(plus account-level card/Flow collection). Don't register a second account per
+rail — that splits one real pool into two GL balances and breaks reconciliation.
+Registering those rails (and a counterparty's payment instructions, and routing)
+is its own step — hand off to **`payment-rails`**.
+
 ## 3. Cap table
 
 A share class is the authorized ceiling; issuances draw against it and post to the
@@ -109,6 +119,9 @@ Once the profile, accounts, and cap table are in place, this skill's job is done
 Route the founder to the skill that owns each next step — don't re-implement them
 here:
 
+- **Payment rails** — the identifiers that reach each account (ACH/IBAN/wallet),
+  their priced in/out methods, card/Flow collection, counterparty payment
+  instructions, and cheapest/fastest routing → **`payment-rails`**.
 - **Pricing** — turning the business model into a `pricing.md` and revenue
   obligations → **`pricing`**.
 - **Customers** — order forms and customer contracts before billing →

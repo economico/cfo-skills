@@ -5,7 +5,7 @@
     "email": "support@economi.co"
   },
   "metadata": {
-    "description": "Agent skills for CFO tasks — pricing, expense tracking, invoicing & billing, forecasting, and reporting — built to run against Economico's MCP ledger",
+    "description": "Agent skills for CFO tasks \u2014 pricing, expense tracking, invoicing & billing, forecasting, and reporting \u2014 built to run against Economico's MCP ledger",
     "version": "0.1.0"
   },
   "plugins": [
@@ -28,8 +28,17 @@
       ]
     },
     {
+      "name": "payment-rails",
+      "description": "Model how money moves in and out of a business in Economico and pick the cheapest or fastest route. Register the identifiers that reach each account (RFC 8905 payto, CAIP-10) with priced in/out methods, account-level card/Flow collection, and counterparty payment instructions; rank routes with quote_payment_routes; post route fees to the ledger.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./payment-rails"
+      ]
+    },
+    {
       "name": "financial-analyst",
-      "description": "Read Economico's ledger and turn it into financial analysis — reports plus ratios, trends, aging, concentration, burn, and runway, drilling into the journal when the reports don't say enough. Read-only.",
+      "description": "Read Economico's ledger and turn it into financial analysis \u2014 reports plus ratios, trends, aging, concentration, burn, and runway, drilling into the journal when the reports don't say enough. Read-only.",
       "source": "./",
       "strict": false,
       "skills": [
@@ -38,7 +47,7 @@
     },
     {
       "name": "expense-tracking",
-      "description": "Ramp-style accounts payable: find vendor receipts/invoices in connected email and record them as bills, first building each vendor's party → contract → obligation spine so every line maps to the right chart-of-accounts code and feeds unit economics.",
+      "description": "Ramp-style accounts payable: find vendor receipts/invoices in connected email and record them as bills, first building each vendor's party \u2192 contract \u2192 obligation spine so every line maps to the right chart-of-accounts code and feeds unit economics.",
       "source": "./",
       "strict": false,
       "skills": [
@@ -83,7 +92,7 @@
     },
     {
       "name": "cpa",
-      "description": "Audit Economico's books for correctness and US GAAP conformance — tie out the statements and surface misstatements, misclassifications, missing accruals, and control gaps as ranked findings with evidence and the correcting entry. Read-only.",
+      "description": "Audit Economico's books for correctness and US GAAP conformance \u2014 tie out the statements and surface misstatements, misclassifications, missing accruals, and control gaps as ranked findings with evidence and the correcting entry. Read-only.",
       "source": "./",
       "strict": false,
       "skills": [
@@ -92,7 +101,7 @@
     },
     {
       "name": "forecasting",
-      "description": "Project Economico's future state — cash, runway, MRR/ARR, and committed inflows/outflows — by running what-ifs and forward-dated draft entries inside disposable planning scenarios, so reports show base + scenario and the real ledger stays untouched.",
+      "description": "Project Economico's future state \u2014 cash, runway, MRR/ARR, and committed inflows/outflows \u2014 by running what-ifs and forward-dated draft entries inside disposable planning scenarios, so reports show base + scenario and the real ledger stays untouched.",
       "source": "./",
       "strict": false,
       "skills": [
