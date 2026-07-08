@@ -30,10 +30,17 @@ obligations -> invoice lines -> send -> payment.
    explicitly told you to send it.
 6. `send_invoice(id, channel)` posts AR and revenue and sends through `flow`,
    `email`, or `link` — but annual-plan lines defer to Unearned Revenue instead
-   of recognizing on send (see Model Notes).
-7. Use `record_payment` only when the user provides a real payment event.
-   Use `get_invoices` before reconciling or voiding; use `void_invoice` for
-   corrections with a reason.
+   of recognizing on send (see Model Notes). A `flow`/`link` payin advertises the
+   assets and settlement addresses drawn from your registered receiving rails, so
+   register them first (**`payment-rails`**) — otherwise the customer is offered
+   nothing to pay with.
+7. Use `record_payment` only when the user provides a real payment event. If the
+   collection rail charged a fee (card, Flow), pass it —
+   `record_payment(..., payment_endpoint_id?, fee_amount?, fee_account_code?)` —
+   so the invoice still settles at **gross** while cash lands **net**
+   (`amount − fee`); the fee posts as its own leg (default `5500` Payment
+   Processing Fees). Use `get_invoices` before reconciling or voiding; use
+   `void_invoice` for corrections with a reason.
 
 ## Line Mapping
 
@@ -80,5 +87,7 @@ the rollup:
 ## Hand Offs
 
 Use `pricing` to define a new charge model. Use `creating-contracts` to create
-the order form and obligations. Use `investor-reporting` after billing to report
-MRR, ARR, ACV, retention, burn, and default-alive style metrics.
+the order form and obligations. Use `payment-rails` to register the receiving
+rails a Flow payin advertises and to model collection fees. Use
+`investor-reporting` after billing to report MRR, ARR, ACV, retention, burn, and
+default-alive style metrics.

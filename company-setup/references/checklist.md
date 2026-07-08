@@ -19,6 +19,7 @@ anything already done; confirm before anything posts to the books.
 
 | Next job | Skill | Starting tools |
 |---|---|---|
+| Register each account's rails, routing, fees | **`payment-rails`** | `add_payment_endpoint`, `add_payment_method`, `quote_payment_routes` |
 | Design pricing / write `pricing.md` | **`pricing`** | `preview_platform_fees`, obligation pricing |
 | Paper a customer deal / order form | **`creating-contracts`** | `create_contract`, `create_obligation` |
 | Bill a customer | **`invoicing`** | `create_invoice`, `send_invoice`, `record_payment` |
