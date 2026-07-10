@@ -1,19 +1,13 @@
 ---
 name: expense-tracking
 description: >
-  Ramp-style accounts payable for Economico: find vendor receipts and invoices in
-  the user's connected email and record them as bills — but first build each
-  vendor's books-grade spine (a vendor party, an active vendor contract from its
-  terms/pricing pages, and obligations carrying the chart-of-accounts code + SKU)
-  so every line maps to the right account and feeds unit economics. Use when asked
-  to process receipts, track or categorize expenses, run accounts payable, or
-  "add this invoice / bill". Triggers on: "track expenses", "process my receipts",
-  "log this invoice", "record this bill", "categorize our spend", "accounts
-  payable", "what are we paying for", "scan my email for receipts", "add the AWS /
-  GitHub / OpenAI invoice", "book this vendor bill", "set up our vendors". Not for
-  analyzing the numbers (use financial-analyst), billing customers (use
-  invoicing), or connecting Economico (use setup-economico). Assumes Economico is
-  connected and the agent can search email.
+  Accounts payable on Economico: find vendor receipts/invoices (email), build
+  party→contract→obligation spine, record receipts or bills, pay AP, draw down
+  startup credits (AWS Activate, OpenAI, etc.). Triggers: track expenses, process
+  receipts, log bill, accounts payable, book AWS/GitHub invoice, vendor credit,
+  categorize spend. Posts double-entry journals (expense/COGS + cash or AP). Not
+  for P&L analysis (financial-analyst), customer invoices (invoicing), or connect
+  (setup-economico). Assumes Economico is connected and the agent can search email.
 ---
 
 # Expense Tracking (Ramp-style AP, with a books-grade vendor spine)

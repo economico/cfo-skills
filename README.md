@@ -1,13 +1,14 @@
 # cfo-skills
 
-Agent skills that turn a coding agent into a working CFO — pricing, expense
-tracking, invoicing & billing, forecasting, and reporting.
+Agent skills that turn a coding agent into a working CFO on
+[Economico](https://economi.co) — an agent-native double-entry general ledger.
+Install, run `setup-economico`, then price, contract, invoice, pay bills, analyze,
+forecast, and report. Economico is the system of record (MCP/CLI); these skills
+are the playbooks (double-entry reasoning, period close, unit economics).
 
-The skills are designed to run against [Economico](https://economi.co), an
-agent-native general ledger. Economico exposes its books primarily over MCP
-(Model Context Protocol), so these skills teach an agent *how* to do CFO work —
-the playbooks, the double-entry reasoning, the period-close discipline — while
-Economico's MCP tools provide the *system of record* underneath.
+**Fit:** new SaaS/consulting company, no books to migrate, founder-run agent.
+**Constraint:** write access is YC-founder gated until `verify_yc` — see
+https://economi.co/skill.md.
 
 ## Skills
 

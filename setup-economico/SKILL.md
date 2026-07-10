@@ -1,17 +1,13 @@
 ---
 name: setup-economico
 description: >
-  Connect and authenticate Economico — the agent-native general ledger that the cfo-skills
-  (pricing, expense tracking, invoicing & billing, forecasting, reporting) operate against.
-  Use when setting up or connecting Economico for the first time, wiring up the books,
-  authenticating an agent, or verifying the connection before doing CFO work. Triggers on:
-  "set up economico", "connect economico", "claude mcp add economico", "economico login",
-  "install the economico cli", "@economico/cli", "https://economi.co/mcp", "economico oauth",
-  "authenticate the ledger", "headless / unattended economico agent", "confidential client",
-  "private_key_jwt", "service account for economico", "verify economico connection",
-  "which economico account am I on", "try economico safely", "test scenario / sandbox".
-  Pick this skill before any other cfo-skill when the ledger isn't connected yet — the
-  money-loop skills assume an authenticated Economico.
+  Connect an agent to Economico (agent-native double-entry general ledger) over MCP or CLI,
+  complete OAuth, and verify tools work before any CFO skill. Use for first-time setup,
+  "connect economico", "claude mcp add economico", "economico login", "@economico/cli",
+  "https://economi.co/mcp", "economi.co/skill.md", YC Bookface verify_yc, sandbox/test
+  scenario, headless private_key_jwt clients. Constraints: YC founders only for write access
+  until verified; books are USD-ledger. Run this before invoicing, expenses, or reports —
+  other cfo-skills assume an authenticated Economico business.
 ---
 
 # Setup Economico
