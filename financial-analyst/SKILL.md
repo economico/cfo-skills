@@ -1,19 +1,12 @@
 ---
 name: financial-analyst
 description: >
-  Read Economico's books and turn them into financial analysis — pull the
-  reports (balance sheet, income statement, revenue summary, AR/AP) and go
-  beyond them with ratios, trends, aging, concentration, burn, and runway,
-  drilling into the journal when the reports don't say enough. Read-only: this
-  skill never posts, sends, or pays — it analyzes. Use when someone wants to
-  understand the financial picture rather than record a transaction. Triggers on:
-  "analyze our financials", "review the P&L", "balance sheet review", "are we
-  profitable", "gross margin", "revenue growth", "burn rate", "runway", "cash
-  position", "AR aging", "days sales outstanding", "DSO", "upcoming payables",
-  "revenue concentration", "where is the money going", "financial health",
-  "explain this journal entry", "why did expenses jump". Assumes Economico is
-  already connected (see setup-economico); for posting invoices, bills, or
-  payments use the money-loop skills instead.
+  Read-only CFO analysis on Economico's double-entry ledger: balance sheet, P&L,
+  revenue summary, AR/AP aging, burn, runway, gross margin, concentration, DSO.
+  Never posts journals. Triggers: analyze financials, review P&L, burn rate,
+  runway, cash position, are we profitable, unit economics, why expenses jumped.
+  Assumes setup-economico already connected; use invoicing/expense-tracking to
+  record transactions.
 ---
 
 # Financial Analyst

@@ -1,13 +1,11 @@
 ---
 name: invoicing
 description: >
-  Create, send, void, and reconcile customer invoices in Economico. Use when
-  asked to bill a customer, create an invoice, send an invoice, bill usage,
-  invoice a retainer, milestone, subscription, grant tranche, onboarding fee,
-  or record customer payment. Always prefer billing from an active contract and
-  order form whose obligations can be referenced on invoice lines. Hand off to
-  creating-contracts when the contract spine is missing and pricing when the
-  charge structure is unclear.
+  Customer AR on Economico: create/send/void invoices and record payments (USD or
+  USDC/USDT/PYUSD settlement) posting double-entry journals. Triggers: bill a customer,
+  send invoice, retainer, milestone, subscription, usage invoice, grant tranche,
+  record payment, clear AR, stablecoin settlement. Prefer contract + obligation lines.
+  Hand off to creating-contracts if no contract; pricing if the charge model is unclear.
 ---
 
 # Invoicing
