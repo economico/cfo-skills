@@ -28,19 +28,15 @@ confirm before anything posts to the books.** Everything here can run against th
 seeded `test` scenario first (pass `scenario: "test"`) to rehearse — see
 `setup-economico`.
 
-## 0. Preconditions — connected and un-gated
+## 0. Preconditions — connected
 
 - **Connected?** This skill assumes an authenticated session. If `get_business`
   401s or no tools are visible, stop and use **`setup-economico`** first.
-- **YC gate.** A brand-new account is gated to **read-only** until it's verified as
-  a YC founder — every write step below (`update_business`,
-  `create_financial_account`, `create_share_class`, `issue_shares`, `record_safe`)
-  is blocked until then. Call `get_business`; if it isn't YC-verified, walk the
-  founder through `verify_yc(link)` first (the link is minted at
-  `https://bookface.ycombinator.com/verify`). The read tools this skill uses to
-  inspect state (`get_business`, `list_parties`, `list_financial_accounts`,
-  `list_share_classes`, `get_cap_table`) work before verification, so you can
-  survey what's already set up either way.
+- **No verification gate.** Every account has full read *and* write access from
+  signup — nothing below waits on anything. YC founder verification is optional
+  and purely a **pricing** benefit (`verify_yc` with a link minted at
+  `https://bookface.ycombinator.com/verify`), so raise it when pricing comes up,
+  never as a blocker to setting the company up.
 
 ## 1. Company profile
 
