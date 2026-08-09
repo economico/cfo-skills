@@ -5,9 +5,10 @@ description: >
   complete OAuth, and verify tools work before any CFO skill. Use for first-time setup,
   "connect economico", "claude mcp add economico", "economico login", "@economico/cli",
   "https://economi.co/mcp", "economi.co/skill.md", YC Bookface verify_yc, sandbox/test
-  scenario, headless private_key_jwt clients. Constraints: YC founders only for write access
-  until verified; books are USD-ledger. Run this before invoicing, expenses, or reports —
-  other cfo-skills assume an authenticated Economico business.
+  scenario, headless private_key_jwt clients. Every account can read and write from signup;
+  verify_yc is optional and only changes pricing. Constraint: books are USD-ledger. Run this
+  before invoicing, expenses, or reports — other cfo-skills assume an authenticated
+  Economico business.
 ---
 
 # Setup Economico

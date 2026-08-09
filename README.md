@@ -7,8 +7,8 @@ forecast, and report. Economico is the system of record (MCP/CLI); these skills
 are the playbooks (double-entry reasoning, period close, unit economics).
 
 **Fit:** new SaaS/consulting company, no books to migrate, founder-run agent.
-**Constraint:** write access is YC-founder gated until `verify_yc` — see
-https://economi.co/skill.md.
+**Access:** every account can read and write from signup. `verify_yc` is optional
+and only turns on YC founder pricing — see https://economi.co/skill.md.
 
 ## Skills
 

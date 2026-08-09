@@ -5,8 +5,8 @@ anything already done; confirm before anything posts to the books.
 
 ## This skill (`company-setup`)
 
-- [ ] **Connected & un-gated** — `get_business` returns; if not YC-verified,
-      `verify_yc(link)` first (every write below is gated until then).
+- [ ] **Connected** — `get_business` returns. Writes need no verification;
+      `verify_yc(link)` is optional and only changes pricing.
 - [ ] **Profile** — `update_business(name, legal_entity_type, jurisdiction,
       description, url)`.
 - [ ] **Bank / wallet accounts** — for each: resolve-or-create the provider party,
