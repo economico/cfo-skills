@@ -52,6 +52,15 @@ partial update, only the fields you pass change:
 
 This flows onto invoices and the hosted business pages, so it's worth getting right.
 
+Apply what you were told **now**, in one `update_business` call. It writes metadata
+only, touches no GL account, and is a partial update, so missing fields are not a
+reason to wait. Pass only the fields the founder actually stated: mentioning an
+entity type and state of incorporation means `legal_entity_type` + `jurisdiction`.
+Leave `name` alone unless they asked to rename the business, since re-sending a
+guessed name overwrites the real one. Then re-read with `get_business` and, if
+`description` or `url` are still empty, ask for them afterwards — never before
+the write.
+
 ## 2. Bank & wallet accounts
 
 Register each real cash account the business holds so the agent can pick the right
@@ -74,6 +83,15 @@ For each account:
 
 Two accounts in the same currency (Mercury **checking** + **savings**) each keep a
 distinct balance — register both. `list_financial_accounts` to confirm.
+
+**Finish the whole set in one pass.** If the founder names several accounts — two
+banks, a bank plus a wallet, checking plus savings — loop step 2 once per named
+account before you report back. Accounts at the same institution reuse the *one*
+provider party from step 1; each still needs its own `create_financial_account`
+with its own `name` and `gl_account_code` (`1110` fiat / `1310` wallet). Stopping
+after the first one leaves the founder with cash sitting in an unregistered
+account that payments can't be routed to, and `list_financial_accounts` at the
+end should show one entry per account they named.
 
 **One pool, many identifiers.** An account is one balance; the ACH details, IBAN,
 or blockchain addresses that reach it — and their per-rail fees and speeds — are a
@@ -135,8 +153,11 @@ checklist and a map of which skill owns each later step.
 - **Read before write.** `get_business`, `list_parties`, `list_financial_accounts`,
   `list_share_classes`, `get_cap_table` before creating anything — resolve-or-create,
   never blind-create.
-- **Confirm before the books move.** `update_business`, `create_party`, and
-  `create_financial_account` are safe metadata. `issue_shares` and `record_safe`
+- **Confirm before the books move — and only then.** `update_business`,
+  `create_party`, and `create_financial_account` are metadata operations: they
+  post no journal and change no balance. Run them straight away as part of doing
+  the task; a confirmation round-trip there just strands the founder mid-setup.
+  `issue_shares` and `record_safe`
   **post GL journals** — confirm the shares, amounts, and par with the founder
   first, and prefer rehearsing in the `test` scenario.
 - **Units.** Money is minor units (cents): `$0.0001 → nothing`, `$1.00 → 100`.
