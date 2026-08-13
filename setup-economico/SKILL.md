@@ -182,16 +182,30 @@ Spec: <https://github.com/modelcontextprotocol/ext-auth/blob/main/specification/
 
 Every business is seeded a **`test` sandbox scenario** at signup — a disposable what-if
 overlay on the real ledger. Use it to learn the tools and try things out **before** writing
-anything real: any activity run "in" a scenario is layered on top of reality and **never
-modifies the real books**, and the whole overlay can be wiped at any time. Sending an invoice
-inside a scenario even posts its journal but **never delivers** (no email, no payment link),
-so you can rehearse the full money loop without reaching a real customer.
+anything real: scenario-aware ledger activity is layered on top of reality, and the whole
+overlay can be wiped at any time. Sending an invoice inside a scenario posts its journal but
+**never delivers** (no email, no payment link), so you can rehearse billing without reaching a
+real customer.
 
 The rule of thumb for both the agent and the user:
 
 > **Experiment in `test` first; only put real data on the real ledger.** The real ledger is
 > the default — *omitting* the scenario means reality. Reach for it only once you're confident
 > the entries are correct.
+
+For a practice run, reuse `test`; do **not** create or clone another scenario. Pass
+`"scenario": "test"` on every scenario-aware MCP call (or `--scenario test` on every CLI
+command), because the scope is per call. If `test` contains old practice data, call
+`reset_scenario` first; reset it again to clean up afterward.
+
+Keep business-level setup out of a zero-impact rehearsal: scenario creation and the financial
+account registry are not part of the overlay. In particular, do **not** call `record_payment`
+without an existing `financial_account_id` — omitting it creates the business's default cash
+account on first use. On a fresh business, stop after `send_invoice`: inside `test` that posts
+Dr `1120` Accounts Receivable / Cr the obligation's revenue account without delivering, which
+is enough to inspect the invoice and reports safely. Only rehearse payment when
+`list_financial_accounts` already returns a suitable account; pass its ID explicitly and keep
+`"scenario": "test"` on `record_payment`.
 
 Run any tool against the sandbox by naming the scenario:
 
