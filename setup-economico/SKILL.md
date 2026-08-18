@@ -181,17 +181,44 @@ Spec: <https://github.com/modelcontextprotocol/ext-auth/blob/main/specification/
 ## Practice in the `test` scenario before touching the real books
 
 Every business is seeded a **`test` sandbox scenario** at signup — a disposable what-if
-overlay on the real ledger. Use it to learn the tools and try things out **before** writing
-anything real: any activity run "in" a scenario is layered on top of reality and **never
-modifies the real books**, and the whole overlay can be wiped at any time. Sending an invoice
-inside a scenario even posts its journal but **never delivers** (no email, no payment link),
-so you can rehearse the full money loop without reaching a real customer.
+overlay on the real ledger. Use it **before** writing anything real: scenario-aware ledger
+activity is layered on top of reality, and the whole overlay can be wiped at any time.
+Sending an invoice inside a scenario posts its journal but **never delivers** (no email, no
+payment link), so a rehearsal cannot reach a real customer.
 
 The rule of thumb for both the agent and the user:
 
 > **Experiment in `test` first; only put real data on the real ledger.** The real ledger is
 > the default — *omitting* the scenario means reality. Reach for it only once you're confident
 > the entries are correct.
+
+For a practice run, reuse `test`; do **not** create or clone another scenario. Pass
+`"scenario": "test"` on every scenario-aware MCP call (or `--scenario test` on every CLI
+command), because the scope is per call. If `test` contains old practice data, call
+`reset_scenario` first; reset it again to clean up afterward.
+
+**Rehearsing a customer bill is not this skill's workflow.** This skill only decides
+*where* the work lands (`test` vs the real ledger). Load the skills that own the spine,
+and carry the sandbox into every call they make:
+
+1. **`creating-contracts`** — party, contract, and billable obligations.
+2. **`invoicing`** — invoice lines from those obligations, then `send_invoice`.
+
+Do not re-implement that chain from the tool names in this file. Those skills know
+subscription vs usage accounts and that every line should point at an obligation. Pass
+`"scenario": "test"` (or `--scenario test`) on **every** tool they invoke, including
+`create_party`, `create_contract`, `create_obligation`, `create_invoice`, and
+`send_invoice`. Omitting it on one call writes the real books.
+
+Keep business-level setup out of a zero-impact rehearsal: scenario creation and the financial
+account registry are not part of the overlay. Do **not** call `create_scenario` or
+`clone_scenario` for a practice run — reuse seeded `test`. Do **not** call `record_payment`
+without an existing `financial_account_id` — omitting it creates the business's default cash
+account on first use, on the real books. On a fresh business, stop after `send_invoice`:
+inside `test` that posts Dr `1120` Accounts Receivable / Cr the obligation's revenue account
+without delivering, which is enough to inspect the invoice and reports safely. Only rehearse
+payment when `get_financial_accounts` already returns a suitable account; pass its ID
+explicitly and keep `"scenario": "test"` on `record_payment`.
 
 Run any tool against the sandbox by naming the scenario:
 
@@ -212,17 +239,20 @@ the **`forecasting`** cfo-skill.
 ## You're connected — what next
 
 Once `tools/list` (MCP) or `economico accounts list` (CLI) returns cleanly, the books are
-live and authenticated. When in doubt, rehearse in the `test` scenario first (above); then hand
-off to the task-specific cfo-skill for real entries:
+live and authenticated. This skill's job is done. Route the work to the skill that owns it
+— don't re-implement those playbooks here. When in doubt, load the same sibling with
+`"scenario": "test"` first (above); omit the scenario only for real entries.
 
-- **first-run company setup** → **`company-setup`** — the guided next step: fill the
-  legal-entity profile, register bank/wallet accounts, and stand up the cap table before the
-  money loop starts.
-- **invoicing & billing** → `create_party` → `create_contract` → `create_obligation` →
-  `create_invoice` → `send_invoice` → `record_payment`
-- **expense tracking** → `receive_bill` → `approve_bill` → `pay_bill`
-- **reporting** → `summarize_revenue`, balance sheet / P&L, `get_invoices`, `get_bills`
-- **pricing** → `preview_platform_fees`, obligation pricing definitions
+- **first-run company setup** → **`company-setup`** — legal-entity profile, named
+  bank/wallet accounts, and the cap table before the money loop starts.
+- **customers & billing** → **`creating-contracts`** (`create_party`, `create_contract`,
+  `create_obligation`) then **`invoicing`** (`create_invoice`, `send_invoice`,
+  `record_payment`).
+- **expense tracking** → **`expense-tracking`** (`receive_bill`, `approve_bill`,
+  `pay_bill`, `get_bills`).
+- **pricing** → **`pricing`** (`preview_platform_fees`).
+- **reading the books** → **`financial-analyst`** / **`investor-reporting`**
+  (`summarize_revenue`, `get_invoices`, `get_bills`).
 
 For the full money model, chart of accounts, and tool catalogue, run `economico skill` (CLI)
 or `tools/list` over `/mcp`, which is always authoritative for the connected deployment.

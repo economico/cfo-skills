@@ -8,12 +8,17 @@ description: >
   Common Paper Cloud Service Agreement for SaaS-like businesses; for consulting
   suggest a services MSA plus SOW and relevant OSCON/OWASP-style attachments.
   Hand off to pricing for pricing.md design and invoicing to bill active terms.
+  Practice / first-run dry run: always use the seeded test scenario.
 ---
 
 # Creating Contracts
 
 Contracts are the agreement; obligations are the billable terms. Build both
 before invoicing so every invoice line points back to an accepted order form.
+
+On a practice or first-run dry run, always pass `scenario: "test"` on every
+write. That seeded sandbox already exists; omitting the parameter writes the
+real books.
 
 ## Terms Selection
 
@@ -36,8 +41,8 @@ that the legal paper may live outside the current allowlist.
 
 1. Confirm the counterparty, currency, billing contact, term, payment terms, and
    pricing model. Use `pricing` first if the model is not clear.
-2. `list_parties`; reuse the party if it exists, otherwise `create_party`.
-3. `list_contracts(party_id)`; reuse an active matching customer contract only
+2. `get_parties`; reuse the party if it exists, otherwise `create_party`.
+3. `get_contracts(party_id)`; reuse an active matching customer contract only
    if the order form already covers the requested billing terms.
 4. Draft the order form summary: scope, term, payment terms, line items, usage
    meters, included quantities, overage, cancellation/renewal, and acceptance.
@@ -45,8 +50,17 @@ that the legal paper may live outside the current allowlist.
 6. Create one `create_obligation` per billable line. Use revenue account codes:
    `4110` subscription, `4120` usage, `4200` setup/service, `4210` consulting,
    `4500` grants.
-7. Move to `offer` while under review. Only `update_contract_status(id, "active")`
-   when the user says the order form is accepted or signed.
+7. Finish the lifecycle. A billable setup is not complete in `draft` or `offer`:
+   - If the order form is accepted/signed, or the user asks to onboard, go live,
+     make the contract billable, finish the setup, or proceed without waiting,
+     call `update_contract_status(id, "active")` after creating the obligations.
+   - Use `offer` only when the terms are explicitly still under review or awaiting
+     acceptance. Say that it is non-billable and incomplete; never present an
+     offer or draft as a finished contract setup.
+8. Run `get_contracts(id)` to read the contract back and verify its status is
+   exactly `active`. For a requested billable setup, do not report success until
+   the read-back is active; if it is not, complete the transition or report the
+   blocker explicitly.
 
 ## Obligation Patterns
 
@@ -75,11 +89,13 @@ date. Pick by whether the paper stays the same:
   a renewal or re-paper on new terms.
 
 Both require an **active** contract. Prior versions stay queryable, and
-`list_obligations(as_of=<date>)` returns the obligation set in force on that
+`get_obligations(as_of=<date>)` returns the obligation set in force on that
 date.
 
 ## Guardrails
 
 Never bill against a draft or offer contract. `invoicing` should use an active
 contract and line-level `obligation_id`s. If the requested invoice has no
-contract, stop and create or confirm the contract first.
+contract, stop and create or confirm the contract first. Before handing off to
+`invoicing`, use the workflow's `get_contracts` read-back rather than assuming a
+successful create or status-update call left the contract active.

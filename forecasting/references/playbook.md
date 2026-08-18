@@ -3,13 +3,14 @@
 Reference for the `forecasting` skill: how to derive forward entries from the
 contract/obligation spine, the runway and cash-flow formulas, and the draft-entry
 table format. Work in **minor units (cents)** throughout — `4999` is `$49.99` —
-and convert to currency only for the final writeup. Never sum across currencies;
-forecast each currency separately.
+and divide by 100 exactly once for every amount in the writeup. A ledger integer
+behind a `$` is a 100x projection error that reads as a plausible number. Never
+sum across currencies; forecast each currency separately.
 
 ## Deriving forward entries from obligations
 
 The contract → obligation spine encodes the future before any invoice or bill
-exists. Each `list_obligations` row carries an `account_code`, an optional `sku`,
+exists. Each `get_obligations` row carries an `account_code`, an optional `sku`,
 a cadence (`recurring` + `interval`, `usage`, or `one_off`), and an amount. Walk
 it to emit one draft entry per obligation per period:
 

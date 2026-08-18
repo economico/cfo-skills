@@ -51,7 +51,7 @@ re-scope it. Reads of the real ledger (to establish the baseline) are fine and
 expected.
 
 Safety the platform already gives you: **sending an invoice inside a scenario
-posts its AR/revenue journal but never delivers** (no email, no Flow) — a
+posts its AR/revenue journal but never delivers it externally** (no email) — a
 hypothetical invoice can't reach a real customer. Lean on that, but still prefer
 posting forward entries directly over "sending" unless you're modeling collection
 timing.
@@ -76,7 +76,7 @@ to compare variants from the same starting point (e.g. clone `base-case` into
 
 1. **Baseline (real ledger, read-only).** Pull `get_balance_sheet`,
    `get_income_statement`, and `summarize_revenue` for orientation, and
-   `list_contracts` / `list_obligations` for the **committed run-rate** — recurring
+   `get_contracts` / `get_obligations` for the **committed run-rate** — recurring
    obligations are the forward inflows (customer) and outflows (vendor) you're
    already locked into before any invoice/bill exists. This is the spine every
    projection builds on. Note the currency; never mix currencies.

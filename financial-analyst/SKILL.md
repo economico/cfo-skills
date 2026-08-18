@@ -30,8 +30,12 @@ call `create_journal`, `void_journal`, `send_invoice`, `record_payment`, or
 Three facts about Economico's reports drive every analysis. Get them wrong and
 your numbers will be wrong:
 
-1. **Amounts are in minor units (cents).** `4999` means `$49.99`. Divide by 100
-   for display; keep minor units for math to avoid rounding drift.
+1. **Amounts are in minor units (cents).** `4999` means `$49.99`. Keep minor
+   units for math to avoid rounding drift, then divide by 100 exactly once for
+   every amount you print. A ledger integer behind a `$` is a 100x
+   overstatement that reads as a plausible number: `2887800` is `$28,878.00`.
+   Transcribe from the tool result, not from memory, and sanity-check each
+   total's magnitude against a figure you already know.
 2. **Balance sheet, income statement, and balances are *current cumulative
    state*, scoped to one currency** — they are not period-bounded. The only
    period-windowed report is `summarize_revenue(period_start, period_end)`. To
@@ -56,25 +60,27 @@ Voided journals are excluded automatically.
 | Metered usage — totals, events, and the unit-economics rollup (metered cost tied to the revenue it serves via `source_obligation_id`) | `get_usage(obligation_id?, from?, until?)` | `economico usage list` |
 | Receivables detail + aging (filter by status, due date, party) | `get_invoices(status?, party_id?, due_from?, due_until?)` | — |
 | Payables detail (filter by status, vendor) | `get_bills(status?, party_id?)` | — |
-| Contracts by counterparty (customer = revenue, vendor = spend) | `list_contracts(party_id?)` | — |
-| Obligations — the priced lines under a contract (carry `account_code`, `sku`, cadence, and `source_obligation_id`) | `list_obligations(contract_id?, party_id?)` | — |
+| Contracts by counterparty (customer = revenue, vendor = spend) | `get_contracts(party_id?)` | — |
+| Obligations — the priced lines under a contract (carry `account_code`, `sku`, cadence, and `source_obligation_id`) | `get_obligations(contract_id?, party_id?)` | — |
 | Account map (codes → ledger account_id) | `list_chart_of_accounts(currency)` | `economico accounts list --currency USD --human` |
-| A single journal with all its debit/credit lines | `get_journal(id)` | `economico journals get <id> --human` |
-| Every posted journal, newest-effective first, paginated (whole-ledger scan, filterable by effective-date window) | `list_journals(effective_from?, effective_until?, limit?, offset?)` | `economico journals list --human` |
-| Customers / vendors (for concentration) | `list_parties` | — |
+| A single journal with all its debit/credit lines | `get_journals(id)` | `economico journals get <id> --human` |
+| Every posted journal, newest-effective first, paginated (whole-ledger scan, filterable by effective-date window) | `get_journals(effective_from?, effective_until?, limit?, offset?)` | `economico journals list --human` |
+| Customers / vendors (for concentration) | `get_parties` | — |
+| Default alive vs default dead (cash, burn, growth; optional what-if overrides) | `check_default_alive` | — |
+| ARR/MRR, burn, margin, runway, CAC for a month | `get_saas_metrics` | — |
 
-To scan raw GL activity a report flattens away, `list_journals` walks the whole
+To scan raw GL activity a report flattens away, `get_journals` walks the whole
 ledger — newest-effective first, paginated, filterable by an effective-date
 window; advance by `limit` while `has_more` is true. For a single entry
-surfaced by an invoice, bill, or payment, go straight to `get_journal(id)`; for
+surfaced by an invoice, bill, or payment, go straight to `get_journals(id)`; for
 account-level rollups use `get_balances` + `list_chart_of_accounts`.
 
 ## The party → contract → obligation spine
 
 Don't stop at the reports — Economico carries a **structured spine** that the P&L
 flattens away, and it's where the richest analysis lives. Each counterparty is a
-**party**; each `list_contracts` row carries a `role` (`customer` = revenue,
-`vendor` = spend); and each `list_obligations` row is a priced commitment under a
+**party**; each `get_contracts` row carries a `role` (`customer` = revenue,
+`vendor` = spend); and each `get_obligations` row is a priced commitment under a
 contract carrying an `account_code`, an optional `sku`, a cadence (`recurring` +
 `interval`, `usage`, or `one_off`), and a `source_obligation_id`. Read it for:
 
@@ -85,7 +91,7 @@ contract carrying an `account_code`, an optional `sku`, a cadence (`recurring` +
 - **Unit economics.** A vendor obligation's `source_obligation_id` ties a cost to
   the specific customer-revenue obligation it serves — follow it to compute true
   gross margin per customer / SKU, not just blended margin.
-- **Concentration & dependency.** `list_parties` + obligations reveal how
+- **Concentration & dependency.** `get_parties` + obligations reveal how
   concentrated revenue is in one customer and how concentrated spend is in one
   vendor — both are risks worth naming.
 
@@ -98,7 +104,7 @@ go to the spine; when it's about *what actually happened*, go to the reports.
    `summarize_revenue` for the period in question. Note the currency.
 2. **Drill.** Go to the level the question needs — `get_balances` for
    account-level, `get_invoices` / `get_bills` for AR/AP and aging,
-   `list_contracts` / `list_obligations` for recurring, `get_journal` for a
+   `get_contracts` / `get_obligations` for recurring, `get_journals` for a
    specific suspicious entry.
 3. **Analyze.** Compute the ratios/trends in
    [`references/analyses.md`](references/analyses.md) — work in minor units, only

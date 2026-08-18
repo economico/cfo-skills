@@ -1,11 +1,14 @@
 ---
 name: invoicing
 description: >
-  Customer AR on Economico: create/send/void invoices and record payments (USD or
-  USDC/USDT/PYUSD settlement) posting double-entry journals. Triggers: bill a customer,
-  send invoice, retainer, milestone, subscription, usage invoice, grant tranche,
-  record payment, clear AR, stablecoin settlement. Prefer contract + obligation lines.
-  Hand off to creating-contracts if no contract; pricing if the charge model is unclear.
+  Before record_payment, always get_financial_accounts: pass the matching existing
+  financial_account_id, or do not record the payment when none exists. Customer AR on
+  Economico: create/send/void invoices; bill retainers, milestones, subscriptions,
+  usage, grants, and ad-hoc agreed work; reconcile USD or stablecoin settlement. Read
+  invoices before writing to prevent duplicate billing. Use contract-backed obligation
+  lines; append an agreed missing term with create_obligation. Use the seeded test
+  scenario for practice. Hand off to creating-contracts if no contract, and pricing if
+  the charge model is unclear.
 ---
 
 # Invoicing
@@ -13,32 +16,61 @@ description: >
 Prefer contract-backed invoicing: customer party -> active customer contract ->
 obligations -> invoice lines -> send -> payment.
 
+On a practice or first-run dry run, always pass `scenario: "test"` on every
+write. That seeded sandbox already exists; omitting the parameter writes the
+real books.
+
+For every payment request, use this exact order:
+
+1. `get_invoices` to identify the sent invoice and its unpaid balance.
+2. `get_financial_accounts`; read the result before proceeding.
+3. Treat the user's direct statement that the customer paid as the real payment
+   event. If a matching account exists, copy its returned
+   `financial_account_id` into `record_payment`; do not substitute a payment
+   receipt or seek separate email or bank confirmation.
+4. If no matching account exists, stop. Do not call `record_payment` or create
+   an account: leave the invoice sent, report the payment as unrecorded, and ask
+   the user to add the bank account or wallet first.
+
+Never omit `financial_account_id`: the fallback creates a default cash account
+on the real books, including inside `test` and on receipt/settlement paths.
+
 ## Workflow
 
 1. Identify the billing event: subscription period, usage period, retainer,
    hourly work, milestone, setup fee, grant tranche, or agent-native per-call
    settlement.
-2. `list_parties`, `list_contracts(party_id)`, and `list_obligations(party_id)`.
-   Use `creating-contracts` if there is no active contract or no matching
-   obligation.
-3. Build invoice lines from obligations. Use `quantity_micros` (`1_000_000` =
-   1.0) and `unit_price_minor`; the invoice `amount` must equal line totals.
+2. `get_parties`, `get_contracts(party_id)`, `get_obligations(party_id)`, and
+   `get_invoices(party_id)`. If the same period, milestone, or usage window is
+   already invoiced, do not create or re-send anything. Report the existing
+   invoice and its outstanding balance. Re-read `get_invoices` without a party
+   filter and report total open AR across all customers in dollars.
+3. Build every invoice line with its matching `obligation_id`. If an active
+   contract is missing, use `creating-contracts`. If an active contract exists
+   but agreed work is outside its current obligations, call `create_obligation`
+   exactly once to append only that term. Never call `amend_contract` for this
+   path: it reissues the whole obligation set and duplicates unrelated grant or
+   retainer versions. Use `4210` for consulting work and `4500` only for grants.
+   Use `quantity_micros` (`1_000_000` = 1.0) and `unit_price_minor`; the invoice
+   `amount` must equal line totals. Draft-only invoices still require
+   obligation-linked lines.
 4. `create_invoice(party_id, contract_id, amount, currency, due_date, memo, lines)`.
 5. Show the draft invoice and ask before external delivery unless the user has
    explicitly told you to send it.
-6. `send_invoice(id, channel)` posts AR and revenue and sends through `flow`,
-   `email`, or `link` — but annual-plan lines defer to Unearned Revenue instead
-   of recognizing on send (see Model Notes). A `flow`/`link` payin advertises the
-   assets and settlement addresses drawn from your registered receiving rails, so
-   register them first (**`payment-rails`**) — otherwise the customer is offered
-   nothing to pay with.
-7. Use `record_payment` only when the user provides a real payment event. If the
-   collection rail charged a fee (card, Flow), pass it —
+6. `send_invoice(id, channel="email")` posts AR and revenue and sends the invoice
+   by email — but annual-plan lines defer to Unearned Revenue instead of
+   recognizing on send (see Model Notes).
+7. Use `record_payment` only when the user provides a real payment event **and**
+   `get_financial_accounts` already returns an account. Pass that
+   `financial_account_id` every time — without it the call creates cash on the
+   real books. If the collection rail charged a processor fee, pass it —
    `record_payment(..., payment_endpoint_id?, fee_amount?, fee_account_code?)` —
    so the invoice still settles at **gross** while cash lands **net**
    (`amount − fee`); the fee posts as its own leg (default `5500` Payment
    Processing Fees). Use `get_invoices` before reconciling or voiding; use
-   `void_invoice` for corrections with a reason.
+   `void_invoice` for corrections with a reason. Cash that arrived before you
+   know which invoice it settles is `record_unapplied_cash`, not
+   `record_payment`.
 
 ## Line Mapping
 
@@ -85,7 +117,7 @@ the rollup:
 ## Hand Offs
 
 Use `pricing` to define a new charge model. Use `creating-contracts` to create
-the order form and obligations. Use `payment-rails` to register the receiving
-rails a Flow payin advertises and to model collection fees. Use
+the order form and obligations. Use `payment-rails` to register payment
+instructions, compare routes, and model collection fees. Use
 `investor-reporting` after billing to report MRR, ARR, ACV, retention, burn, and
 default-alive style metrics.

@@ -3,7 +3,8 @@
 Every check below names the **accounts** it touches (codes from Economico's
 chart — confirm against `list_chart_of_accounts`), the **read tool** that
 surfaces it, the **GAAP principle**, and the **correcting entry** to recommend.
-Work in **minor units** (cents) throughout; convert only for the writeup. You
+Work in **minor units** (cents) throughout; divide by 100 exactly once for every
+amount in the writeup, and never put a `$` in front of a raw ledger integer. You
 *recommend* corrections — the money-loop skills post them.
 
 Run the checks per currency. The accounting equation and every tie-out hold
@@ -51,7 +52,7 @@ finer tests, because everything downstream inherits the error.
    companion asset is large is itself a finding (see §2/§3).
 4. **Per-journal balance.** Economico backstops debits = credits with a deferred
    DB constraint, so unbalanced posted journals shouldn't exist — but when you
-   drill into a suspicious `get_journal(id)`, still confirm the lines net to
+   drill into a suspicious `get_journals(id)`, still confirm the lines net to
    zero and hit sensible accounts. The constraint guarantees arithmetic, not
    *correct* accounts.
 
@@ -181,7 +182,7 @@ their absence is the misstatement to catch.
    but a void *and re-post* across a period boundary can shift income between
    periods — check both sides.
 4. **Unrecorded liabilities.** Bills approved but never posted, or known
-   recurring vendor obligations (`list_obligations` `role=vendor` recurring) with
+   recurring vendor obligations (`get_obligations` `role=vendor` recurring) with
    no corresponding posted expense for the period, suggest completeness gaps —
    the classic "search for unrecorded liabilities".
 
