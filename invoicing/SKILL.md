@@ -1,14 +1,14 @@
 ---
 name: invoicing
 description: >
-  Before record_payment, always get_financial_accounts: pass the matching existing
-  financial_account_id, or do not record the payment when none exists. Customer AR on
-  Economico: create/send/void invoices; bill retainers, milestones, subscriptions,
-  usage, grants, and ad-hoc agreed work; reconcile USD or stablecoin settlement. Read
-  invoices before writing to prevent duplicate billing. Use contract-backed obligation
-  lines; append an agreed missing term with create_obligation. Use the seeded test
-  scenario for practice. Hand off to creating-contracts if no contract, and pricing if
-  the charge model is unclear.
+  Already billed: write nothing; the final answer must state total open AR across all
+  customers in dollars. Before billing, list all invoices and inspect matching lines.
+  Ad-hoc consulting or security review: append exactly one 4210 obligation with
+  create_obligation, never amend_contract or 4200. Before record_payment, get financial
+  accounts: pass the matching existing financial_account_id, or do not record payment
+  when none exists. Create/send/void customer invoices; reconcile USD or stablecoin
+  settlement. Use the seeded test scenario for practice. Hand off to creating-contracts
+  if no contract, and pricing if unclear.
 ---
 
 # Invoicing
@@ -40,17 +40,20 @@ on the real books, including inside `test` and on receipt/settlement paths.
 1. Identify the billing event: subscription period, usage period, retainer,
    hourly work, milestone, setup fee, grant tranche, or agent-native per-call
    settlement.
-2. `get_parties`, `get_contracts(party_id)`, `get_obligations(party_id)`, and
-   `get_invoices(party_id)`. If the same period, milestone, or usage window is
-   already invoiced, do not create or re-send anything. Report the existing
-   invoice and its outstanding balance. Re-read `get_invoices` without a party
-   filter and report total open AR across all customers in dollars.
+2. Before any billing write, call `get_invoices()` without a party filter. Use
+   `get_invoices(id)` on possible matches to inspect their lines; list summaries
+   alone may not include line details. If the same period, milestone, or usage
+   window is already invoiced, do not create, send, or amend anything. Report
+   the existing invoice and total open AR across all customers in dollars,
+   computed from the unfiltered result. Then read `get_parties`,
+   `get_contracts(party_id)`, and `get_obligations(party_id)` only as needed.
 3. Build every invoice line with its matching `obligation_id`. If an active
    contract is missing, use `creating-contracts`. If an active contract exists
    but agreed work is outside its current obligations, call `create_obligation`
    exactly once to append only that term. Never call `amend_contract` for this
    path: it reissues the whole obligation set and duplicates unrelated grant or
-   retainer versions. Use `4210` for consulting work and `4500` only for grants.
+   retainer versions. Professional reviews, audits, and other consulting use
+   `4210`; `4200` is for setup/onboarding services, and `4500` is only for grants.
    Use `quantity_micros` (`1_000_000` = 1.0) and `unit_price_minor`; the invoice
    `amount` must equal line totals. Draft-only invoices still require
    obligation-linked lines.

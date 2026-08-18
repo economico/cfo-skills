@@ -1,14 +1,16 @@
 ---
 name: creating-contracts
 description: >
-  Create customer contracts and order forms in Economico for SaaS, usage,
-  AI-credit, consulting, services, and grant-funded businesses. Use when asked
+  Create contracts in Economico. Exactly one obligation per line; never amend a
+  new contract. Mixed SaaS: subscription 4110, implementation 4200. Vendor LLM
+  usage: 5400, never hosting 5300. Use when asked
   to create an order form, choose terms, set up a customer contract, map signed
-  pricing into obligations, or prepare billing terms before invoicing. Prefer
+  pricing into obligations, or prepare billing terms before invoicing for SaaS,
+  usage, AI-credit, consulting, services, or grants. Prefer
   Common Paper Cloud Service Agreement for SaaS-like businesses; for consulting
   suggest a services MSA plus SOW and relevant OSCON/OWASP-style attachments.
+  Real setup omits scenario; only explicit dry runs use test.
   Hand off to pricing for pricing.md design and invoicing to bill active terms.
-  Practice / first-run dry run: always use the seeded test scenario.
 ---
 
 # Creating Contracts
@@ -16,9 +18,11 @@ description: >
 Contracts are the agreement; obligations are the billable terms. Build both
 before invoicing so every invoice line points back to an accepted order form.
 
-On a practice or first-run dry run, always pass `scenario: "test"` on every
-write. That seeded sandbox already exists; omitting the parameter writes the
-real books.
+Real contract setup is the default: omit `scenario` so the agreement lands in
+the real ledger. Only when the user explicitly asks to practice, rehearse, or
+dry-run should every write pass `scenario: "test"`; use the seeded sandbox and
+do not create another scenario. "Go ahead without waiting" is permission to
+complete the real setup, not a request for a rehearsal.
 
 ## Terms Selection
 
@@ -46,10 +50,18 @@ that the legal paper may live outside the current allowlist.
    if the order form already covers the requested billing terms.
 4. Draft the order form summary: scope, term, payment terms, line items, usage
    meters, included quantities, overage, cancellation/renewal, and acceptance.
-5. `create_contract(role="customer", currency, msa_url, order_form_url?, term_length?, payment_terms?, services_scope?)`.
-6. Create one `create_obligation` per billable line. Use revenue account codes:
-   `4110` subscription, `4120` usage, `4200` setup/service, `4210` consulting,
-   `4500` grants.
+5. `create_contract(role="customer" | "vendor", currency, msa_url?, order_form_url?, term_length?, payment_terms?, services_scope?)`.
+   Customer contracts require an `msa_url`; vendor agreements may omit it.
+6. Create exactly one `create_obligation` per agreed billable line and choose
+   exactly one account by direction and line type. Map every line before calling
+   the tool; do not copy another line's account:
+   - Customer subscription -> `4110`.
+   - Customer usage -> `4120`.
+   - Customer setup, onboarding, or implementation -> `4200`, even when sold
+     beside a subscription. A one-time implementation line must never use `4110`.
+   - Customer consulting -> `4210`; grant -> `4500`.
+   - Vendor spend -> a cost/expense account, never customer revenue. Hosting is
+     `5300`; AI model or LLM inference usage is always `5400`, never `5300`.
 7. Finish the lifecycle. A billable setup is not complete in `draft` or `offer`:
    - If the order form is accepted/signed, or the user asks to onboard, go live,
      make the contract billable, finish the setup, or proceed without waiting,
@@ -90,7 +102,9 @@ date. Pick by whether the paper stays the same:
 
 Both require an **active** contract. Prior versions stay queryable, and
 `get_obligations(as_of=<date>)` returns the obligation set in force on that
-date.
+date. Use these only to change an agreement that existed before the request.
+Do not amend a contract you just created to correct wording or omitted fields:
+validate the inputs before creation, and never duplicate its obligation set.
 
 ## Guardrails
 

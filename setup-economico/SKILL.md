@@ -1,14 +1,16 @@
 ---
 name: setup-economico
 description: >
-  Connect an agent to Economico (agent-native double-entry general ledger) over MCP or CLI,
-  complete OAuth, and verify tools work before any CFO skill. Use for first-time setup,
-  "connect economico", "claude mcp add economico", "economico login", "@economico/cli",
+  Connect, sign in, or authenticate an agent to Economico over MCP or CLI; verify the
+  connection or identify which business/account is active. Dry run or practice: use the
+  existing seeded test scenario on every write; never create, clone, reset, or delete a
+  scenario, and leave test intact. Never record payment without an existing financial
+  account. Use when asked to verify Economico is connected or which Economico account
+  or business is active. Also use for first-time setup, "connect economico",
+  "claude mcp add economico", "economico login", "@economico/cli",
   "https://economi.co/mcp", "economi.co/skill.md", YC Bookface verify_yc, sandbox/test
-  scenario, headless private_key_jwt clients. Every account can read and write from signup;
-  verify_yc is optional and only changes pricing. Constraint: books are USD-ledger. Run this
-  before invoicing, expenses, or reports — other cfo-skills assume an authenticated
-  Economico business.
+  scenario, and headless private_key_jwt clients. Every account can read and write from
+  signup; verify_yc only changes pricing. Books use a USD ledger.
 ---
 
 # Setup Economico
@@ -194,8 +196,8 @@ The rule of thumb for both the agent and the user:
 
 For a practice run, reuse `test`; do **not** create or clone another scenario. Pass
 `"scenario": "test"` on every scenario-aware MCP call (or `--scenario test` on every CLI
-command), because the scope is per call. If `test` contains old practice data, call
-`reset_scenario` first; reset it again to clean up afterward.
+command), because the scope is per call. Do not reset or delete `test` unless the user
+explicitly asks; leave the requested rehearsal result there so they can inspect it.
 
 **Rehearsing a customer bill is not this skill's workflow.** This skill only decides
 *where* the work lands (`test` vs the real ledger). Load the skills that own the spine,
