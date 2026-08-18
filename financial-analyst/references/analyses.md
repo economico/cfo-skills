@@ -1,8 +1,8 @@
 # Analyses: formulas, ratios, and how to read the ledger
 
-Work in **minor units** (cents) throughout; convert to the display currency only
-in the final number. Every figure below comes from the read tools listed in
-`SKILL.md` — no posting.
+Work in **minor units** (cents) throughout; divide by 100 exactly once for every
+amount you print, and never put a `$` in front of a raw ledger integer. Every
+figure below comes from the read tools listed in `SKILL.md` — no posting.
 
 ## Debit/credit cheat sheet
 
@@ -52,7 +52,7 @@ with `summarize_revenue` windows.
 - **Recognition gap** = `invoiced − recognized` — deferred/unearned revenue
   signal.
 - **Revenue concentration** = top customer's invoiced ÷ total invoiced. Build it
-  from `get_invoices` grouped by `party_id` (cross-reference `list_parties` for
+  from `get_invoices` grouped by `party_id` (cross-reference `get_parties` for
   names). >30–40% from one customer is a concentration risk worth naming.
 
 ## Liquidity, burn & runway
@@ -89,7 +89,7 @@ with `summarize_revenue` windows.
   (assets, especially cash) sitting negative — Economico has no general overdraft
   check, so this is a true signal, not a glitch.
 - **Single-entry drill-down:** when a balance looks wrong, pull the specific
-  `get_journal(id)` (id from the related invoice/bill/payment) and read its lines
+  `get_journals(id)` (id from the related invoice/bill/payment) and read its lines
   — confirm debits = credits and the accounts hit make sense.
 - **Cross-report tie-out:** `summarize_revenue` *recognized* for a window vs the
   income-statement revenue movement should roughly agree; a large divergence
@@ -98,10 +98,10 @@ with `summarize_revenue` windows.
 
 ## Spine analyses (parties, contracts, obligations)
 
-These read commitments and structure the P&L can't show. Source: `list_contracts`
-(each row has `role` customer/vendor), `list_obligations` (each has `account_code`,
+These read commitments and structure the P&L can't show. Source: `get_contracts`
+(each row has `role` customer/vendor), `get_obligations` (each has `account_code`,
 `sku`, `type`, `interval`, `amount_minor_units` / `price_per_unit_minor`,
-`source_obligation_id`), and `list_parties`.
+`source_obligation_id`), and `get_parties`.
 
 ### Committed run-rate (forward spend & revenue)
 

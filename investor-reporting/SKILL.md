@@ -35,7 +35,7 @@ Use:
 - `get_invoices(status?, party_id?, due_from?, due_until?)` for AR, ACV, and
   customer-level revenue.
 - `get_bills(status?, party_id?)` for payables and vendor cost context.
-- `list_contracts`, `list_obligations`, and `list_parties` for customer,
+- `get_contracts`, `get_obligations`, and `get_parties` for customer,
   contract, obligation, SKU, and pricing-model context.
 - `get_usage(obligation_id?, from?, until?)` for metered-usage revenue, usage
   growth, and the unit-economics rollup — metered cost tied to the revenue it
@@ -46,8 +46,11 @@ Use:
   operating metrics.
 - `list_chart_of_accounts(currency)` to verify account names and codes.
 
-Amounts are minor units. Do not sum across currencies; report USD and USDC
-separately unless the user explicitly provides a conversion policy.
+Amounts are minor units. Divide by 100 exactly once for every amount you print —
+a ledger integer behind a `$` is a 100x overstatement that reads as a plausible
+number (`1176900` is `$11,769.00`), and an inflated metric in an investor update
+is the one number nobody catches. Do not sum across currencies; report USD and
+USDC separately unless the user explicitly provides a conversion policy.
 
 ## Metrics by Model
 

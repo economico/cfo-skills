@@ -29,7 +29,7 @@
     },
     {
       "name": "payment-rails",
-      "description": "Model how money moves in and out of a business in Economico and pick the cheapest or fastest route. Register the identifiers that reach each account (RFC 8905 payto, CAIP-10) with priced in/out methods, account-level card/Flow collection, and counterparty payment instructions; rank routes with quote_payment_routes; post route fees to the ledger.",
+      "description": "Model how money moves in and out of a business in Economico and pick the cheapest or fastest route. Register the identifiers that reach each account (RFC 8905 payto, CAIP-10) with priced in/out methods, account-level card collection, and counterparty payment instructions; rank routes with quote_payment_routes; post route fees to the ledger.",
       "source": "./",
       "strict": false,
       "skills": [

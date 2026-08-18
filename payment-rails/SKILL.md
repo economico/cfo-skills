@@ -5,8 +5,8 @@ description: >
   cheapest or fastest way to move it. A financial account is one pool of value
   (one GL balance); this skill registers the many identifiers that reach it — bank
   details (RFC 8905 payto), blockchain addresses (CAIP-10) — and the priced in/out
-  methods on each (rail, asset, fees, ETA), plus account-level card and Flow
-  collection. It also stores a counterparty's payment instructions, ranks routes
+  methods on each (rail, asset, fees, ETA), plus account-level card collection.
+  It also stores a counterparty's payment instructions, ranks routes
   with quote_payment_routes, and posts route fees to the ledger. Use for "register
   my Stripe / Mercury / wallet", "add ACH details / a wallet address / a payment
   rail", "set up payment routing", "cheapest / fastest way to pay this vendor",
@@ -25,13 +25,23 @@ skill adds the layer on top: the **identifiers** that reach a pool and the
 assets on an invoice, pick the cheapest route to pay a vendor, and book the fee
 correctly.
 
+**Hard EVM rule:** one hex address/keypair means one endpoint, even across
+chains. **Wrong:** one `add_payment_endpoint` call for Base and another for
+Ethereum. **Right:** one call whose CAIP-10 `uri` uses either supported chain and
+whose `methods[]` contains both routes. The URI names the keypair; each method's
+CAIP-19 `asset` selects the chain and token that actually move value. Economico
+enforces this: the second call is rejected as a conflict naming the endpoint that
+already holds the keypair — extend that one with `update_payment_endpoint`
+(existing methods **plus** the new chain's) rather than retrying with a
+different URI.
+
 ## The three-level model
 
 ```
 financial_account   1 pool  = 1 GL sub-balance          (company-setup owns this)
   ├── payment_endpoint   0..n identifiers                 payto:// URI or CAIP-10 address
   │     └── payment_method   1..n priced (direction, rail, asset) + fee schedule
-  └── payment_method     0..n account-level               card / flow collection (no identifier)
+  └── payment_method     0..n account-level               card collection (no identifier)
 ```
 
 One real custodial account (Stripe's financial account is the canonical case) is
@@ -48,7 +58,7 @@ GL sub-balances and breaks reconciliation. **One pool, many identifiers.**
   (`financial_account_id`) **or** a counterparty (`party_id`) — never both.
 - **`payment_method`** — one priceable `(direction, rail, asset)` on an endpoint,
   or attached at the account level for collection rails that put no identifier on
-  the wire (`card`, `flow`). `direction` is always **relative to the owner**: an
+  the wire (`card`). `direction` is always **relative to the owner**: an
   `in` method on *our* endpoint = we can receive it; an `in` method on a
   *vendor's* endpoint = the vendor can receive it.
 
@@ -63,8 +73,8 @@ Each method in `methods[]`:
 | field | meaning |
 |---|---|
 | `direction` | `in` (receive) or `out` (pay) — separate rows; economics differ by direction |
-| `rail` | `ach`, `ach_same_day`, `fedwire`, `rtp`, `sepa`, `sepa_instant`, `swift`, `onchain`, `internal` (free book transfer), `card`, `flow` |
-| `asset` | what moves on the wire — ISO 4217 (`USD`, `EUR`) or CAIP-19. For `onchain`, CAIP-19 pins chain **and** token (`eip155:8453/erc20:0x833…` = USDC-on-Base) |
+| `rail` | `ach`, `ach_same_day`, `fedwire`, `rtp`, `sepa`, `sepa_instant`, `swift`, `onchain`, `internal` (free book transfer), `card` |
+| `asset` | what moves on the wire — ISO 4217 (`USD`, `EUR`) or CAIP-19. For an EVM `onchain` token, use `eip155:<chain_id>/erc20:<contract_address>` (`eip155:8453/erc20:0x833…` = USDC-on-Base); the `erc20:` segment is required |
 | `settles_as` | what lands in the pool if the provider converts (ACH `USD` in → `USDC` balance). Omit if same as `asset`; when set, `spread_bps` applies |
 | `fee_fixed_minor` | fixed fee, minor units |
 | `fee_bps` | proportional fee, basis points |
@@ -95,32 +105,24 @@ add_payment_endpoint(
   ])
 ```
 
-### Account-level collection: card & Flow
+### Account-level card collection
 
-`card` and `flow` put **no** payer-facing identifier on the wire — the payer never
+`card` puts **no** payer-facing identifier on the wire — the payer never
 sees one of our addresses — so they attach to the account, not an endpoint:
 
-`add_payment_method(financial_account_id, method{...})` — rails `card`/`flow` only.
+`add_payment_method(financial_account_id, method{...})` — rail `card` only.
 
 - Card: `{ direction:"in", rail:"card", asset:"USD", fee_bps:290, fee_fixed_minor:30 }` — 2.9% + $0.30.
-- Flow: `{ direction:"in", rail:"flow", asset:"...", fee_bps:..., fee_min_minor:..., fee_max_minor:... }` — the same platform-fee economics `preview_platform_fees` reports. This makes "invoice via Flow" rank against "card" and "give them our ACH details" on equal footing.
 
 ## 2. Store a counterparty's payment instructions
 
-To pay a vendor *outside* Flow you need where to send it. Register their
+To pay a vendor you need where to send it. Register their
 instructions as a **party-owned** endpoint:
 
 `add_payment_endpoint(party_id, uri, label?, methods[])` — the methods carry the
 vendor's receiving capability (rail, asset, `eta_seconds`); their fees are theirs,
 so usually leave the fee fields empty (fill them only where **we** bear the cost,
 e.g. our side of a wire).
-
-**Flow counterparties are lighter.** From the payment message of a Flow transfer,
-capture their agent (`agent_did`) and settlement identifier — that party-owned
-endpoint alone is enough to pay them again; Flow resolves the rest, no priced
-methods needed:
-
-`add_payment_endpoint(party_id, uri="eip155:8453:0x…", agent_did="did:web:their-vasp.example", label="Acme via Flow")`
 
 `update_payment_endpoint(id, methods=[...])` **replaces** an endpoint's whole
 method list (price sheets are current facts, not history). The `uri` is immutable
@@ -138,11 +140,18 @@ computation, it never moves money:
 - `optimize` — `cheapest` (default) or `fastest`.
 - `party_id` — **outbound only**: intersect *our* `out` methods with that
   counterparty's stored `in` endpoints — "cheapest way to actually get funds to
-  this vendor". For a Flow transfer, pass its `supportedAssets` via `assets`.
+  this vendor".
 - `max_eta_seconds` — cheapest route that still settles by a deadline.
 
 Each ranked route carries the account, endpoint URI, rail, asset, ETA, and the fee
 breakdown. **The agent picks and then records the payment** with the chosen route.
+
+A comparison is work in the books, not a table in the reply: register the rails
+being compared first — the counterparty's instructions as a party endpoint, our
+side as methods on the paying account — then quote through them. Asked to compare
+without paying, still leave the endpoints on file so payment time needs no
+re-typing, and never claim to have saved details that were only written in the
+answer.
 
 ## 4. Post the route fee to the ledger
 
@@ -150,50 +159,48 @@ A route fee is real expense, not just metadata. `record_payment` (AR) and
 `pay_bill` (AP) take the fee inline so the document still settles at **gross**
 while cash moves at **net**:
 
-- `record_payment(..., payment_endpoint_id?, fee_amount?, fee_account_code?)` —
+- `record_payment(..., financial_account_id, payment_endpoint_id?, fee_amount?, fee_account_code?)` —
   cash lands **net** (`amount − fee`); journal is Dr cash net / Dr fee / Cr AR gross.
-- `pay_bill(..., payment_endpoint_id?, fee_amount?, fee_account_code?)` — cash out
+- `pay_bill(..., financial_account_id, payment_endpoint_id?, fee_amount?, fee_account_code?)` — cash out
   is **`amount + fee`**; Dr AP gross / Cr cash / Dr fee.
-- `fee_account_code` defaults to **`5500` Payment Processing Fees**; use **`6440`
-  Bank Charges and Fees** for bank-rail fees (wires, ACH returns).
-- `payment_endpoint_id` records which identifier the money moved through and, when
-  `financial_account_id` is omitted, resolves the cash account through the
-  endpoint. **Endpoints never create sub-balances** — the GL still keys on the
+- `fee_account_code` picks **who** charged the fee, and the two don't mix — the
+  point of the split is being able to add up a year of each:
+  - **`5500` Payment Processing Fees** (the default) — a card or payment
+    processor's cut of the amount (Stripe, PayPal).
+  - **`6440` Bank Charges and Fees** — the **bank's** charge for moving money:
+    incoming or outgoing wire fees, ACH returns, account fees. A wire fee is
+    never `5500`, whichever direction the money went.
+- `financial_account_id` is required — look it up with `get_financial_accounts`.
+  `payment_endpoint_id` records which identifier the money moved through. **Endpoints never create sub-balances** — the GL still keys on the
   account, which is exactly what keeps one pool = one balance.
 
 When the actual fee isn't known at record time (variable gas, a batched provider
 statement), record the method's estimate and let daily reconciliation true it up
 against the statement.
 
-## 5. Flow uses this registry
-
-Once endpoints exist, Flow stops sending bare amount + currency:
-
-- **Generating a payin** (`send_invoice(channel="flow"|"link")`) advertises
-  `supportedAssets` = the CAIP-19 assets of your account-owned **`in`** methods,
-  and `fallbackSettlementAddresses` = the endpoints that can receive them. Only
-  register `in` methods whose inbound cost you're happy to accept — that's what
-  the customer is offered.
-- **Settlement webhook** matches the event's settlement address against your
-  `payment_endpoints.uri` and books the payment to **that pool's** sub-balance
-  automatically — reconciliation by identifier, instead of everything landing in
-  the house default.
-
 ## Reading the picture
 
 One read gives the full routing picture — no separate list tool:
 
-- `list_financial_accounts` / `get_financial_account` return each account's
+- `get_financial_accounts` return each account's
   `endpoints` + account-level methods inline.
-- `get_party` / `list_parties` return a party's stored payment instructions.
+- `get_parties` return a party's stored payment instructions.
 
 ## Discipline
 
-- **Read before write.** `get_financial_account` / `get_party` first —
+- **Read before write.** `get_financial_accounts` / `get_parties` first —
   resolve-or-create, never blind-add a duplicate endpoint. A `uri` is unique per
   business; re-registering it is rejected.
 - **One pool, many identifiers.** Never register a second financial account for a
   different rail into the same real pool — add an endpoint to the existing account.
+- **One EVM keypair, one endpoint across chains.** Never preserve both the Base
+  and Ethereum CAIP-10 forms of the same hex address as separate endpoints.
+  Pick either supported chain for the one canonical endpoint URI and put every
+  chain/token in that call's `methods[]`; the CAIP-19 assets, not duplicate
+  endpoints, select the networks. When adding a chain later, read the endpoint
+  and use `update_payment_endpoint` with its existing methods plus the new one.
+  A rejected second registration is that rule firing, not a bad URI — never work
+  around it by trying another chain prefix or a second financial account.
 - **Registering rails is safe metadata; moving money is not.** `add_payment_endpoint`
   / `add_payment_method` / `quote_payment_routes` don't touch the GL. `record_payment`
   / `pay_bill` move cash and post the fee leg — confirm those with the user.

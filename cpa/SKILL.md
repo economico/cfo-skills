@@ -65,7 +65,11 @@ Receivable (customer) offset that rests there until billed (reconcile with
 Three facts drive every test; get them wrong and your findings are wrong:
 
 1. **Amounts are minor units (cents).** `4999` = `$49.99`. Do all math in minor
-   units; convert only in the final writeup.
+   units, then divide by 100 exactly once for every amount you print. A ledger
+   integer behind a `$` is a 100x misstatement that reads as a plausible number:
+   `1176900` is `$11,769.00`. Before you write a total, check its magnitude
+   against a figure you already know (a single invoice, one month's plan price):
+   a book with two open invoices does not have millions in revenue.
 2. **Balance sheet, income statement, and balances are *current cumulative
    state*, one currency each** — not period-bounded. The only period-windowed
    report is `summarize_revenue(period_start, period_end)`. For cutoff and
@@ -90,17 +94,17 @@ aggregated.
 | Metered usage — totals, events, unit-economics rollup, `1125` unbilled position | `get_usage(obligation_id?, from?, until?)` | `economico usage list` |
 | Receivables + aging (status, due date, party) | `get_invoices(status?, party_id?, due_from?, due_until?)` | — |
 | Payables (status, vendor) | `get_bills(status?, party_id?)` | — |
-| Contracts by counterparty | `list_contracts(party_id?)` | — |
-| Obligations (carry `account_code`, `sku`, cadence) | `list_obligations(contract_id?, party_id?)` | — |
+| Contracts by counterparty | `get_contracts(party_id?)` | — |
+| Obligations (carry `account_code`, `sku`, cadence) | `get_obligations(contract_id?, party_id?)` | — |
 | Account map (codes → ledger account_id, types, contra flags) | `list_chart_of_accounts(currency)` | `economico accounts list --currency USD --human` |
-| A single journal with all its lines | `get_journal(id)` | `economico journals get <id> --human` |
-| Every posted journal, newest-effective first, paginated (whole-ledger scan, effective-date filterable) | `list_journals(effective_from?, effective_until?, limit?, offset?)` | `economico journals list --human` |
-| Customers / vendors | `list_parties` | — |
+| A single journal with all its lines | `get_journals(id)` | `economico journals get <id> --human` |
+| Every posted journal, newest-effective first, paginated (whole-ledger scan, effective-date filterable) | `get_journals(effective_from?, effective_until?, limit?, offset?)` | `economico journals list --human` |
+| Customers / vendors | `get_parties` | — |
 
-For a completeness or cutoff test that needs the raw entries, `list_journals`
+For a completeness or cutoff test that needs the raw entries, `get_journals`
 walks the whole ledger (newest-effective first, paginated, filterable by an
 effective-date window) — advance by `limit` while `has_more` is true. Reach a
-specific entry with `get_journal(id)` using an id surfaced by an invoice, bill,
+specific entry with `get_journals(id)` using an id surfaced by an invoice, bill,
 or payment. Test account-level activity through `get_balances` +
 `list_chart_of_accounts`.
 
@@ -121,7 +125,7 @@ or payment. Test account-level activity through `get_balances` +
    completeness & cutoff, consistency. Each check names the accounts, the read
    tool that surfaces it, the GAAP principle, and the correcting entry.
 4. **Corroborate.** For anything that looks off, drill to the specific
-   `get_journal(id)` and read its lines before writing it up — never report a
+   `get_journals(id)` and read its lines before writing it up — never report a
    misstatement you haven't traced to an entry. An anomaly you can't reproduce
    is a question, not a finding.
 5. **Report.** Write it up as audit findings (format below).
@@ -139,8 +143,9 @@ Every finding earns its place by being specific and actionable. Include:
   disclosure) and, where it sharpens the point, the codification it maps to
   (e.g. ASC 606 revenue, ASC 326 expected credit losses, ASU 2023-08 crypto fair
   value, ASC 360 depreciation).
-- **Evidence** — the exact numbers and the tool calls / journal ids you ran, in
-  minor units and in currency, so a human can reproduce it.
+- **Evidence** — the exact numbers and the tool calls / journal ids you ran, so
+  a human can reproduce it. Every amount is in currency; quote the raw count
+  only alongside it and labelled, as `$11,769.00 (1176900 minor units)`.
 - **Impact** — what's over/understated and by how much, and on which statement.
 - **Recommendation** — the correcting entry as a balanced debit/credit, and
   which money-loop skill should post it. You recommend; you don't post.

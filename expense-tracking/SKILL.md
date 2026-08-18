@@ -5,12 +5,35 @@ description: >
   party→contract→obligation spine, record receipts or bills, pay AP, draw down
   startup credits (AWS Activate, OpenAI, etc.). Triggers: track expenses, process
   receipts, log bill, accounts payable, book AWS/GitHub invoice, vendor credit,
-  categorize spend. Posts double-entry journals (expense/COGS + cash or AP). Not
-  for P&L analysis (financial-analyst), customer invoices (invoicing), or connect
-  (setup-economico). Assumes Economico is connected and the agent can search email.
+  categorize spend. Already-charged corporate-card receipts use record_receipt
+  with paid_by_corporate_card (historical, no new transfer), never trade AP.
+  Posts double-entry journals (expense/COGS + cash, card payable, or AP). Not for
+  P&L analysis (financial-analyst), customer invoices (invoicing), or connect
+  (setup-economico). Assumes Economico is connected and can search email.
 ---
 
 # Expense Tracking (Ramp-style AP, with a books-grade vendor spine)
+
+## Non-negotiable routing
+
+- **Source says paid / charged / auto-charged → `record_receipt`.** This records
+  history and initiates no external payment. A request such as “don't pay
+  anything today” blocks `pay_bill` and new transfers; it never changes an
+  already-paid charge into AP. Complete this route in order: deduplicate, build
+  the full spine, identify how it was funded, call `record_receipt`, then verify
+  `get_bills` shows one `receipt` in `paid`. For a company credit-card charge,
+  pass `paid_by_corporate_card=true`: it credits `2190 Credit Card Payable` and
+  creates no cash payment row. For company cash/debit, list financial accounts
+  and pass the real `financial_account_id`. For a personal card, pass
+  `paid_by_party_id`. Never fabricate a cash account for a credit card, and never
+  substitute `receive_bill`, `create_journal`, or trade AP for the receipt.
+  `record_receipt` records the historical charge; it is not a new transfer and
+  does not conflict with “don't pay anything today.” The task is incomplete
+  until the paid receipt exists.
+- **Source says owed / unpaid → `receive_bill` + `approve_bill`.** Leave it in AP
+  and call `pay_bill` only when the user asks to initiate payment.
+- **Both routes require the full spine.** Use an active vendor contract and an
+  `obligation_id` on every line before recording.
 
 Most expense trackers just OCR a receipt and dump a number into a category. We do
 something stronger: for every vendor that bills us we build a **party → contract →
@@ -23,6 +46,9 @@ books and reconcile payments also power margin and unit-economics analysis later
 Work the loop: **find → identify the vendor → build/confirm the spine → record the
 bill → (optionally) pay**. Read before you write; confirm before anything that
 moves the books.
+
+Do not compress the spine for a small batch. A single invoice and the one real
+document left after triage still run steps 2–4.
 
 ## 1. Find the receipts (email)
 
@@ -40,7 +66,7 @@ and process that one.
 
 ## 2. Identify the vendor → ensure a vendor **party**
 
-- `list_parties` and match on name or the email domain (e.g. `aws.amazon.com`).
+- `get_parties` and match on name or the email domain (e.g. `aws.amazon.com`).
 - No match → `create_party(name, url)` with the vendor's website so its DID
   derives (`did:web:<host>`). One party per real-world vendor; don't duplicate.
 
@@ -49,7 +75,7 @@ and process that one.
 A vendor contract groups the vendor's obligations and records the terms you're
 agreeing to.
 
-- `list_contracts(party_id)` — reuse an existing **active** vendor contract if one
+- `get_contracts(party_id)` — reuse an existing **active** vendor contract if one
   exists.
 - Otherwise `create_contract(party_id, role="vendor", currency, msa_url?,
   order_form_url?, services_scope?, term_length?, payment_terms?)`:
@@ -103,7 +129,8 @@ accountant needs the *why*, not just the question:
   lines and map each to its own code — don't lump the whole bill to one account.
 - **Which OpEx bucket** changes how burn reads — e.g. an AI-search / brand-
   visibility tool is marketing (6240), not general SaaS (6350); a dev tool is R&D
-  cloud/tools (6130), not G&A.
+  cloud/tools (6130), not G&A. Source hosting, CI/CD, and developer seat plans
+  are `6130`; AI/LLM tools are `6140`; generic business software is `6350`.
 - **Company cash vs founder-paid** changes the balance sheet (see §5).
 
 The invoice usually bills by *resource*, not by *purpose* (which machine, not
@@ -113,16 +140,27 @@ maps itself.
 
 ## 5. Record it — receipt (already paid) or bill (owed)
 
-Route by whether the money has already left the account:
+Route by whether the vendor has already been paid:
 
 - **Already paid** — the thing in the inbox is a *paid* receipt (a card
   auto-charge, a Stripe/processor receipt). Use **`record_receipt(party_id,
   amount, currency, lines[], contract_id?, issue_date?, external_id?,
-  document_url?, financial_account_id?, memo?)`** — one step, no approval, no AP:
-  it posts Dr expense/COGS / Cr cash and lands `paid`. This is the default for
-  "process my receipts". `financial_account_id` names which registry cash account
-  it was paid from (omit for the currency's default). `external_id` carries the
-  vendor's receipt number.
+  document_url?, financial_account_id?, paid_by_corporate_card?,
+  paid_by_party_id?, memo?)`** — one step, no approval, no trade AP. It posts Dr
+  expense/COGS and lands `paid`. This is the default for "process my receipts".
+  Choose exactly one funding path:
+  - company credit card → `paid_by_corporate_card=true`, Cr `2190 Credit Card
+    Payable`, no cash payment row;
+  - company cash/debit → look the account up with `get_financial_accounts` and
+    pass the real `financial_account_id`, Cr cash. If the list is empty, create
+    the account first;
+  - personal card/account → pass `paid_by_party_id`, Cr `2135 Due to Related
+    Parties`.
+  `external_id` carries the vendor's receipt number. Do not invent a cash account
+  when the source says credit card.
+  Money that arrived or left **before you know which bill it belongs to** is
+  unapplied cash (`record_unapplied_cash`) — do not use `record_receipt` for
+  that; `record_receipt` is the already-paid vendor expense document.
 - **Owed, will pay later** — a net-30 vendor invoice with an open payable. Use
   the bill path below (`receive_bill` → `approve_bill` → `pay_bill`).
 
@@ -157,9 +195,9 @@ obligation_id?}`.
   `1.0 → 1_000_000` (10 hours → `10_000_000`). `amount` must equal the sum of the
   lines.
 - Tie each line to its obligation via `obligation_id` so it posts to that
-  obligation's account code + SKU. A line with no obligation falls back to the
-  default COGS account (5900) — fine for a one-off, but prefer obligations for
-  anything recurring.
+  obligation's account code + SKU. A line with no obligation silently falls back
+  to the default COGS account (5900); treat that as a missing-spine error, not a
+  shortcut. Create a `one_off` obligation for a genuine one-off charge.
 - Put the source invoice/receipt number in `memo` for the audit trail.
 
 Then **confirm with the user** and `approve_bill(id)` — that posts the journal
@@ -169,11 +207,10 @@ make sure you're not double-recording a receipt you already booked (see
 
 ## 6. Pay (only when asked)
 
-When a payment actually clears, `pay_bill(id, amount, currency, idempotency_key)`
+When a payment actually clears, `pay_bill(id, amount, currency, financial_account_id, idempotency_key)`
 posts Dr accounts payable / Cr cash. This **moves money** — confirm first, and
 note the payment refuses to overdraw the source cash account.
-`pay_bill` also takes an optional `financial_account_id` to pick the source cash
-account (omit for the currency's default).
+`financial_account_id` is required: look it up with `get_financial_accounts`.
 
 **Cheapest / fastest route + the processor fee.** If the vendor's payment
 instructions are on file (see below), `quote_payment_routes(direction="out",
@@ -187,14 +224,12 @@ wire/ACH fees). Registering rails, routing, and the fee model in depth is the
 
 ### Save the vendor's payment instructions
 
-To pay a vendor outside Flow you need where to send it. Store their bank/wallet
+To pay a vendor you need where to send it. Store their bank/wallet
 details as a **party-owned** endpoint so routing can use them:
 `add_payment_endpoint(party_id, uri, label?, methods[])` — `uri` is an RFC 8905
 `payto://` (IBAN/ACH) or a CAIP-10 address; the methods carry the vendor's
 receiving capability (rail, asset, `eta_seconds`) — leave the fee fields empty
-(their fees are theirs). For a vendor paid via Flow, capture their `agent_did` +
-settlement address from the first transfer and that endpoint alone suffices. See
-**`payment-rails`** for the full model.
+(their fees are theirs). See **`payment-rails`** for the full model.
 
 ## 7. Vendor credits (startup programs)
 
@@ -213,7 +248,7 @@ of overstating cash spend:
 
 ## Discipline
 
-- **Read before write**: `list_parties` / `list_contracts` / `list_obligations` /
+- **Read before write**: `get_parties` / `get_contracts` / `get_obligations` /
   `get_bills` before creating anything — resolve-or-create, never blind-create.
 - **Confirm before the books move**: creating parties/contracts/obligations and
   `receive_bill` (draft) are safe; `approve_bill` posts the GL and `pay_bill`
