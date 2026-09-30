@@ -1,0 +1,241 @@
+{
+  "name": "Vendor receipt already paid from the bank",
+  "description": "An AI inference provider auto-debited the bank for last month's API usage. The expense (5220 AI and model inference, cost of revenue) and its settlement are one recorded occurrence: the payable opens and closes in the same statement, so nothing appears in AP aging.",
+  "setupAt": "2026-08-01T00:00:00Z",
+  "recordedAt": "2026-09-10T00:00:00Z",
+  "steps": [
+    {
+      "key": "receipt",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "RnJvbTogYmlsbGluZ0BhbnRocm9waWMuY29tClN1YmplY3Q6IFlvdXIgcmVjZWlwdCBmcm9tIEFudGhyb3BpYywgUEJDICMyMjMxLTAwOTgKQW1vdW50IHBhaWQgJDEsMTg0LjUyIG9uIDIwMjYtMDktMDEgYnkgQUNIIGRlYml0LgpDbGF1ZGUgQVBJIHVzYWdlLCAyMDI2LTA4LTAxIHRvIDIwMjYtMDgtMzEu",
+        "externalId": "email:anthropic:2231-0098"
+      }
+    },
+    {
+      "key": "vendor",
+      "command": "parties.create",
+      "input": {
+        "partyId": "ven_anthropic",
+        "name": "Anthropic",
+        "iri": "https://www.anthropic.com",
+        "categories": [
+          "vendor"
+        ]
+      }
+    },
+    {
+      "key": "bank",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "bank_main",
+        "name": "Operating bank",
+        "currency": "USD",
+        "kind": "checking"
+      }
+    },
+    {
+      "key": "def-accept",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Accept vendor commercial terms",
+          "trigger": {
+            "type": "transition",
+            "from": [
+              "draft"
+            ],
+            "to": "active"
+          }
+        }
+      }
+    },
+    {
+      "key": "def-paid-usage",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Model inference usage, paid at charge",
+          "trigger": {
+            "type": "recorded"
+          },
+          "repeatable": true,
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "bank": {
+              "type": "text"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "accrue_expense",
+              "ledger": "money",
+              "amount": "fact:amount",
+              "expenseAccount": 5220,
+              "expenseFunction": "cost_of_revenue"
+            },
+            {
+              "pattern": "pay",
+              "ledger": "money",
+              "amount": "fact:amount",
+              "financialAccountFact": "bank"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "vendor-template",
+      "command": "templates.create",
+      "input": {
+        "definition": {
+          "name": "Anthropic API (vendor terms)",
+          "parties": [
+            "vendor"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "activities": [
+            {
+              "key": "accept",
+              "activityDocumentId": {
+                "$ref": "def-accept.documentId"
+              },
+              "partyRole": "vendor",
+              "ledgers": {}
+            },
+            {
+              "key": "usage",
+              "activityDocumentId": {
+                "$ref": "def-paid-usage.documentId"
+              },
+              "partyRole": "vendor",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "contract",
+      "command": "contracts.create",
+      "input": {
+        "templateDocumentId": {
+          "$ref": "vendor-template.documentId"
+        },
+        "parties": {
+          "vendor": "ven_anthropic"
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "receipt.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "accept",
+      "command": "contracts.record",
+      "at": "2026-08-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "accept",
+        "occurrenceKey": "accept",
+        "sourceFactId": "anthropic:account:terms",
+        "effectiveAt": "2026-08-01T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "other",
+              "ref": "https://www.anthropic.com/legal/commercial-terms"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "usage-aug",
+      "command": "contracts.record",
+      "at": "2026-09-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "usage",
+        "occurrenceKey": "2231-0098",
+        "sourceFactId": "anthropic:receipt:2231-0098",
+        "effectiveAt": "2026-09-01T00:00:00Z",
+        "facts": {
+          "amount": "118452",
+          "bank": "bank_main"
+        },
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "receipt.documentId"
+              }
+            }
+          ],
+          "payment": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "receipt.documentId"
+              }
+            }
+          ]
+        }
+      },
+      "sourceDocumentId": {
+        "$ref": "receipt.documentId"
+      }
+    },
+    {
+      "key": "nothing-payable",
+      "report": true,
+      "input": {
+        "kind": "balance_sheet",
+        "currency": "USD",
+        "as_of": "2026-09-02"
+      },
+      "expect": {
+        "assets": {
+          "total": "-118452"
+        },
+        "liabilities": {
+          "total": "0"
+        }
+      }
+    }
+  ]
+}

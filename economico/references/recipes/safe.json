@@ -1,0 +1,248 @@
+{
+  "name": "SAFE held as financing until conversion",
+  "description": "A $100,000 SAFE is recorded as a financing liability (2240), not equity and not shares. Conversion at a priced round is a separate evidenced activity (convert_liability plus allocate).",
+  "recordedAt": "2026-01-02T00:00:00Z",
+  "setupAt": "2025-01-01T00:00:00Z",
+  "steps": [
+    {
+      "key": "source",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "U0FGRSAocmVwbGFjZSB3aXRoIHRoZSBzaWduZWQgZG9jdW1lbnQpLg==",
+        "externalId": "safe"
+      }
+    },
+    {
+      "key": "party-investor",
+      "command": "parties.create",
+      "input": {
+        "partyId": "investor",
+        "name": "Investor"
+      }
+    },
+    {
+      "key": "bank",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "operating",
+        "name": "Operating account",
+        "currency": "USD"
+      }
+    },
+    {
+      "key": "definition-accept",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Accept documented terms",
+          "trigger": {
+            "type": "transition",
+            "from": [
+              "draft"
+            ],
+            "to": "active"
+          }
+        }
+      }
+    },
+    {
+      "key": "definition-fund",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "SAFE purchase amount received",
+          "trigger": {
+            "type": "recorded"
+          },
+          "terms": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "10000000"
+            }
+          },
+          "facts": {
+            "bank": {
+              "type": "text"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "fund_liability",
+              "ledger": "money",
+              "amount": "term:amount",
+              "financialAccountFact": "bank"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "template",
+      "command": "templates.create",
+      "input": {
+        "definition": {
+          "name": "SAFE",
+          "parties": [
+            "investor"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "activities": [
+            {
+              "key": "accept",
+              "activityDocumentId": {
+                "$ref": "definition-accept.documentId"
+              },
+              "partyRole": "investor",
+              "ledgers": {}
+            },
+            {
+              "key": "fund",
+              "activityDocumentId": {
+                "$ref": "definition-fund.documentId"
+              },
+              "partyRole": "investor",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "contract",
+      "command": "contracts.create",
+      "input": {
+        "templateDocumentId": {
+          "$ref": "template.documentId"
+        },
+        "parties": {
+          "investor": "investor"
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "source.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "accept",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "accept",
+        "occurrenceKey": "accept",
+        "sourceFactId": "accept",
+        "effectiveAt": "2025-03-01T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:accept"
+            }
+          ],
+          "payment": [
+            {
+              "kind": "other",
+              "ref": "synthetic:bank-receipt:accept"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "fund",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "fund",
+        "occurrenceKey": "fund",
+        "sourceFactId": "fund",
+        "effectiveAt": "2025-03-01T00:00:00Z",
+        "facts": {
+          "bank": "operating"
+        },
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:fund"
+            }
+          ],
+          "payment": [
+            {
+              "kind": "other",
+              "ref": "synthetic:bank-receipt:fund"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "safe-is-not-equity",
+      "report": true,
+      "input": {
+        "kind": "balance_sheet",
+        "currency": "USD"
+      },
+      "expect": {
+        "liabilities": {
+          "total": "10000000",
+          "lines": [
+            {
+              "account_code": 2240,
+              "balance": "10000000"
+            }
+          ]
+        },
+        "equity": {
+          "total": "0"
+        }
+      }
+    }
+  ]
+}

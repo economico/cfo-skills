@@ -1,0 +1,446 @@
+{
+  "name": "Customer on an annual plan paid upfront",
+  "description": "$4,800 billed and collected once for a year of service. The whole year sits in deferred revenue (2150) and is recognized $400 per completed month; MRR is $400 from the start even though cash arrived in one payment.",
+  "setupAt": "2026-01-01T00:00:00Z",
+  "recordedAt": "2026-04-01T00:00:00Z",
+  "steps": [
+    {
+      "key": "order-form",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "R2xvYmV4IC0gVGVhbSBhbm51YWwgb3JkZXIgZm9ybQpQbGFuOiBUZWFtIGFubnVhbCwgJDQsODAwLjAwIHBlciB5ZWFyLCBpbnZvaWNlZCB1cGZyb250LCBuZXQgMTUuClRlcm06IDIwMjYtMDEtMDEgdG8gMjAyNy0wMS0wMS4gU2lnbmVkIGJ5IGJvdGggcGFydGllcyAyMDI1LTEyLTIwLg==",
+        "externalId": "globex:order-form:2026"
+      }
+    },
+    {
+      "key": "customer",
+      "command": "parties.create",
+      "input": {
+        "partyId": "cus_globex",
+        "name": "Globex Corp",
+        "categories": [
+          "customer"
+        ]
+      }
+    },
+    {
+      "key": "bank",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "bank_main",
+        "name": "Operating bank",
+        "currency": "USD",
+        "kind": "checking"
+      }
+    },
+    {
+      "key": "def-accept",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Accept signed order form",
+          "trigger": {
+            "type": "transition",
+            "from": [
+              "draft"
+            ],
+            "to": "active"
+          }
+        }
+      }
+    },
+    {
+      "key": "def-bill",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Invoice the year upfront",
+          "trigger": {
+            "type": "scheduled"
+          },
+          "repeatable": true,
+          "terms": {
+            "price": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "480000"
+            },
+            "start": {
+              "type": "date"
+            },
+            "end": {
+              "type": "date"
+            }
+          },
+          "facts": {},
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "bill",
+              "ledger": "money",
+              "amount": "term:price"
+            }
+          ],
+          "schedule": {
+            "startTerm": "start",
+            "endTerm": "end",
+            "everyMonths": 12,
+            "timing": "start"
+          }
+        }
+      }
+    },
+    {
+      "key": "def-service",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Completed month of Team service",
+          "trigger": {
+            "type": "scheduled"
+          },
+          "repeatable": true,
+          "product": "team",
+          "terms": {
+            "monthly": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "40000"
+            },
+            "start": {
+              "type": "date"
+            },
+            "end": {
+              "type": "date"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "recognize",
+              "ledger": "money",
+              "amount": "term:monthly",
+              "accountingKey": "bill",
+              "category": "subscription"
+            }
+          ],
+          "schedule": {
+            "startTerm": "start",
+            "endTerm": "end",
+            "everyMonths": 1,
+            "timing": "end",
+            "serviceEvidence": "elapsed_time"
+          },
+          "recurringValue": {
+            "amount": "term:monthly",
+            "interval": "monthly",
+            "ledger": "money",
+            "startTerm": "start",
+            "endTerm": "end"
+          }
+        }
+      }
+    },
+    {
+      "key": "def-receipt",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Customer payment received",
+          "trigger": {
+            "type": "recorded"
+          },
+          "repeatable": true,
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "bank": {
+              "type": "text"
+            },
+            "billed": {
+              "type": "text"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "collect",
+              "ledger": "money",
+              "amount": "fact:amount",
+              "accountingKey": "bill",
+              "financialAccountFact": "bank",
+              "claimFact": "billed"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "plan-team-annual",
+      "command": "templates.create",
+      "input": {
+        "definition": {
+          "name": "Team annual plan",
+          "plan": "on_sale",
+          "parties": [
+            "customer"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "activities": [
+            {
+              "key": "accept",
+              "activityDocumentId": {
+                "$ref": "def-accept.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {}
+            },
+            {
+              "key": "bill",
+              "activityDocumentId": {
+                "$ref": "def-bill.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "service",
+              "activityDocumentId": {
+                "$ref": "def-service.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "receipt",
+              "activityDocumentId": {
+                "$ref": "def-receipt.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "contract",
+      "command": "contracts.create",
+      "input": {
+        "templateDocumentId": {
+          "$ref": "plan-team-annual.documentId"
+        },
+        "parties": {
+          "customer": "cus_globex"
+        },
+        "terms": {
+          "bill": {
+            "start": "2026-01-01",
+            "end": "2027-01-01"
+          },
+          "service": {
+            "start": "2026-01-01",
+            "end": "2027-01-01"
+          }
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "order-form.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "accept",
+      "command": "contracts.record",
+      "at": "2026-01-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "accept",
+        "occurrenceKey": "accept",
+        "sourceFactId": "globex:order-form:2026:signed",
+        "effectiveAt": "2026-01-01T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "order-form.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "bill-year",
+      "command": "contracts.record",
+      "at": "2026-01-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "bill",
+        "occurrenceKey": "schedule:2026-01-01:2027-01-01",
+        "sourceFactId": "globex:invoice:2026-001",
+        "effectiveAt": "2026-01-01T00:00:00Z",
+        "facts": {},
+        "evidence": {}
+      }
+    },
+    {
+      "key": "paid",
+      "command": "contracts.record",
+      "at": "2026-01-12T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "receipt",
+        "occurrenceKey": "globex:wire:2026-01-12",
+        "sourceFactId": "globex:wire:2026-01-12",
+        "effectiveAt": "2026-01-12T00:00:00Z",
+        "facts": {
+          "amount": "480000",
+          "bank": "bank_main",
+          "billed": "schedule:2026-01-01:2027-01-01"
+        },
+        "evidence": {
+          "payment": [
+            {
+              "kind": "other",
+              "ref": "bank:statement:2026-01:line-4"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "service-jan",
+      "command": "contracts.record",
+      "at": "2026-01-31T23:59:59.999Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "service",
+        "occurrenceKey": "schedule:2026-01-01:2026-02-01",
+        "sourceFactId": "globex:service:2026-01",
+        "effectiveAt": "2026-01-31T23:59:59.999Z",
+        "facts": {},
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "elapsed:2026-01-01:2026-02-01"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "service-feb",
+      "command": "contracts.record",
+      "at": "2026-02-28T23:59:59.999Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "service",
+        "occurrenceKey": "schedule:2026-02-01:2026-03-01",
+        "sourceFactId": "globex:service:2026-02",
+        "effectiveAt": "2026-02-28T23:59:59.999Z",
+        "facts": {},
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "elapsed:2026-02-01:2026-03-01"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "after-february",
+      "report": true,
+      "input": {
+        "kind": "balance_sheet",
+        "currency": "USD",
+        "as_of": "2026-03-01"
+      },
+      "expect": {
+        "assets": {
+          "total": "480000"
+        },
+        "liabilities": {
+          "total": "400000"
+        },
+        "equity": {
+          "total": "80000"
+        }
+      }
+    },
+    {
+      "key": "february-mrr",
+      "report": true,
+      "input": {
+        "kind": "saas_metrics",
+        "year": 2026,
+        "month": 2
+      },
+      "expect": {
+        "mrr": {
+          "minor_units": "40000"
+        }
+      }
+    }
+  ]
+}

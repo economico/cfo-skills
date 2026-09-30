@@ -1,111 +1,37 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "cfo-skills",
   "owner": {
     "name": "Economico",
     "email": "support@economi.co"
   },
   "metadata": {
-    "description": "Agent skills for CFO tasks \u2014 pricing, expense tracking, invoicing & billing, forecasting, and reporting \u2014 built to run against Economico's MCP ledger",
-    "version": "0.1.0"
+    "description": "Agent skills for running a founder-run company's books on Economico, the double-entry ledger your own agent operates",
+    "version": "1.0.0"
   },
   "plugins": [
     {
-      "name": "setup-economico",
-      "description": "Connect and authenticate Economico (the agent-native ledger the other cfo-skills run against) via MCP or the @economico/cli, including unattended confidential clients",
+      "name": "economico",
+      "description": "Set up Economico and model your business in it from your code, Stripe and email, then keep the books: customers, invoices, payments, vendor bills, receipts and investor updates",
+      "version": "1.0.0",
+      "author": {
+        "name": "Economico",
+        "email": "support@economi.co"
+      },
+      "homepage": "https://economi.co",
+      "repository": "https://github.com/economico/cfo-skills",
+      "license": "MIT",
+      "category": "productivity",
       "source": "./",
       "strict": false,
       "skills": [
-        "./setup-economico"
-      ]
-    },
-    {
-      "name": "company-setup",
-      "description": "Guided first-run setup once Economico is connected: fill the legal-entity profile, register named bank/wallet accounts, and stand up the cap table (share classes, founder issuance, early SAFEs), then hand off to pricing, creating-contracts, and expense-tracking for the rest.",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./company-setup"
-      ]
-    },
-    {
-      "name": "payment-rails",
-      "description": "Model how money moves in and out of a business in Economico and pick the cheapest or fastest route. Register the identifiers that reach each account (RFC 8905 payto, CAIP-10) with priced in/out methods, account-level card collection, and counterparty payment instructions; rank routes with quote_payment_routes; post route fees to the ledger.",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./payment-rails"
-      ]
-    },
-    {
-      "name": "financial-analyst",
-      "description": "Read Economico's ledger and turn it into financial analysis \u2014 reports plus ratios, trends, aging, concentration, burn, and runway, drilling into the journal when the reports don't say enough. Read-only.",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./financial-analyst"
-      ]
-    },
-    {
-      "name": "expense-tracking",
-      "description": "Ramp-style accounts payable: find vendor receipts/invoices in connected email and record them as bills, first building each vendor's party \u2192 contract \u2192 obligation spine so every line maps to the right chart-of-accounts code and feeds unit economics.",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./expense-tracking"
-      ]
-    },
-    {
-      "name": "pricing",
-      "description": "Create a customer-facing pricing.md and map the model into Economico contracts, obligations, revenue accounts, and platform-fee previews.",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./pricing"
-      ]
-    },
-    {
-      "name": "creating-contracts",
-      "description": "Create order forms, choose standard terms, and set up customer contracts plus billable obligations before invoicing.",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./creating-contracts"
-      ]
-    },
-    {
-      "name": "invoicing",
-      "description": "Create, send, void, and reconcile customer invoices, preferring active contracts and obligation-linked invoice lines.",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./invoicing"
-      ]
-    },
-    {
-      "name": "investor-reporting",
-      "description": "Produce read-only investor updates and board metrics from Economico: MRR, ARR, ACV, NDR, burn, runway, default-alive, margin, concentration, and model KPIs.",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./investor-reporting"
-      ]
-    },
-    {
-      "name": "cpa",
-      "description": "Audit Economico's books for correctness and US GAAP conformance \u2014 tie out the statements and surface misstatements, misclassifications, missing accruals, and control gaps as ranked findings with evidence and the correcting entry. Read-only.",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./cpa"
-      ]
-    },
-    {
-      "name": "forecasting",
-      "description": "Project Economico's future state \u2014 cash, runway, MRR/ARR, and committed inflows/outflows \u2014 by running what-ifs and forward-dated draft entries inside disposable planning scenarios, so reports show base + scenario and the real ledger stays untouched.",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./forecasting"
+        "./economico",
+        "./add-customer",
+        "./investor-update",
+        "./record-payment",
+        "./record-receipts",
+        "./record-vendor-invoice",
+        "./send-invoice"
       ]
     }
   ]

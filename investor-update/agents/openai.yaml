@@ -1,0 +1,5 @@
+interface:
+  display_name: "Investor update"
+  short_description: "Draft this month's investor update from the books in Economico."
+policy:
+  allow_implicit_invocation: false

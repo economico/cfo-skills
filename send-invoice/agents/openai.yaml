@@ -1,0 +1,5 @@
+interface:
+  display_name: "Send invoice"
+  short_description: "Bill a customer in Economico and hand the founder the invoice to send."
+policy:
+  allow_implicit_invocation: false

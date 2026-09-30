@@ -1,0 +1,5 @@
+interface:
+  display_name: "Record vendor invoice"
+  short_description: "Record a bill or invoice a vendor sent the company, with the invoice as evidence."
+policy:
+  allow_implicit_invocation: false

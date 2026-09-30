@@ -1,0 +1,5 @@
+interface:
+  display_name: "Record receipts"
+  short_description: "Find vendor receipts and bills in the founder's email and record them in Economico."
+policy:
+  allow_implicit_invocation: false

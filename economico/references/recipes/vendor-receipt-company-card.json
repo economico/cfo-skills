@@ -1,0 +1,330 @@
+{
+  "name": "Vendor receipt already charged to the company card",
+  "description": "A SaaS tool's email receipt says the company card was charged. Nothing is owed to the vendor: the expense (5320 AI and developer tools, research and development) credits the card liability 2190 for that registered card, and the card statement payment later clears the card from the bank.",
+  "setupAt": "2026-05-01T00:00:00Z",
+  "recordedAt": "2026-07-01T00:00:00Z",
+  "steps": [
+    {
+      "key": "receipt",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "RnJvbTogbm9yZXBseUBnaXRodWIuY29tClN1YmplY3Q6IFtHaXRIdWJdIFBheW1lbnQgUmVjZWlwdCBmb3IgYWNtZS1sYWJzCldlIGNoYXJnZWQgJDMyLjAwIHRvIHlvdXIgVmlzYSBlbmRpbmcgNDI0MiBvbiAyMDI2LTA1LTMxLgpHaXRIdWIgVGVhbSwgOCBzZWF0cyB4ICQ0LjAwLCAyMDI2LTA1LTMxIHRvIDIwMjYtMDYtMzAuClJlY2VpcHQgI0dILTg4MjMx",
+        "externalId": "email:github:GH-88231"
+      }
+    },
+    {
+      "key": "vendor",
+      "command": "parties.create",
+      "input": {
+        "partyId": "ven_github",
+        "name": "GitHub",
+        "iri": "https://github.com",
+        "categories": [
+          "vendor"
+        ]
+      }
+    },
+    {
+      "key": "bank",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "bank_main",
+        "name": "Operating bank",
+        "currency": "USD",
+        "kind": "checking"
+      }
+    },
+    {
+      "key": "card",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "card_visa_4242",
+        "name": "Company Visa 4242",
+        "currency": "USD",
+        "glAccountCode": 2190,
+        "kind": "card"
+      }
+    },
+    {
+      "key": "def-accept",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Accept vendor terms of service",
+          "trigger": {
+            "type": "transition",
+            "from": [
+              "draft"
+            ],
+            "to": "active"
+          }
+        }
+      }
+    },
+    {
+      "key": "def-charge",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Subscription charged to the company card",
+          "trigger": {
+            "type": "recorded"
+          },
+          "repeatable": true,
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "card": {
+              "type": "text"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "card_expense",
+              "ledger": "money",
+              "amount": "fact:amount",
+              "expenseAccount": 5320,
+              "expenseFunction": "research_and_development",
+              "cardFinancialAccountFact": "card"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "def-pay-card",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Card statement paid from the bank",
+          "trigger": {
+            "type": "recorded"
+          },
+          "repeatable": true,
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "bank": {
+              "type": "text"
+            },
+            "card": {
+              "type": "text"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "pay_card",
+              "ledger": "money",
+              "amount": "fact:amount",
+              "accountingKey": "charge",
+              "financialAccountFact": "bank",
+              "cardFinancialAccountFact": "card"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "vendor-template",
+      "command": "templates.create",
+      "input": {
+        "definition": {
+          "name": "GitHub Team (vendor terms)",
+          "parties": [
+            "vendor"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "activities": [
+            {
+              "key": "accept",
+              "activityDocumentId": {
+                "$ref": "def-accept.documentId"
+              },
+              "partyRole": "vendor",
+              "ledgers": {}
+            },
+            {
+              "key": "charge",
+              "activityDocumentId": {
+                "$ref": "def-charge.documentId"
+              },
+              "partyRole": "vendor",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "pay-card",
+              "activityDocumentId": {
+                "$ref": "def-pay-card.documentId"
+              },
+              "partyRole": "vendor",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "contract",
+      "command": "contracts.create",
+      "input": {
+        "templateDocumentId": {
+          "$ref": "vendor-template.documentId"
+        },
+        "parties": {
+          "vendor": "ven_github"
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "receipt.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "accept",
+      "command": "contracts.record",
+      "at": "2026-05-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "accept",
+        "occurrenceKey": "accept",
+        "sourceFactId": "github:account:terms",
+        "effectiveAt": "2026-05-01T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "other",
+              "ref": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "charge-may",
+      "command": "contracts.record",
+      "at": "2026-05-31T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "charge",
+        "occurrenceKey": "GH-88231",
+        "sourceFactId": "github:receipt:GH-88231",
+        "effectiveAt": "2026-05-31T00:00:00Z",
+        "facts": {
+          "amount": "3200",
+          "card": "card_visa_4242"
+        },
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "receipt.documentId"
+              }
+            }
+          ]
+        }
+      },
+      "sourceDocumentId": {
+        "$ref": "receipt.documentId"
+      }
+    },
+    {
+      "key": "card-owed",
+      "report": true,
+      "input": {
+        "kind": "balance_sheet",
+        "currency": "USD",
+        "as_of": "2026-06-01"
+      },
+      "expect": {
+        "liabilities": {
+          "total": "3200"
+        }
+      }
+    },
+    {
+      "key": "card-paid",
+      "command": "contracts.record",
+      "at": "2026-06-15T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "pay-card",
+        "occurrenceKey": "visa-4242:statement:2026-06",
+        "sourceFactId": "visa-4242:statement:2026-06:payment",
+        "effectiveAt": "2026-06-15T00:00:00Z",
+        "facts": {
+          "amount": "3200",
+          "bank": "bank_main",
+          "card": "card_visa_4242"
+        },
+        "evidence": {
+          "payment": [
+            {
+              "kind": "other",
+              "ref": "bank:statement:2026-06:line-9"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "may-expense",
+      "report": true,
+      "input": {
+        "kind": "income_statement",
+        "currency": "USD",
+        "from": "2026-05-01",
+        "until": "2026-06-01"
+      },
+      "expect": {
+        "net_income": "-3200"
+      }
+    }
+  ]
+}
