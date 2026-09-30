@@ -1,0 +1,5 @@
+interface:
+  display_name: "Add customer"
+  short_description: "Add a customer to Economico with a contract on one of the company's plans."
+policy:
+  allow_implicit_invocation: false

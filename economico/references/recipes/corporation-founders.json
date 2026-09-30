@@ -1,0 +1,909 @@
+{
+  "name": "Corporation: founders buy restricted common stock with a one-year cliff and monthly vesting",
+  "description": "A Delaware corporation authorizes 10,000,000 common shares in its charter. Two founders each sign a restricted stock purchase agreement: 4,800,000 and 2,400,000 shares at $0.001 a share, par $0.0001, so par goes to share capital (3100) and the rest to paid-in capital (3110). Each founder is their own party and their own contract, from one template with the shares as terms, and every contract binds the charter's share ledger (read from the charter contract's state) so they draw on one authorization. Shares are outstanding and unvested from the purchase; 25% vests at the one-year cliff and 1/48 monthly after it, each a scheduled activity whose service evidence is elapsed time, so the ledger's timer records it on its date (without it every tranche plans as contingent and never vests). Tax elections (83(b)) and options are not modeled.",
+  "recordedAt": "2026-03-01T00:00:00Z",
+  "setupAt": "2025-01-01T00:00:00Z",
+  "steps": [
+    {
+      "key": "charter",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "Q2VydGlmaWNhdGUgb2YgSW5jb3Jwb3JhdGlvbiBvZiBBY21lIFJvYm90aWNzLCBJbmMuIChEZWxhd2FyZSksIGZpbGVkIDIwMjUtMDEtMDEuIEF1dGhvcml6ZWQgY2FwaXRhbDogMTAsMDAwLDAwMCBzaGFyZXMgb2YgY29tbW9uIHN0b2NrLCBwYXIgdmFsdWUgJDAuMDAwMSBwZXIgc2hhcmUu",
+        "externalId": "email:atlas:certificate-of-incorporation"
+      }
+    },
+    {
+      "key": "spa-ada",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "UmVzdHJpY3RlZCBTdG9jayBQdXJjaGFzZSBBZ3JlZW1lbnQsIEFjbWUgUm9ib3RpY3MsIEluYy4gYW5kIEFkYSBGb3VuZGVyLCBzaWduZWQgMjAyNS0wMS0wMTogNCw4MDAsMDAwIHNoYXJlcyBvZiBjb21tb24gc3RvY2sgYXQgJDAuMDAxIHBlciBzaGFyZSAoJDQsODAwLjAwKS4gVmVzdGluZyBjb21tZW5jZW1lbnQgMjAyNS0wMS0wMTsgMjUlIG9uIHRoZSBmaXJzdCBhbm5pdmVyc2FyeSwgdGhlbiAxLzQ4IG9mIHRoZSBzaGFyZXMgbW9udGhseSBmb3IgMzYgbW9udGhzLiBVbnZlc3RlZCBzaGFyZXMgc3ViamVjdCB0byByZXB1cmNoYXNlIGF0IGNvc3Qu",
+        "externalId": "docusign:spa-ada"
+      }
+    },
+    {
+      "key": "spa-bo",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "UmVzdHJpY3RlZCBTdG9jayBQdXJjaGFzZSBBZ3JlZW1lbnQsIEFjbWUgUm9ib3RpY3MsIEluYy4gYW5kIEJvIEZvdW5kZXIsIHNpZ25lZCAyMDI1LTAxLTAxOiAyLDQwMCwwMDAgc2hhcmVzIG9mIGNvbW1vbiBzdG9jayBhdCAkMC4wMDEgcGVyIHNoYXJlICgkMiw0MDAuMDApLiBWZXN0aW5nIGNvbW1lbmNlbWVudCAyMDI1LTAxLTAxOyAyNSUgb24gdGhlIGZpcnN0IGFubml2ZXJzYXJ5LCB0aGVuIDEvNDggb2YgdGhlIHNoYXJlcyBtb250aGx5IGZvciAzNiBtb250aHMuIFVudmVzdGVkIHNoYXJlcyBzdWJqZWN0IHRvIHJlcHVyY2hhc2UgYXQgY29zdC4=",
+        "externalId": "docusign:spa-bo"
+      }
+    },
+    {
+      "key": "founder-ada",
+      "command": "parties.create",
+      "input": {
+        "partyId": "founder_ada",
+        "name": "Ada Founder",
+        "categories": [
+          "founder"
+        ]
+      }
+    },
+    {
+      "key": "founder-bo",
+      "command": "parties.create",
+      "input": {
+        "partyId": "founder_bo",
+        "name": "Bo Founder",
+        "categories": [
+          "founder"
+        ]
+      }
+    },
+    {
+      "key": "bank",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "bank_mercury_checking",
+        "name": "Mercury checking",
+        "currency": "USD",
+        "kind": "checking"
+      }
+    },
+    {
+      "key": "def-accept",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Accept signed agreement",
+          "trigger": {
+            "type": "transition",
+            "from": [
+              "draft"
+            ],
+            "to": "active"
+          }
+        }
+      }
+    },
+    {
+      "key": "def-authorize",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Authorize common stock in the charter",
+          "trigger": {
+            "type": "recorded"
+          },
+          "terms": {
+            "shares": {
+              "type": "integer",
+              "unit": "common",
+              "default": "10000000"
+            }
+          },
+          "facts": {},
+          "ledgers": {
+            "shares": {
+              "classification": "ownership",
+              "unitKind": "share",
+              "unitCode": "common",
+              "decimals": 0,
+              "accountTemplate": "issued_instrument"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "authorize",
+              "ledger": "shares",
+              "amount": "term:shares"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "def-buy",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Founder buys restricted common stock: par to share capital, the rest to paid-in capital",
+          "trigger": {
+            "type": "recorded"
+          },
+          "terms": {
+            "shares": {
+              "type": "integer",
+              "unit": "common",
+              "default": "4800000"
+            },
+            "par": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "48000"
+            },
+            "premium": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "432000"
+            }
+          },
+          "facts": {
+            "bank": {
+              "type": "text"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            },
+            "shares": {
+              "classification": "ownership",
+              "unitKind": "share",
+              "unitCode": "common",
+              "decimals": 0,
+              "accountTemplate": "issued_instrument"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "fund_capital",
+              "ledger": "money",
+              "amount": "term:par",
+              "financialAccountFact": "bank"
+            },
+            {
+              "pattern": "fund_premium",
+              "ledger": "money",
+              "amount": "term:premium",
+              "financialAccountFact": "bank"
+            },
+            {
+              "pattern": "grant_restricted",
+              "ledger": "shares",
+              "amount": "term:shares"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "def-cliff",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "One-year cliff: 25% vests on the first anniversary",
+          "trigger": {
+            "type": "scheduled"
+          },
+          "repeatable": true,
+          "terms": {
+            "shares": {
+              "type": "integer",
+              "unit": "common",
+              "default": "1200000"
+            },
+            "start": {
+              "type": "date",
+              "default": "2025-01-01"
+            },
+            "end": {
+              "type": "date",
+              "default": "2026-01-01"
+            }
+          },
+          "facts": {},
+          "ledgers": {
+            "shares": {
+              "classification": "ownership",
+              "unitKind": "share",
+              "unitCode": "common",
+              "decimals": 0,
+              "accountTemplate": "issued_instrument"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "vest",
+              "ledger": "shares",
+              "amount": "term:shares",
+              "accountingKey": "buy"
+            }
+          ],
+          "schedule": {
+            "startTerm": "start",
+            "endTerm": "end",
+            "everyMonths": 12,
+            "timing": "end",
+            "serviceEvidence": "elapsed_time"
+          }
+        }
+      }
+    },
+    {
+      "key": "def-monthly",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Monthly vesting after the cliff: 1/48 a month for 36 months",
+          "trigger": {
+            "type": "scheduled"
+          },
+          "repeatable": true,
+          "terms": {
+            "shares": {
+              "type": "integer",
+              "unit": "common",
+              "default": "100000"
+            },
+            "start": {
+              "type": "date",
+              "default": "2026-01-01"
+            },
+            "end": {
+              "type": "date",
+              "default": "2029-01-01"
+            }
+          },
+          "facts": {},
+          "ledgers": {
+            "shares": {
+              "classification": "ownership",
+              "unitKind": "share",
+              "unitCode": "common",
+              "decimals": 0,
+              "accountTemplate": "issued_instrument"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "vest",
+              "ledger": "shares",
+              "amount": "term:shares",
+              "accountingKey": "buy"
+            }
+          ],
+          "schedule": {
+            "startTerm": "start",
+            "endTerm": "end",
+            "everyMonths": 1,
+            "timing": "end",
+            "serviceEvidence": "elapsed_time"
+          }
+        }
+      }
+    },
+    {
+      "key": "charter-template",
+      "command": "templates.create",
+      "input": {
+        "definition": {
+          "name": "Certificate of incorporation: authorized common stock",
+          "parties": [
+            "incorporator"
+          ],
+          "ledgers": {
+            "shares": {
+              "classification": "ownership",
+              "unitKind": "share",
+              "unitCode": "common",
+              "decimals": 0,
+              "accountTemplate": "issued_instrument"
+            }
+          },
+          "activities": [
+            {
+              "key": "accept",
+              "activityDocumentId": {
+                "$ref": "def-accept.documentId"
+              },
+              "partyRole": "incorporator",
+              "ledgers": {}
+            },
+            {
+              "key": "authorize",
+              "activityDocumentId": {
+                "$ref": "def-authorize.documentId"
+              },
+              "partyRole": "incorporator",
+              "ledgers": {
+                "shares": "shares"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "spa-template",
+      "command": "templates.create",
+      "input": {
+        "definition": {
+          "name": "Founder restricted stock purchase agreement",
+          "parties": [
+            "founder"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            },
+            "shares": {
+              "classification": "ownership",
+              "unitKind": "share",
+              "unitCode": "common",
+              "decimals": 0,
+              "accountTemplate": "issued_instrument"
+            }
+          },
+          "activities": [
+            {
+              "key": "accept",
+              "activityDocumentId": {
+                "$ref": "def-accept.documentId"
+              },
+              "partyRole": "founder",
+              "ledgers": {}
+            },
+            {
+              "key": "buy",
+              "activityDocumentId": {
+                "$ref": "def-buy.documentId"
+              },
+              "partyRole": "founder",
+              "ledgers": {
+                "money": "money",
+                "shares": "shares"
+              }
+            },
+            {
+              "key": "cliff",
+              "activityDocumentId": {
+                "$ref": "def-cliff.documentId"
+              },
+              "partyRole": "founder",
+              "ledgers": {
+                "shares": "shares"
+              }
+            },
+            {
+              "key": "monthly",
+              "activityDocumentId": {
+                "$ref": "def-monthly.documentId"
+              },
+              "partyRole": "founder",
+              "ledgers": {
+                "shares": "shares"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "charter-contract",
+      "command": "contracts.create",
+      "input": {
+        "templateDocumentId": {
+          "$ref": "charter-template.documentId"
+        },
+        "parties": {
+          "incorporator": "founder_ada"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "charter.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "charter-accept",
+      "command": "contracts.record",
+      "at": "2025-01-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "charter-contract.id"
+        },
+        "activityKey": "accept",
+        "occurrenceKey": "accept",
+        "sourceFactId": "charter:filed",
+        "effectiveAt": "2025-01-01T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "charter.documentId"
+              }
+            }
+          ]
+        }
+      },
+      "sourceDocumentId": {
+        "$ref": "charter.documentId"
+      }
+    },
+    {
+      "key": "authorize",
+      "command": "contracts.record",
+      "at": "2025-01-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "charter-contract.id"
+        },
+        "activityKey": "authorize",
+        "occurrenceKey": "authorize",
+        "sourceFactId": "charter:authorized-common",
+        "effectiveAt": "2025-01-01T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "charter.documentId"
+              }
+            }
+          ]
+        }
+      },
+      "sourceDocumentId": {
+        "$ref": "charter.documentId"
+      }
+    },
+    {
+      "key": "charter-state",
+      "read": "subjects",
+      "input": {
+        "action": "get",
+        "type": "contract",
+        "id": {
+          "$ref": "charter-contract.id"
+        }
+      },
+      "expect": {
+        "status": "active"
+      }
+    },
+    {
+      "key": "spa-ada-contract",
+      "command": "contracts.create",
+      "input": {
+        "templateDocumentId": {
+          "$ref": "spa-template.documentId"
+        },
+        "parties": {
+          "founder": "founder_ada"
+        },
+        "terms": {
+          "buy": {
+            "shares": "4800000",
+            "par": "48000",
+            "premium": "432000"
+          },
+          "cliff": {
+            "shares": "1200000"
+          },
+          "monthly": {
+            "shares": "100000"
+          }
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840",
+          "shares": {
+            "$ref": "charter-state.state.ledgers.shares"
+          }
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "spa-ada.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "spa-ada-accept",
+      "command": "contracts.record",
+      "at": "2025-01-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "spa-ada-contract.id"
+        },
+        "activityKey": "accept",
+        "occurrenceKey": "accept",
+        "sourceFactId": "docusign:spa-ada:signed",
+        "effectiveAt": "2025-01-01T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "spa-ada.documentId"
+              }
+            }
+          ]
+        }
+      },
+      "sourceDocumentId": {
+        "$ref": "spa-ada.documentId"
+      }
+    },
+    {
+      "key": "spa-ada-buy",
+      "command": "contracts.record",
+      "at": "2025-01-06T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "spa-ada-contract.id"
+        },
+        "activityKey": "buy",
+        "occurrenceKey": "buy",
+        "sourceFactId": "mercury:incoming:spa-ada",
+        "effectiveAt": "2025-01-06T00:00:00Z",
+        "facts": {
+          "bank": "bank_mercury_checking"
+        },
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "spa-ada.documentId"
+              }
+            }
+          ],
+          "payment": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "spa-ada.documentId"
+              }
+            }
+          ]
+        }
+      },
+      "sourceDocumentId": {
+        "$ref": "spa-ada.documentId"
+      }
+    },
+    {
+      "key": "spa-bo-contract",
+      "command": "contracts.create",
+      "input": {
+        "templateDocumentId": {
+          "$ref": "spa-template.documentId"
+        },
+        "parties": {
+          "founder": "founder_bo"
+        },
+        "terms": {
+          "buy": {
+            "shares": "2400000",
+            "par": "24000",
+            "premium": "216000"
+          },
+          "cliff": {
+            "shares": "600000"
+          },
+          "monthly": {
+            "shares": "50000"
+          }
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840",
+          "shares": {
+            "$ref": "charter-state.state.ledgers.shares"
+          }
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "spa-bo.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "spa-bo-accept",
+      "command": "contracts.record",
+      "at": "2025-01-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "spa-bo-contract.id"
+        },
+        "activityKey": "accept",
+        "occurrenceKey": "accept",
+        "sourceFactId": "docusign:spa-bo:signed",
+        "effectiveAt": "2025-01-01T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "spa-bo.documentId"
+              }
+            }
+          ]
+        }
+      },
+      "sourceDocumentId": {
+        "$ref": "spa-bo.documentId"
+      }
+    },
+    {
+      "key": "spa-bo-buy",
+      "command": "contracts.record",
+      "at": "2025-01-06T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "spa-bo-contract.id"
+        },
+        "activityKey": "buy",
+        "occurrenceKey": "buy",
+        "sourceFactId": "mercury:incoming:spa-bo",
+        "effectiveAt": "2025-01-06T00:00:00Z",
+        "facts": {
+          "bank": "bank_mercury_checking"
+        },
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "spa-bo.documentId"
+              }
+            }
+          ],
+          "payment": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "spa-bo.documentId"
+              }
+            }
+          ]
+        }
+      },
+      "sourceDocumentId": {
+        "$ref": "spa-bo.documentId"
+      }
+    },
+    {
+      "key": "vesting-plan",
+      "report": true,
+      "input": {
+        "kind": "activity_plan",
+        "contract_id": {
+          "$ref": "spa-ada-contract.id"
+        },
+        "from": "2025-12-01",
+        "through": "2026-03-01"
+      },
+      "expect": {
+        "flows": [
+          {
+            "activityKey": "cliff",
+            "periodEnd": "2026-01-01",
+            "status": "fixed"
+          },
+          {
+            "activityKey": "monthly",
+            "periodEnd": "2026-02-01",
+            "status": "fixed"
+          },
+          {
+            "activityKey": "monthly",
+            "periodEnd": "2026-03-01",
+            "status": "fixed"
+          }
+        ]
+      }
+    },
+    {
+      "key": "before-cliff",
+      "report": true,
+      "input": {
+        "kind": "cap_table",
+        "as_of": "2025-12-31"
+      },
+      "expect": {
+        "instruments": [
+          {
+            "unitCode": "common",
+            "authorized": "10000000",
+            "outstanding": "7200000",
+            "vested": "0",
+            "unvested": "7200000",
+            "holders": [
+              {
+                "partyId": "founder_ada",
+                "quantity": "4800000",
+                "vested": "0",
+                "unvested": "4800000",
+                "ownershipBasisPoints": "6667"
+              },
+              {
+                "partyId": "founder_bo",
+                "quantity": "2400000",
+                "vested": "0",
+                "unvested": "2400000",
+                "ownershipBasisPoints": "3333"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "ada-cliff",
+      "command": "contracts.record",
+      "at": "2025-12-31T23:59:59.999Z",
+      "input": {
+        "contractId": {
+          "$ref": "spa-ada-contract.id"
+        },
+        "activityKey": "cliff",
+        "occurrenceKey": "schedule:2025-01-01:2026-01-01",
+        "sourceFactId": "vesting:ada:cliff",
+        "effectiveAt": "2025-12-31T23:59:59.999Z",
+        "facts": {},
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "elapsed:2025-01-01:2026-01-01"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "ada-month-1",
+      "command": "contracts.record",
+      "at": "2026-01-31T23:59:59.999Z",
+      "input": {
+        "contractId": {
+          "$ref": "spa-ada-contract.id"
+        },
+        "activityKey": "monthly",
+        "occurrenceKey": "schedule:2026-01-01:2026-02-01",
+        "sourceFactId": "vesting:ada:2026-02",
+        "effectiveAt": "2026-01-31T23:59:59.999Z",
+        "facts": {},
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "elapsed:2026-01-01:2026-02-01"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "bo-cliff",
+      "command": "contracts.record",
+      "at": "2025-12-31T23:59:59.999Z",
+      "input": {
+        "contractId": {
+          "$ref": "spa-bo-contract.id"
+        },
+        "activityKey": "cliff",
+        "occurrenceKey": "schedule:2025-01-01:2026-01-01",
+        "sourceFactId": "vesting:bo:cliff",
+        "effectiveAt": "2025-12-31T23:59:59.999Z",
+        "facts": {},
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "elapsed:2025-01-01:2026-01-01"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "bo-month-1",
+      "command": "contracts.record",
+      "at": "2026-01-31T23:59:59.999Z",
+      "input": {
+        "contractId": {
+          "$ref": "spa-bo-contract.id"
+        },
+        "activityKey": "monthly",
+        "occurrenceKey": "schedule:2026-01-01:2026-02-01",
+        "sourceFactId": "vesting:bo:2026-02",
+        "effectiveAt": "2026-01-31T23:59:59.999Z",
+        "facts": {},
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "elapsed:2026-01-01:2026-02-01"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "after-first-month",
+      "report": true,
+      "input": {
+        "kind": "cap_table"
+      },
+      "expect": {
+        "instruments": [
+          {
+            "unitCode": "common",
+            "outstanding": "7200000",
+            "vested": "1950000",
+            "unvested": "5250000",
+            "holders": [
+              {
+                "partyId": "founder_ada",
+                "vested": "1300000",
+                "unvested": "3500000"
+              },
+              {
+                "partyId": "founder_bo",
+                "vested": "650000",
+                "unvested": "1750000"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "equity",
+      "report": true,
+      "input": {
+        "kind": "balance_sheet",
+        "currency": "USD"
+      },
+      "expect": {
+        "equity": {
+          "total": "720000",
+          "lines": [
+            {
+              "account_code": 3100,
+              "balance": "72000"
+            },
+            {
+              "account_code": 3110,
+              "balance": "648000"
+            },
+            {
+              "account_code": 3200,
+              "balance": "0"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

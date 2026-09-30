@@ -1,0 +1,320 @@
+{
+  "name": "Founder paid a business expense personally, company reimburses",
+  "description": "The founder bought the domain on a personal card. The obligation is to the founder, not the registrar, so the contract is the founder expense-reimbursement agreement: the expense posts against 2135 Due to related parties keyed by the founder, and the reimbursement clears it from the bank. The vendor stays visible through the receipt document and the activity's external reference.",
+  "setupAt": "2026-03-01T00:00:00Z",
+  "recordedAt": "2026-05-01T00:00:00Z",
+  "steps": [
+    {
+      "key": "policy",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "RXhwZW5zZSByZWltYnVyc2VtZW50IHBvbGljeQpUaGUgY29tcGFueSByZWltYnVyc2VzIGZvdW5kZXJzIGZvciBwcmUtYXBwcm92ZWQgYnVzaW5lc3MgZXhwZW5zZXMgcGFpZCBwZXJzb25hbGx5LCB3aXRoaW4gMzAgZGF5cyBvZiBhIHN1Ym1pdHRlZCByZWNlaXB0Lg==",
+        "externalId": "policy:founder-reimbursement"
+      }
+    },
+    {
+      "key": "receipt",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "RnJvbTogc3VwcG9ydEBuYW1lY2hlYXAuY29tClN1YmplY3Q6IE9yZGVyIFN1bW1hcnkgIzE4NDIzMwphY21lLmRldiBkb21haW4gcmVnaXN0cmF0aW9uLCAxIHllYXI6ICQxOC4xNiBjaGFyZ2VkIHRvIE1hc3RlcmNhcmQgZW5kaW5nIDE4ODEu",
+        "externalId": "email:namecheap:184233"
+      }
+    },
+    {
+      "key": "founder",
+      "command": "parties.create",
+      "input": {
+        "partyId": "founder_ada",
+        "name": "Ada Founder",
+        "categories": [
+          "founder"
+        ]
+      }
+    },
+    {
+      "key": "bank",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "bank_main",
+        "name": "Operating bank",
+        "currency": "USD",
+        "kind": "checking"
+      }
+    },
+    {
+      "key": "def-accept",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Adopt the reimbursement policy",
+          "trigger": {
+            "type": "transition",
+            "from": [
+              "draft"
+            ],
+            "to": "active"
+          }
+        }
+      }
+    },
+    {
+      "key": "def-software",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Founder-paid software and domains",
+          "trigger": {
+            "type": "recorded"
+          },
+          "repeatable": true,
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "related_expense",
+              "ledger": "money",
+              "amount": "fact:amount",
+              "expenseAccount": 5310,
+              "expenseFunction": "general_and_administrative"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "def-reimburse",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Reimburse the founder",
+          "trigger": {
+            "type": "recorded"
+          },
+          "repeatable": true,
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "bank": {
+              "type": "text"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "reimburse_related",
+              "ledger": "money",
+              "amount": "fact:amount",
+              "accountingKey": "software",
+              "financialAccountFact": "bank"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "reimbursement-template",
+      "command": "templates.create",
+      "input": {
+        "definition": {
+          "name": "Founder expense reimbursement",
+          "parties": [
+            "founder"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "activities": [
+            {
+              "key": "accept",
+              "activityDocumentId": {
+                "$ref": "def-accept.documentId"
+              },
+              "partyRole": "founder",
+              "ledgers": {}
+            },
+            {
+              "key": "software",
+              "activityDocumentId": {
+                "$ref": "def-software.documentId"
+              },
+              "partyRole": "founder",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "reimburse",
+              "activityDocumentId": {
+                "$ref": "def-reimburse.documentId"
+              },
+              "partyRole": "founder",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "contract",
+      "command": "contracts.create",
+      "input": {
+        "templateDocumentId": {
+          "$ref": "reimbursement-template.documentId"
+        },
+        "parties": {
+          "founder": "founder_ada"
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "policy.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "accept",
+      "command": "contracts.record",
+      "at": "2026-03-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "accept",
+        "occurrenceKey": "accept",
+        "sourceFactId": "policy:founder-reimbursement:adopted",
+        "effectiveAt": "2026-03-01T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "policy.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "domain",
+      "command": "contracts.record",
+      "at": "2026-03-04T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "software",
+        "occurrenceKey": "namecheap-184233",
+        "sourceFactId": "namecheap:order:184233",
+        "effectiveAt": "2026-03-04T00:00:00Z",
+        "facts": {
+          "amount": "1816"
+        },
+        "evidence": {
+          "payment": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "receipt.documentId"
+              }
+            }
+          ]
+        }
+      },
+      "sourceDocumentId": {
+        "$ref": "receipt.documentId"
+      }
+    },
+    {
+      "key": "owed-to-founder",
+      "report": true,
+      "input": {
+        "kind": "balance_sheet",
+        "currency": "USD",
+        "as_of": "2026-03-05"
+      },
+      "expect": {
+        "liabilities": {
+          "total": "1816"
+        }
+      }
+    },
+    {
+      "key": "reimbursed",
+      "command": "contracts.record",
+      "at": "2026-03-20T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "reimburse",
+        "occurrenceKey": "reimburse:2026-03",
+        "sourceFactId": "bank:transfer:founder_ada:2026-03-20",
+        "effectiveAt": "2026-03-20T00:00:00Z",
+        "facts": {
+          "amount": "1816",
+          "bank": "bank_main"
+        },
+        "evidence": {
+          "payment": [
+            {
+              "kind": "other",
+              "ref": "bank:statement:2026-03:line-2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "settled",
+      "report": true,
+      "input": {
+        "kind": "balance_sheet",
+        "currency": "USD",
+        "as_of": "2026-03-21"
+      },
+      "expect": {
+        "liabilities": {
+          "total": "0"
+        }
+      }
+    }
+  ]
+}

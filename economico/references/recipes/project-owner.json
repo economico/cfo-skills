@@ -1,0 +1,799 @@
+{
+  "name": "Project owned by one person or company",
+  "description": "The owner invests $5,000 and advances $10,000 repayable; a $400 expense paid personally is left in as investment; $4,000 of the advance is repaid and the owner draws $1,000. Owner's capital $4,400; due to owner $6,000; cash $10,000. At year end, year-end closes the draws into the owner's capital; the year's $400 loss stays in undistributed earnings, since a loss has no allocation pattern yet.",
+  "recordedAt": "2026-01-02T00:00:00Z",
+  "setupAt": "2025-01-01T00:00:00Z",
+  "steps": [
+    {
+      "key": "source",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "UHJvamVjdCBvd25lciBhcnJhbmdlbWVudCAocmVwbGFjZSB3aXRoIGFueSB3cml0dGVuIHRlcm1zLCBvciBhIG5vdGUgb2YgdGhlIG93bmVyJ3MgZGVjaXNpb24pLg==",
+        "externalId": "project"
+      }
+    },
+    {
+      "key": "legal-form",
+      "command": "business.change_legal_form",
+      "input": {
+        "legalEntityType": "project",
+        "reason": "Run by its owner as a project, not a registered company"
+      },
+      "sourceDocumentId": {
+        "$ref": "source.documentId"
+      }
+    },
+    {
+      "key": "party-owner",
+      "command": "parties.create",
+      "input": {
+        "partyId": "owner",
+        "name": "Owner"
+      }
+    },
+    {
+      "key": "bank",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "operating",
+        "name": "Operating account",
+        "currency": "USD"
+      }
+    },
+    {
+      "key": "definition-accept",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Accept documented terms",
+          "trigger": {
+            "type": "transition",
+            "from": [
+              "draft"
+            ],
+            "to": "active"
+          }
+        }
+      }
+    },
+    {
+      "key": "definition-invest",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Owner's investment",
+          "trigger": {
+            "type": "recorded"
+          },
+          "terms": {},
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "bank": {
+              "type": "text"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "fund_capital",
+              "ledger": "money",
+              "amount": "fact:amount",
+              "financialAccountFact": "bank"
+            }
+          ],
+          "repeatable": true
+        }
+      }
+    },
+    {
+      "key": "definition-advance",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Owner's repayable advance (use instead of investment when the owner lends)",
+          "trigger": {
+            "type": "recorded"
+          },
+          "terms": {},
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "bank": {
+              "type": "text"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "advance_related",
+              "ledger": "money",
+              "amount": "fact:amount",
+              "financialAccountFact": "bank"
+            }
+          ],
+          "repeatable": true
+        }
+      }
+    },
+    {
+      "key": "definition-repay",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Repay the owner's advance",
+          "trigger": {
+            "type": "recorded"
+          },
+          "terms": {},
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "bank": {
+              "type": "text"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "reimburse_related",
+              "ledger": "money",
+              "amount": "fact:amount",
+              "financialAccountFact": "bank",
+              "accountingKey": "advance"
+            }
+          ],
+          "repeatable": true
+        }
+      }
+    },
+    {
+      "key": "definition-owner-paid",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Expense the owner paid personally",
+          "trigger": {
+            "type": "recorded"
+          },
+          "terms": {},
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "related_expense",
+              "ledger": "money",
+              "amount": "fact:amount"
+            }
+          ],
+          "repeatable": true
+        }
+      }
+    },
+    {
+      "key": "definition-leave-in",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Owner leaves a personally paid expense in as investment",
+          "trigger": {
+            "type": "recorded"
+          },
+          "terms": {},
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "contribute_related",
+              "ledger": "money",
+              "amount": "fact:amount",
+              "accountingKey": "owner-paid"
+            }
+          ],
+          "repeatable": true
+        }
+      }
+    },
+    {
+      "key": "definition-draw",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Owner's draw",
+          "trigger": {
+            "type": "recorded"
+          },
+          "terms": {},
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "bank": {
+              "type": "text"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "owner_draw",
+              "ledger": "money",
+              "amount": "fact:amount",
+              "financialAccountFact": "bank"
+            }
+          ],
+          "repeatable": true
+        }
+      }
+    },
+    {
+      "key": "definition-year-end",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Year-end: close the draws into the owner's capital",
+          "trigger": {
+            "type": "recorded"
+          },
+          "terms": {},
+          "facts": {
+            "draws": {
+              "type": "integer",
+              "unit": "USD"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "close_draws",
+              "ledger": "money",
+              "amount": "fact:draws",
+              "accountingKey": "draw"
+            }
+          ],
+          "repeatable": true
+        }
+      }
+    },
+    {
+      "key": "template",
+      "command": "templates.create",
+      "input": {
+        "definition": {
+          "name": "Project owner arrangement",
+          "parties": [
+            "owner"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "activities": [
+            {
+              "key": "accept",
+              "activityDocumentId": {
+                "$ref": "definition-accept.documentId"
+              },
+              "partyRole": "owner",
+              "ledgers": {}
+            },
+            {
+              "key": "invest",
+              "activityDocumentId": {
+                "$ref": "definition-invest.documentId"
+              },
+              "partyRole": "owner",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "advance",
+              "activityDocumentId": {
+                "$ref": "definition-advance.documentId"
+              },
+              "partyRole": "owner",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "repay",
+              "activityDocumentId": {
+                "$ref": "definition-repay.documentId"
+              },
+              "partyRole": "owner",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "owner-paid",
+              "activityDocumentId": {
+                "$ref": "definition-owner-paid.documentId"
+              },
+              "partyRole": "owner",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "leave-in",
+              "activityDocumentId": {
+                "$ref": "definition-leave-in.documentId"
+              },
+              "partyRole": "owner",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "draw",
+              "activityDocumentId": {
+                "$ref": "definition-draw.documentId"
+              },
+              "partyRole": "owner",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "year-end",
+              "activityDocumentId": {
+                "$ref": "definition-year-end.documentId"
+              },
+              "partyRole": "owner",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "contract",
+      "command": "contracts.create",
+      "input": {
+        "templateDocumentId": {
+          "$ref": "template.documentId"
+        },
+        "parties": {
+          "owner": "owner"
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "source.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "accept",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "accept",
+        "occurrenceKey": "accept",
+        "sourceFactId": "accept",
+        "effectiveAt": "2025-01-01T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:accept"
+            }
+          ],
+          "payment": [
+            {
+              "kind": "other",
+              "ref": "synthetic:bank-receipt:accept"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "invest",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "invest",
+        "occurrenceKey": "invest",
+        "sourceFactId": "invest",
+        "effectiveAt": "2025-01-01T00:00:00Z",
+        "facts": {
+          "amount": "500000",
+          "bank": "operating"
+        },
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:invest"
+            }
+          ],
+          "payment": [
+            {
+              "kind": "other",
+              "ref": "synthetic:bank-receipt:invest"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "advance",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "advance",
+        "occurrenceKey": "advance",
+        "sourceFactId": "advance",
+        "effectiveAt": "2025-01-02T00:00:00Z",
+        "facts": {
+          "amount": "1000000",
+          "bank": "operating"
+        },
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:advance"
+            }
+          ],
+          "payment": [
+            {
+              "kind": "other",
+              "ref": "synthetic:bank-receipt:advance"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "owner-paid",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "owner-paid",
+        "occurrenceKey": "owner-paid",
+        "sourceFactId": "owner-paid",
+        "effectiveAt": "2025-02-10T00:00:00Z",
+        "facts": {
+          "amount": "40000"
+        },
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:owner-paid"
+            }
+          ],
+          "payment": [
+            {
+              "kind": "other",
+              "ref": "synthetic:bank-receipt:owner-paid"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "leave-in",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "leave-in",
+        "occurrenceKey": "leave-in",
+        "sourceFactId": "leave-in",
+        "effectiveAt": "2025-02-28T00:00:00Z",
+        "facts": {
+          "amount": "40000"
+        },
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:leave-in"
+            }
+          ],
+          "payment": [
+            {
+              "kind": "other",
+              "ref": "synthetic:bank-receipt:leave-in"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "repay",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "repay",
+        "occurrenceKey": "repay",
+        "sourceFactId": "repay",
+        "effectiveAt": "2025-03-01T00:00:00Z",
+        "facts": {
+          "amount": "400000",
+          "bank": "operating"
+        },
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:repay"
+            }
+          ],
+          "payment": [
+            {
+              "kind": "other",
+              "ref": "synthetic:bank-receipt:repay"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "draw",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "draw",
+        "occurrenceKey": "draw",
+        "sourceFactId": "draw",
+        "effectiveAt": "2025-03-15T00:00:00Z",
+        "facts": {
+          "amount": "100000",
+          "bank": "operating"
+        },
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:draw"
+            }
+          ],
+          "payment": [
+            {
+              "kind": "other",
+              "ref": "synthetic:bank-receipt:draw"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "year-end",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "year-end",
+        "occurrenceKey": "year-end",
+        "sourceFactId": "year-end",
+        "effectiveAt": "2025-12-31T23:00:00Z",
+        "facts": {
+          "draws": "100000"
+        },
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:year-end"
+            }
+          ],
+          "payment": [
+            {
+              "kind": "other",
+              "ref": "synthetic:bank-receipt:year-end"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "owner-capital",
+      "report": true,
+      "input": {
+        "kind": "capital_accounts",
+        "currency": "USD"
+      },
+      "expect": {
+        "owners": [
+          {
+            "partyId": "owner",
+            "contributed": "540000",
+            "allocated": "0",
+            "distributed": "100000",
+            "balance": "440000"
+          }
+        ],
+        "undistributedEarnings": "-40000",
+        "totalEquity": "400000"
+      }
+    },
+    {
+      "key": "due-to-owner",
+      "report": true,
+      "input": {
+        "kind": "balance_sheet",
+        "currency": "USD"
+      },
+      "expect": {
+        "assets": {
+          "total": "1000000"
+        },
+        "liabilities": {
+          "total": "600000"
+        },
+        "equity": {
+          "total": "400000"
+        }
+      }
+    }
+  ]
+}
