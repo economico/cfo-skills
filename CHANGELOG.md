@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.3.0 (2026-10-01)
+
+- Every first session now records who owns the company. The skill reads the legal form and
+  looks for the formation documents (certificate, stock purchase agreements, operating
+  agreement, a Stripe Atlas confirmation), sets the legal form if it is missing, and records
+  each owner from the recipe for that form, so `cap_table` lists the holders even when there is
+  a single owner who has put in no cash yet. When no document gives the quantities, it asks
+  instead of leaving the cap table empty.
+- New procedure for a single-member LLC: one operating agreement, membership units authorized
+  and allocated to the member, and the member's capital from cash, contributed founder-paid
+  costs or draws.
+- The brief gains an Ownership table, and the final message shows the cap table beside the
+  statements: a table with one row per holder (units, ownership, vested) and each SAFE as an
+  amount that converts later, never as shares.
+- Accounts now carry their issuer's look: the skill researches each bank's, card issuer's or
+  token's brand color and logo and sets them with `brandColor` and `logoDocumentId` (a logo is
+  received as an `image` document, PNG, JPEG or WebP). The workspace draws a card in its
+  issuer's color, a bank account under its bank's band, a wallet in its token's color.
+- Payment details: when your mail gives an account's receiving details, the skill registers
+  them as a payto link (ACH or IBAN) or, for a wallet, a CAIP-10 address with its token, so you
+  can copy them from the account's page. It never guesses a number and never records a card
+  number.
+
 ## 1.2.0 (2026-09-30)
 
 - Before anything is recorded, the proposed business model is previewed with the new

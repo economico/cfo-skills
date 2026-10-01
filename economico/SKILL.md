@@ -54,8 +54,8 @@ the open questions, so resume from it ([a later session](references/first-sessio
 | 2 | Understand the machine | The mental model you will map the business onto | [how Economico works](references/how-economico-works.md) |
 | 3 | Discover | Notes on product, pricing, customers, costs, entity | [codebase](references/explore-codebase.md), [Stripe](references/explore-stripe.md), [email](references/explore-email.md) |
 | 4 | Propose | `business-model.md` in the founder's repo, always previewed with `model_preview`, then reviewed by them, its price book and costs shown in the review message | [first session](references/first-session.md), [brief template](references/business-model-brief.md) |
-| 5 | Record | Parties, accounts, templates, contracts, activity, evidence; the contracts shown as one table | [products](references/modeling-products.md), [customers](references/customer-contracts.md), [vendors](references/vendor-contracts.md), [evidence](references/evidence.md), [accounts](references/accounts.md), [company](references/company-setup.md) |
-| 6 | Prove | A final message that opens with the price book, the contracts, the income statement and the balance sheet as views, then a short summary | [verify](references/verify.md) |
+| 5 | Record | The legal form and the owners (the cap table, even for a sole owner), parties, accounts, templates, contracts, activity, evidence; the contracts shown as one table | [products](references/modeling-products.md), [customers](references/customer-contracts.md), [vendors](references/vendor-contracts.md), [evidence](references/evidence.md), [accounts](references/accounts.md), [company](references/company-setup.md) |
+| 6 | Prove | A final message that opens with the price book, the contracts, the income statement, the balance sheet and the cap table as views, then a short summary | [verify](references/verify.md) |
 
 [first-session.md](references/first-session.md) is the playbook that strings these together,
 including where to stop for the founder and what to do when access is missing. At the end of

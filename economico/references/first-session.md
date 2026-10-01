@@ -43,6 +43,14 @@ that already has contracts is extended, never duplicated. Every business starts 
 already in place: its own service agreement with Economico (Economico is a vendor party). Leave it
 as it is; it is not part of the model you are building.
 
+Also establish **who owns the company**: the legal form and jurisdiction from `business get`, and
+the owners with their shares, units or percentage from the formation documents (certificate of
+incorporation or formation, stock purchase agreements, the operating agreement, a formation
+service's confirmation such as Stripe Atlas) found in the repository or the mailbox. Read
+`cap_table` too: a business whose cap table already lists its holders is extended, never
+duplicated. Every company has owners, so the cap table is part of the model even when no money
+came from them.
+
 ## 2. Reconcile
 
 The sources disagree more often than not. Resolve each disagreement explicitly:
@@ -99,18 +107,26 @@ list them in the final message.
 Each step reads back before the next. Use `model:<step>:<id>` idempotency keys, so a rerun of the
 session replays instead of duplicating.
 
-1. **Company basics.** Profile description and URL; financial accounts for each real bank account,
-   card and wallet. See [company setup](company-setup.md).
-2. **Parties.** One per customer, vendor and founder. Stable ids from the source: `cus_<stripe id
+1. **Company basics.** Profile description and URL; the legal form and jurisdiction when
+   `business get` does not have them yet, evidenced by the formation document; financial accounts
+   for each real bank account, card and wallet. See [company setup](company-setup.md).
+2. **Ownership.** One contract per holder from the recipe `business get` names under
+   `ownership` (its recipes), so `cap_table` lists every owner with their units and
+   `capital_accounts` (LLCs, partnerships, projects) names each one. A sole owner is recorded too:
+   a single-member LLC's member holds all the units. Record it even when the owners put in no
+   cash yet. The quantities come from a document or the founder, never from cash received; when
+   neither says, ask in the scope round and list the gap. See
+   [company setup](company-setup.md#ownership).
+3. **Parties.** One per customer, vendor and founder. Stable ids from the source: `cus_<stripe id
    or slug>`, `ven_<domain slug>`, `founder_<name>`.
-3. **Source documents.** Every order form, terms page, receipt and invoice you will cite, with
+4. **Source documents.** Every order form, terms page, receipt and invoice you will cite, with
    `externalId` set to its source identity. See [evidence](evidence.md).
-4. **Activities and templates.** One template per plan in the price book, one per vendor. Start
+5. **Activities and templates.** One template per plan in the price book, one per vendor. Start
    from [the recipes](modeling-products.md#recipes). Preview each template's money effects with
    `activity_effects` before binding a customer to it.
-5. **Contracts.** One per customer subscription or agreement, one per vendor relationship. Record
+6. **Contracts.** One per customer subscription or agreement, one per vendor relationship. Record
    acceptance on each, with the source that evidences it.
-6. **History** (if in scope). Per contract, in date order: invoices, payments, receipts, usage.
+7. **History** (if in scope). Per contract, in date order: invoices, payments, receipts, usage.
    Scheduled periods record themselves daily; record past ones only if the founder wants the
    history on the books today.
 
@@ -124,17 +140,18 @@ effect because service evidence is missing: ask for the evidence or record the g
 ## 5. Prove
 
 Run the reads in [verify](verify.md) and put the results in the brief under "What the books say
-now": MRR and ARR, revenue and expenses to date, open receivables and payables, cash per account.
+now": MRR and ARR, revenue and expenses to date, open receivables and payables, cash per account,
+and who owns the company (`cap_table`, and `capital_accounts` for an LLC, partnership or project).
 Every figure should be explainable from rows in the brief. A figure you cannot explain is a
-modeling error; find it before you finish. Show the income statement, the balance sheet and the
-aging to the founder as you read them, inline or as text ([show the founder](show-the-founder.md)).
+modeling error; find it before you finish. Show the income statement, the balance sheet, the
+aging and the cap table to the founder as you read them, inline or as text ([show the founder](show-the-founder.md)).
 
 ## Finish
 
 Open the final message with the views: the price book table (plan, price, billing), the contracts
 table (party, customer or vendor, template,
-status), the income statement (its flow line and its table), the balance sheet table and the open
-items from the aging, inline or as text
+status), the income statement (its flow line and its table), the balance sheet table, the cap table as a table (one row per holder) and
+the open items from the aging, inline or as text
 ([show the founder](show-the-founder.md)). A sentence that quotes the totals is not the view.
 Before the final message, update "For the next session" in the brief: the standing answers,
 the rules the founder set, and the questions still waiting for them

@@ -11,7 +11,8 @@ Read only. Never send, archive, label or delete mail unless the founder asks.
 ## Searches that find the money
 
 Start broad, then narrow by vendor. In Gmail syntax, the first three find money, the fourth
-finds plans and terms, and the fifth finds signed agreements; paste each line as it is:
+finds plans and terms, the fifth finds signed agreements, and the sixth finds who owns the
+company (formation and share documents); paste each line as it is:
 
 ```text
 subject:(receipt OR invoice OR "payment received" OR "your bill" OR "order confirmation") newer_than:1y
@@ -19,6 +20,7 @@ from:(billing OR invoice OR invoices OR receipts OR no-reply OR noreply OR payme
 "amount paid" OR "total due" OR "amount due" OR "charged to" newer_than:1y
 subject:(welcome OR "you're subscribed" OR "subscription confirmed" OR "trial")
 subject:(signed OR "completed:" OR docusign OR "pandadoc" OR "order form")
+"is now incorporated" OR "certificate of formation" OR "certificate of incorporation" OR "operating agreement" OR "stock purchase" OR "83(b)" OR "SAFE"
 ```
 
 Then one search per vendor found in the code (`from:(@render.com)`, `from:(@anthropic.com)`) to
