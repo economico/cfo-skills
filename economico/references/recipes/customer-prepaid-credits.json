@@ -1,0 +1,508 @@
+{
+  "name": "Customer buys a prepaid credit pack that usage draws down",
+  "description": "A customer pays $500 at purchase for 5,000 API credits valid for 12 months (a paid allowance lot, 10 cents a credit). The whole $500 is deferred revenue (2150) on the day it is paid; each metered draw recognizes its value as usage revenue (4120). After 1,200 credits in March and 800 in April, $200 is earned, $300 is still owed as unused credits, 3,000 credits remain, and MRR stays 0: credits are not a subscription.",
+  "setupAt": "2026-03-01T00:00:00Z",
+  "recordedAt": "2026-05-01T00:00:00Z",
+  "steps": [
+    {
+      "key": "order",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "VG9rZW5taW50IC0gQnVpbGRlciBjcmVkaXQgcGFjayBvcmRlcgpDdXN0b21lcjogUGFyY2Vsd2lzZSBJbmMuCjUsMDAwIEFQSSBjcmVkaXRzIGZvciAkNTAwLjAwLCBwYWlkIGJ5IGNhcmQgYXQgcHVyY2hhc2UsIHZhbGlkIDEyIG1vbnRocyBmcm9tIDIwMjYtMDMtMDEuCkVhY2ggc3VjY2Vzc2Z1bCBBUEkgY2FsbCBjb25zdW1lcyAxIGNyZWRpdDsgdW51c2VkIGNyZWRpdHMgYXJlIG5vdCByZWZ1bmRhYmxlLg==",
+        "externalId": "parcelwise:credit-pack:2026-03"
+      }
+    },
+    {
+      "key": "customer",
+      "command": "parties.create",
+      "input": {
+        "partyId": "cus_parcelwise",
+        "name": "Parcelwise Inc.",
+        "categories": [
+          "customer"
+        ]
+      }
+    },
+    {
+      "key": "bank",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "bank_main",
+        "name": "Operating bank",
+        "currency": "USD",
+        "kind": "checking"
+      }
+    },
+    {
+      "key": "def-accept",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Accept credit pack order",
+          "trigger": {
+            "type": "transition",
+            "from": [
+              "draft"
+            ],
+            "to": "active"
+          }
+        }
+      }
+    },
+    {
+      "key": "def-purchase",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Credit pack purchased and paid",
+          "trigger": {
+            "type": "recorded"
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            },
+            "credits": {
+              "classification": "operational",
+              "unitKind": "usage",
+              "unitCode": "credit",
+              "decimals": 0,
+              "accountTemplate": "capacity"
+            },
+            "credit-value": {
+              "classification": "contractual",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "capacity"
+            }
+          },
+          "terms": {
+            "quantity": {
+              "type": "integer",
+              "unit": "credit",
+              "default": "5000"
+            },
+            "value": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "50000"
+            },
+            "expires": {
+              "type": "instant",
+              "default": "2027-03-01T00:00:00Z"
+            }
+          },
+          "facts": {
+            "bank": {
+              "type": "text"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "grant",
+              "ledger": "credits",
+              "amount": "term:quantity"
+            },
+            {
+              "pattern": "grant",
+              "ledger": "credit-value",
+              "amount": "term:value"
+            },
+            {
+              "pattern": "bill",
+              "ledger": "money",
+              "amount": "term:value"
+            },
+            {
+              "pattern": "collect",
+              "ledger": "money",
+              "amount": "term:value",
+              "financialAccountFact": "bank"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "def-usage",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "API calls drawn from the credit pack",
+          "trigger": {
+            "type": "recorded"
+          },
+          "repeatable": true,
+          "product": "api-credits",
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            },
+            "credits": {
+              "classification": "operational",
+              "unitKind": "usage",
+              "unitCode": "credit",
+              "decimals": 0,
+              "accountTemplate": "capacity"
+            },
+            "credit-value": {
+              "classification": "contractual",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "capacity"
+            }
+          },
+          "terms": {
+            "rate": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "10"
+            },
+            "unit": {
+              "type": "integer",
+              "unit": "credit",
+              "default": "1"
+            }
+          },
+          "facts": {
+            "quantity": {
+              "type": "integer",
+              "unit": "credit"
+            }
+          },
+          "calculations": [
+            {
+              "key": "draw",
+              "type": "allowance",
+              "quantity": "fact:quantity",
+              "link": "pack"
+            }
+          ],
+          "effects": [
+            {
+              "pattern": "consume",
+              "ledger": "credits",
+              "amount": "calc:draw:covered"
+            },
+            {
+              "pattern": "consume",
+              "ledger": "credit-value",
+              "amount": "calc:draw:value"
+            },
+            {
+              "pattern": "recognize",
+              "ledger": "money",
+              "amount": "calc:draw:value",
+              "accountingKey": "purchase",
+              "category": "usage"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "credit-pack",
+      "command": "templates.create",
+      "input": {
+        "definition": {
+          "name": "Builder credit pack",
+          "plan": "on_sale",
+          "parties": [
+            "customer"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            },
+            "credits": {
+              "classification": "operational",
+              "unitKind": "usage",
+              "unitCode": "credit",
+              "decimals": 0,
+              "accountTemplate": "capacity"
+            },
+            "credit-value": {
+              "classification": "contractual",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "capacity"
+            }
+          },
+          "activities": [
+            {
+              "key": "accept",
+              "activityDocumentId": {
+                "$ref": "def-accept.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {}
+            },
+            {
+              "key": "purchase",
+              "activityDocumentId": {
+                "$ref": "def-purchase.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money",
+                "credits": "credits",
+                "credit-value": "credit-value"
+              }
+            },
+            {
+              "key": "usage",
+              "activityDocumentId": {
+                "$ref": "def-usage.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money",
+                "credits": "credits",
+                "credit-value": "credit-value"
+              }
+            }
+          ],
+          "allowances": [
+            {
+              "key": "pack",
+              "kind": "paid",
+              "grantActivity": "purchase",
+              "consumeActivities": [
+                "usage"
+              ],
+              "capacityLedger": "credits",
+              "quantityTerm": "quantity",
+              "valueLedger": "credit-value",
+              "valueTerm": "value",
+              "expiresAtTerm": "expires"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "contract",
+      "command": "contracts.create",
+      "input": {
+        "templateDocumentId": {
+          "$ref": "credit-pack.documentId"
+        },
+        "parties": {
+          "customer": "cus_parcelwise"
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "order.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "accept",
+      "command": "contracts.record",
+      "at": "2026-03-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "accept",
+        "occurrenceKey": "accept",
+        "sourceFactId": "parcelwise:credit-pack:2026-03:accepted",
+        "effectiveAt": "2026-03-01T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "order.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "purchase",
+      "command": "contracts.record",
+      "at": "2026-03-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "purchase",
+        "occurrenceKey": "credit-pack:2026-03",
+        "sourceFactId": "stripe:ch_parcelwise_2026_03_01",
+        "effectiveAt": "2026-03-01T00:00:00Z",
+        "facts": {
+          "bank": "bank_main"
+        },
+        "evidence": {
+          "payment": [
+            {
+              "kind": "other",
+              "ref": "stripe:payout:2026-03-03:line-1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "usage-march",
+      "command": "contracts.record",
+      "at": "2026-03-31T23:59:59.999Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "usage",
+        "occurrenceKey": "usage:2026-03",
+        "sourceFactId": "metering:parcelwise:2026-03",
+        "effectiveAt": "2026-03-31T23:59:59.999Z",
+        "facts": {
+          "quantity": "1200"
+        },
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "metering:parcelwise:2026-03"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "usage-april",
+      "command": "contracts.record",
+      "at": "2026-04-30T23:59:59.999Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "usage",
+        "occurrenceKey": "usage:2026-04",
+        "sourceFactId": "metering:parcelwise:2026-04",
+        "effectiveAt": "2026-04-30T23:59:59.999Z",
+        "facts": {
+          "quantity": "800"
+        },
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "metering:parcelwise:2026-04"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "credits-left",
+      "report": true,
+      "input": {
+        "kind": "activity_capacity",
+        "contract_id": {
+          "$ref": "contract.id"
+        },
+        "as_of": "2026-05-01"
+      },
+      "expect": {
+        "lots": [
+          {
+            "key": "pack",
+            "unitCode": "credit",
+            "free": "3000",
+            "consumed": "2000",
+            "value": {
+              "unitCode": "USD",
+              "granted": "50000",
+              "released": "20000",
+              "remaining": "30000"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "earned",
+      "report": true,
+      "input": {
+        "kind": "income_statement",
+        "currency": "USD",
+        "until": "2026-05-01T00:00:00Z"
+      },
+      "expect": {
+        "revenue": {
+          "lines": [
+            {
+              "account_code": 4120,
+              "balance": "20000"
+            }
+          ],
+          "total": "20000"
+        },
+        "net_income": "20000"
+      }
+    },
+    {
+      "key": "after-april",
+      "report": true,
+      "input": {
+        "kind": "balance_sheet",
+        "currency": "USD",
+        "as_of": "2026-05-01"
+      },
+      "expect": {
+        "assets": {
+          "total": "50000"
+        },
+        "liabilities": {
+          "lines": [
+            {
+              "account_code": 2150,
+              "balance": "30000"
+            }
+          ],
+          "total": "30000"
+        },
+        "equity": {
+          "total": "20000"
+        }
+      }
+    },
+    {
+      "key": "not-mrr",
+      "report": true,
+      "input": {
+        "kind": "saas_metrics",
+        "year": 2026,
+        "month": 4
+      },
+      "expect": {
+        "mrr": {
+          "minor_units": "0"
+        }
+      }
+    }
+  ]
+}

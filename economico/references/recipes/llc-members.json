@@ -30,7 +30,10 @@
       "command": "parties.create",
       "input": {
         "partyId": "member-a",
-        "name": "Member A"
+        "name": "Member A",
+        "categories": [
+          "founder"
+        ]
       }
     },
     {
@@ -38,7 +41,10 @@
       "command": "parties.create",
       "input": {
         "partyId": "member-b",
-        "name": "Member B"
+        "name": "Member B",
+        "categories": [
+          "founder"
+        ]
       }
     },
     {
@@ -46,7 +52,10 @@
       "command": "parties.create",
       "input": {
         "partyId": "customer",
-        "name": "Customer"
+        "name": "Customer",
+        "categories": [
+          "customer"
+        ]
       }
     },
     {

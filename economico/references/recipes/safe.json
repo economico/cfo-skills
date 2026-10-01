@@ -18,7 +18,10 @@
       "command": "parties.create",
       "input": {
         "partyId": "investor",
-        "name": "Investor"
+        "name": "Investor",
+        "categories": [
+          "investor"
+        ]
       }
     },
     {

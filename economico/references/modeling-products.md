@@ -14,9 +14,9 @@ their own start date and any negotiated terms.
 | $Y per year, paid upfront | Scheduled annual bill, monthly recognition of Y/12 | [customer-annual-prepaid](recipes/customer-annual-prepaid.json) |
 | Platform fee plus usage (per call, per GB, per token) | Fee as a subscription; usage as a recorded measurement with a `rate` calculation, earned when measured and invoiced after the period | [customer-platform-fee-plus-usage](recipes/customer-platform-fee-plus-usage.json) |
 | Usage only, tiered | The usage activity alone, with a `tiered` calculation (`graduated` or `volume`) | the usage part of the fee-plus-usage recipe |
-| $Z per seat per month | The subscription recipe with the price computed as seats × price (`rate` calculation over a `seats` term) | subscription recipe plus a seat term |
-| Included usage, then overage | An allowance on the template (`allowances`) that the usage activity consumes before billing overage | `catalog describe templates.create`; preview with `activity_effects` |
-| Prepaid credits or packs | A paid capacity lot granted on purchase, consumed by usage | `catalog describe templates.create` (allowance kind `paid`) |
+| $Z per seat per month | The subscription with the price computed as seats × price (`rate` calculation over a `seats` term); a seat change is a dated `contracts.amend` of the seat term | [customer-per-seat-subscription](recipes/customer-per-seat-subscription.json) |
+| Included usage, then overage | An `included` allowance granted by the fee activity, which the usage activity draws before billing only the overage; one grant per period, and record the measurement before the lot expires | [customer-included-usage-overage](recipes/customer-included-usage-overage.json) |
+| Prepaid credits or packs | A `paid` allowance granted and billed on purchase into deferred revenue, recognized as usage consumes it | [customer-prepaid-credits](recipes/customer-prepaid-credits.json) |
 | Minimum commitment | A `minimum` calculation with a reconciliation activity | `catalog describe activities.create` |
 | Hourly or fixed-fee services | A recorded activity with hours × rate, or a milestone amount, on `consulting` | the fee-plus-usage recipe with `consulting` as the category |
 | Free tier | No template; note it in the brief | — |
@@ -82,8 +82,13 @@ structure.
 | [customer-monthly-subscription](recipes/customer-monthly-subscription.json) | Monthly plan as a price-book template; customer contract; acceptance, bill, Stripe payment, month of service; MRR |
 | [customer-annual-prepaid](recipes/customer-annual-prepaid.json) | Annual plan paid upfront, recognized monthly |
 | [customer-platform-fee-plus-usage](recipes/customer-platform-fee-plus-usage.json) | Monthly platform fee plus metered API usage invoiced in arrears |
+| [customer-per-seat-subscription](recipes/customer-per-seat-subscription.json) | Per-seat monthly plan; a seat expansion amended from a date; MRR before and after |
+| [customer-included-usage-overage](recipes/customer-included-usage-overage.json) | Monthly fee with included calls; usage draws the allowance, only the overage is billed; MRR excludes it |
+| [customer-prepaid-credits](recipes/customer-prepaid-credits.json) | Credit pack paid upfront, deferred, recognized as credits are used |
+| [stripe-gross-net-payout](recipes/stripe-gross-net-payout.json) | Card payments at gross into the Stripe balance, Stripe's fee on 5230, the net paid out to the bank |
 | [vendor-bill-paid-from-bank](recipes/vendor-bill-paid-from-bank.json) | Vendor invoice on terms, paid later |
 | [vendor-receipt-paid-from-bank](recipes/vendor-receipt-paid-from-bank.json) | Receipt already paid by bank debit |
 | [vendor-receipt-company-card](recipes/vendor-receipt-company-card.json) | Receipt charged to the company card; card statement paid |
 | [founder-paid-expense](recipes/founder-paid-expense.json) | Founder paid personally; company reimburses |
+| [vendor-annual-prepay](recipes/vendor-annual-prepay.json) | Annual vendor plan paid upfront into prepaid expenses, released monthly |
 | [corporation-founders](recipes/corporation-founders.json) | Founders buy restricted common stock: charter authorization, one contract per founder, cliff and monthly vesting; the cap table |

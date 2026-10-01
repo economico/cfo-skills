@@ -1,6 +1,6 @@
 ---
 name: economico
-description: "Set up Economico and model a founder's business in it: connect the ledger, read the product's code, Stripe and email to learn what it sells, to whom and what it costs to run, record plans as templates, customers and vendors as contracts and receipts as evidence-backed activity, then prove the books with reports. Use when someone wants to set up or connect Economico or their books, model their business, turn Stripe or pricing into contracts, set up vendors, record receipts or invoices, or asks how Economico works."
+description: "Set up Economico and model a founder's business in it: connect the ledger, read the product's code, Stripe and email to learn what it sells, to whom and what it costs to run, record plans as templates, customers and vendors as contracts and receipts as evidence-backed activity, then prove the books with reports. Use when someone wants to set up or connect Economico or their books, model their business, pick up the books where an earlier session left off, turn Stripe or pricing into contracts, set up vendors, record receipts or invoices, or asks how Economico works."
 ---
 
 # Economico
@@ -44,14 +44,16 @@ with the access the founder gives you, and you turn what you find into reviewed 
 ## The one-session run
 
 When the founder says "set up Economico and model my business", run these phases in order.
-Each phase has a reference; read it when you reach that phase, not before.
+Each phase has a reference; read it when you reach that phase, not before. If the repository
+already has `business-model.md`, read it first: it holds the business, the standing answers and
+the open questions, so resume from it ([a later session](references/first-session.md#a-later-session)).
 
 | # | Phase | Output | Read |
 |---|---|---|---|
 | 1 | Connect and choose the business | A verified connection and a named target business | [connect](references/connect.md) |
 | 2 | Understand the machine | The mental model you will map the business onto | [how Economico works](references/how-economico-works.md) |
 | 3 | Discover | Notes on product, pricing, customers, costs, entity | [codebase](references/explore-codebase.md), [Stripe](references/explore-stripe.md), [email](references/explore-email.md) |
-| 4 | Propose | `business-model.md` in the founder's repo, reviewed by them, with its price book and costs shown in the review message | [first session](references/first-session.md), [brief template](references/business-model-brief.md) |
+| 4 | Propose | `business-model.md` in the founder's repo, always previewed with `model_preview`, then reviewed by them, its price book and costs shown in the review message | [first session](references/first-session.md), [brief template](references/business-model-brief.md) |
 | 5 | Record | Parties, accounts, templates, contracts, activity, evidence; the contracts shown as one table | [products](references/modeling-products.md), [customers](references/customer-contracts.md), [vendors](references/vendor-contracts.md), [evidence](references/evidence.md), [accounts](references/accounts.md), [company](references/company-setup.md) |
 | 6 | Prove | A final message that opens with the price book, the contracts, the income statement and the balance sheet as views, then a short summary | [verify](references/verify.md) |
 

@@ -27,7 +27,7 @@ the background reads the session afterwards, and the views are what they read. A
 
 | Phase | View | Read | Text version |
 |---|---|---|---|
-| Propose | The model before anything is recorded (in the review message; when told to proceed, at the top of the final message) | none: it is the brief | The price book and the cost table from `business-model.md`, plus the run-rate line (money in, money out, per month) |
+| Propose | The model before anything is recorded (in the review message; when told to proceed, at the top of the final message) | `reports run model_preview` with the brief's tables as `model` | The price book and the cost table from `business-model.md`, plus the run-rate line (money in, money out, per month) from the preview's `run_rate` |
 | Record | The price book as recorded | `subjects {action: "list", type: "template", plan: "on_sale"}` | One row per plan: plan, charge, price, when it bills |
 | Record | Who the business trades with | `parties {action: "list"}` | One row per party: name, customer or vendor, contact |
 | Record | The contracts as they land | `subjects {action: "list", type: "contract"}` | One row per contract: party, customer or vendor, template, status, since |
@@ -71,6 +71,11 @@ founder expects to see one.
 
 **Contracts.** Keep the Economico service agreement off the list or mark it as Economico's own;
 it is not part of the model you built.
+
+**The proposal.** In hosts that render the app, the preview draws the price book, the
+customers, the costs with their accounts, what drives each cost and the run rate under the call;
+add one line saying what to review ("check the Globex price and the vendors marked cost of
+revenue"). Everywhere else, the text version is the brief's tables with the preview's figures.
 
 ## What there is no view for yet
 

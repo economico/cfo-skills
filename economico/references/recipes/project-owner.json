@@ -29,7 +29,10 @@
       "command": "parties.create",
       "input": {
         "partyId": "owner",
-        "name": "Owner"
+        "name": "Owner",
+        "categories": [
+          "founder"
+        ]
       }
     },
     {

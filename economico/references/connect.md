@@ -58,7 +58,9 @@ changes are interactive; membership, ownership and public-access changes are bro
 ## Choosing, or creating, the business
 
 1. Call `businesses`. It lists the businesses this connection was approved for, each with its
-   slug and effective permissions.
+   slug and effective permissions. If the repository's `business-model.md` names a business
+   under "For the next session" and it is listed, that is this repository's books: use it
+   without asking.
 2. If the founder has none, the business is created in the browser during sign-in: the form asks
    for the name, where it is incorporated, the legal form, functional currency and fiscal year
    end. The CLI can prefill it: `economico login --country US` (or `SG`, `CA`, `GB`,

@@ -4,10 +4,15 @@ Write this file as `business-model.md` at the root of the founder's repository (
 ask). Keep it to what a founder reads in five minutes. Every number has a source; every judgment
 is labeled as one. Amounts in dollars, not minor units.
 
+It is also the skill's memory between sessions: the last section, "For the next session", is
+what a later session reads first so it resumes instead of asking again
+([a later session](first-session.md#a-later-session)).
+
 ```markdown
 # <Company>: how it makes and spends money
 
-_As of <date>. Built by <agent> from <sources read>. Economico business: <slug>._
+_As of <date>. Built by <agent> from <sources read>. Economico business: `<slug>` on
+<host>._
 
 ## What we sell
 
@@ -43,7 +48,9 @@ _Run rate from recorded terms, not a forecast._
 
 ## Judgments and gaps
 
-- <Each assumption that changes a number, and what would confirm it.>
+- <Each judgment that changes a number, who made it and why: "Confirmed by Ada, 2026-09-26:
+  Umbrella churned in August" or "Taken on Ada's behalf, 2026-09-26: Figma is founder-paid,
+  paid on the personal Mastercard".>
 - <Each source you could not read, and what it would add.>
 
 ## What was recorded
@@ -53,7 +60,45 @@ _Run rate from recorded terms, not a forecast._
 ## What the books say now
 
 <Headline figures from the verify step, with their as-of date and the report they came from.>
+
+## For the next session
+
+**Standing answers** (<date>): business `<slug>` on <host>; may read <this repository, Stripe,
+the mailbox>; history since <date>; records <after review | without asking again>.
+
+**Rules the founder set**
+
+- <A classification to apply the same way next time: "The Mastercard ending 1881 is Ada's
+  personal card: receipts on it are founder-paid (owed to Ada)"; "Anthropic is cost of revenue".>
+
+**Open questions**
+
+- <A decision taken on the founder's behalf and still waiting for them, or a gap only they can
+  fill, each with the option you recommend and why: "Recommended: record the Visa payoff when
+  the statement arrives, since no payment is in the mailbox yet".>
 ```
 
-Compute the run-rate rows in code from the tables above, not in your head. If there is nothing
-to put in a section, say "none found" and why.
+Take the run-rate rows from `model_preview` (below), not from your head. If there is nothing to
+put in a section, say "none found" and why.
+
+## Preview the model before recording it
+
+Once the tables are written, run `reports {action: "run", kind: "model_preview", model}` with
+them as data: `plans` (key, name, price in minor units, cadence `month`, `year`, `one_time` or
+`usage`), `customers` (name, plan key, since, price only when it differs from the list, status
+`ended` for a churned one) and `vendors` (name, what it is for, amount and cadence, the account
+and expense function from [accounts](accounts.md), and `drivers`: the product actions that make
+it cost money, from [the codebase](explore-codebase.md)). It writes nothing. It refuses a
+customer on a plan the price book does not have, an amount that is not minor units, or an account
+that is not an expense account: fix the brief, not the call. Its `run_rate` is the "Run rate
+today" table, and in hosts that render Economico's app the result draws the proposal inline, the
+view the founder reviews ([show the founder](show-the-founder.md)).
+
+## What "For the next session" holds, and what it never holds
+
+It holds what the ledger cannot say: which business these books are, the founder's standing
+answers, the rules they set, and what is still waiting for them. It never holds a secret (the
+CLI keeps credentials in the gitignored `.economico/config.json`) or a copy of what the ledger
+already knows: what was recorded is read back by its `externalId` and `sourceFactId`, never
+from a list here. Update the section at the end of every session: move an answered question into
+"Judgments and gaps" as confirmed, add the rules the founder set, and drop what no longer holds.

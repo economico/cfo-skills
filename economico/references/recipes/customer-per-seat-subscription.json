@@ -1,0 +1,638 @@
+{
+  "name": "Customer on a per-seat monthly plan, with a mid-term seat expansion",
+  "description": "A reusable 'Team' plan prices seats at $15 per seat per month, billed on the 1st and earned over the month. Both the bill and the service activity compute the month's price with a rate calculation, seats x $15, from a `seats` term the contract sets (10). July bills and earns $150 (4110 subscription revenue) and MRR is $150. A signed seat change adds 4 seats from August 1: contracts.amend sets `seats` to 14 on both activities, effective 2026-08-01, so July's bill, revenue and MRR stay as they were while August bills and earns $210 and MRR rises to $210 (ARR $2,520). No new contract and no second plan: the amendment is a new dated version of the same contract.",
+  "setupAt": "2026-07-01T00:00:00Z",
+  "recordedAt": "2026-09-01T00:00:00Z",
+  "steps": [
+    {
+      "key": "order-form",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "SGFyYm9ybGlnaHQgU3R1ZGlvIC0gVGVhbSBwbGFuIG9yZGVyIGZvcm0KUHJpY2U6ICQxNS4wMCBwZXIgc2VhdCBwZXIgbW9udGgsIGJpbGxlZCBtb250aGx5IGluIGFkdmFuY2UgZm9yIHRoZSBzZWF0cyBvbiB0aGUgYWNjb3VudCB0aGF0IG1vbnRoLgpTdGFydGluZyBzZWF0czogMTAuIFNlcnZpY2Ugc3RhcnQ6IDIwMjYtMDctMDEuIE1vbnRoIHRvIG1vbnRoLgpBY2NlcHRlZCAyMDI2LTA3LTAxIGJ5IGZpbmFuY2VAaGFyYm9ybGlnaHQuZXhhbXBsZS4=",
+        "externalId": "harborlight:order-form:team"
+      }
+    },
+    {
+      "key": "customer",
+      "command": "parties.create",
+      "input": {
+        "partyId": "cus_harborlight",
+        "name": "Harborlight Studio",
+        "categories": [
+          "customer"
+        ]
+      }
+    },
+    {
+      "key": "bank",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "bank_main",
+        "name": "Operating bank",
+        "currency": "USD",
+        "kind": "checking"
+      }
+    },
+    {
+      "key": "def-accept",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Accept signed order form",
+          "trigger": {
+            "type": "transition",
+            "from": [
+              "draft"
+            ],
+            "to": "active"
+          }
+        }
+      }
+    },
+    {
+      "key": "def-bill",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Bill a month of seats in advance",
+          "trigger": {
+            "type": "scheduled"
+          },
+          "repeatable": true,
+          "terms": {
+            "seats": {
+              "type": "integer",
+              "unit": "seat"
+            },
+            "price": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "1500"
+            },
+            "oneSeat": {
+              "type": "integer",
+              "unit": "seat",
+              "default": "1"
+            },
+            "start": {
+              "type": "date"
+            },
+            "end": {
+              "type": "date"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "calculations": [
+            {
+              "key": "monthly",
+              "type": "rate",
+              "quantity": "term:seats",
+              "rate": "term:price",
+              "unitsPerPrice": "term:oneSeat"
+            }
+          ],
+          "effects": [
+            {
+              "pattern": "bill",
+              "ledger": "money",
+              "amount": "calc:monthly:amount"
+            }
+          ],
+          "schedule": {
+            "startTerm": "start",
+            "endTerm": "end",
+            "everyMonths": 1,
+            "timing": "start"
+          }
+        }
+      }
+    },
+    {
+      "key": "def-service",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Completed month of seat access",
+          "trigger": {
+            "type": "scheduled"
+          },
+          "repeatable": true,
+          "product": "team-seat",
+          "terms": {
+            "seats": {
+              "type": "integer",
+              "unit": "seat"
+            },
+            "price": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "1500"
+            },
+            "oneSeat": {
+              "type": "integer",
+              "unit": "seat",
+              "default": "1"
+            },
+            "start": {
+              "type": "date"
+            },
+            "end": {
+              "type": "date"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "calculations": [
+            {
+              "key": "monthly",
+              "type": "rate",
+              "quantity": "term:seats",
+              "rate": "term:price",
+              "unitsPerPrice": "term:oneSeat"
+            }
+          ],
+          "effects": [
+            {
+              "pattern": "recognize",
+              "ledger": "money",
+              "amount": "calc:monthly:amount",
+              "accountingKey": "bill",
+              "category": "subscription"
+            }
+          ],
+          "schedule": {
+            "startTerm": "start",
+            "endTerm": "end",
+            "everyMonths": 1,
+            "timing": "end",
+            "serviceEvidence": "elapsed_time"
+          },
+          "recurringValue": {
+            "amount": "calc:monthly:amount",
+            "interval": "monthly",
+            "ledger": "money",
+            "startTerm": "start",
+            "endTerm": "end"
+          }
+        }
+      }
+    },
+    {
+      "key": "def-receipt",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Customer payment received",
+          "trigger": {
+            "type": "recorded"
+          },
+          "repeatable": true,
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "bank": {
+              "type": "text"
+            },
+            "billed": {
+              "type": "text"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "collect",
+              "ledger": "money",
+              "amount": "fact:amount",
+              "accountingKey": "bill",
+              "financialAccountFact": "bank",
+              "claimFact": "billed"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "plan-team",
+      "command": "templates.create",
+      "input": {
+        "definition": {
+          "name": "Team plan, per seat per month",
+          "plan": "on_sale",
+          "parties": [
+            "customer"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "activities": [
+            {
+              "key": "accept",
+              "activityDocumentId": {
+                "$ref": "def-accept.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {}
+            },
+            {
+              "key": "bill",
+              "activityDocumentId": {
+                "$ref": "def-bill.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "service",
+              "activityDocumentId": {
+                "$ref": "def-service.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "receipt",
+              "activityDocumentId": {
+                "$ref": "def-receipt.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "contract",
+      "command": "contracts.create",
+      "input": {
+        "templateDocumentId": {
+          "$ref": "plan-team.documentId"
+        },
+        "parties": {
+          "customer": "cus_harborlight"
+        },
+        "terms": {
+          "bill": {
+            "seats": "10",
+            "start": "2026-07-01",
+            "end": "2027-07-01"
+          },
+          "service": {
+            "seats": "10",
+            "start": "2026-07-01",
+            "end": "2027-07-01"
+          }
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "order-form.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "draft",
+      "read": "subjects",
+      "input": {
+        "action": "get",
+        "type": "contract",
+        "id": {
+          "$ref": "contract.id"
+        }
+      },
+      "expect": {
+        "status": "draft"
+      }
+    },
+    {
+      "key": "accept",
+      "command": "contracts.record",
+      "at": "2026-07-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "accept",
+        "occurrenceKey": "accept",
+        "sourceFactId": "harborlight:order-form:accepted",
+        "effectiveAt": "2026-07-01T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "order-form.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "bill-july",
+      "command": "contracts.record",
+      "at": "2026-07-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "bill",
+        "occurrenceKey": "schedule:2026-07-01:2026-08-01",
+        "sourceFactId": "stripe:invoice:in_harborlight_2026_07",
+        "effectiveAt": "2026-07-01T00:00:00Z",
+        "facts": {},
+        "evidence": {}
+      }
+    },
+    {
+      "key": "paid-july",
+      "command": "contracts.record",
+      "at": "2026-07-03T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "receipt",
+        "occurrenceKey": "stripe:charge:ch_harborlight_2026_07",
+        "sourceFactId": "stripe:charge:ch_harborlight_2026_07",
+        "effectiveAt": "2026-07-03T00:00:00Z",
+        "facts": {
+          "amount": "15000",
+          "bank": "bank_main",
+          "billed": "schedule:2026-07-01:2026-08-01"
+        },
+        "evidence": {
+          "payment": [
+            {
+              "kind": "stripe_object",
+              "ref": "ch_harborlight_2026_07"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "seat-change",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "SGFyYm9ybGlnaHQgU3R1ZGlvIC0gc2VhdCBjaGFuZ2UKQWRkIDQgc2VhdHMgZnJvbSAyMDI2LTA4LTAxLCBmb3IgMTQgc2VhdHMgYXQgJDE1LjAwIHBlciBzZWF0IHBlciBtb250aC4gT3RoZXIgdGVybXMgdW5jaGFuZ2VkLgpTaWduZWQgMjAyNi0wNy0yMCBieSBmaW5hbmNlQGhhcmJvcmxpZ2h0LmV4YW1wbGUu",
+        "externalId": "harborlight:seat-change:2026-08"
+      }
+    },
+    {
+      "key": "add-seats",
+      "command": "contracts.amend",
+      "at": "2026-07-20T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
+        },
+        "effectiveAt": "2026-08-01T00:00:00Z",
+        "terms": {
+          "bill": {
+            "seats": "14"
+          },
+          "service": {
+            "seats": "14"
+          }
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "seat-change.documentId"
+          }
+        ],
+        "acceptanceEvidence": [
+          {
+            "kind": "signed_doc",
+            "ref": {
+              "$ref": "seat-change.documentId"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "service-july",
+      "command": "contracts.record",
+      "at": "2026-07-31T23:59:59.999Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "service",
+        "occurrenceKey": "schedule:2026-07-01:2026-08-01",
+        "sourceFactId": "harborlight:service:2026-07",
+        "effectiveAt": "2026-07-31T23:59:59.999Z",
+        "facts": {},
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "elapsed:2026-07-01:2026-08-01"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "bill-august",
+      "command": "contracts.record",
+      "at": "2026-08-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "bill",
+        "occurrenceKey": "schedule:2026-08-01:2026-09-01",
+        "sourceFactId": "stripe:invoice:in_harborlight_2026_08",
+        "effectiveAt": "2026-08-01T00:00:00Z",
+        "facts": {},
+        "evidence": {}
+      }
+    },
+    {
+      "key": "paid-august",
+      "command": "contracts.record",
+      "at": "2026-08-03T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "receipt",
+        "occurrenceKey": "stripe:charge:ch_harborlight_2026_08",
+        "sourceFactId": "stripe:charge:ch_harborlight_2026_08",
+        "effectiveAt": "2026-08-03T00:00:00Z",
+        "facts": {
+          "amount": "21000",
+          "bank": "bank_main",
+          "billed": "schedule:2026-08-01:2026-09-01"
+        },
+        "evidence": {
+          "payment": [
+            {
+              "kind": "stripe_object",
+              "ref": "ch_harborlight_2026_08"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "service-august",
+      "command": "contracts.record",
+      "at": "2026-08-31T23:59:59.999Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "service",
+        "occurrenceKey": "schedule:2026-08-01:2026-09-01",
+        "sourceFactId": "harborlight:service:2026-08",
+        "effectiveAt": "2026-08-31T23:59:59.999Z",
+        "facts": {},
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "elapsed:2026-08-01:2026-09-01"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "claims",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
+      },
+      "expect": {
+        "claims": [
+          {
+            "occurrenceKey": "schedule:2026-07-01:2026-08-01",
+            "billed": "15000",
+            "outstanding": "0"
+          },
+          {
+            "occurrenceKey": "schedule:2026-08-01:2026-09-01",
+            "billed": "21000",
+            "outstanding": "0"
+          }
+        ]
+      }
+    },
+    {
+      "key": "july-books",
+      "report": true,
+      "input": {
+        "kind": "income_statement",
+        "currency": "USD",
+        "from": "2026-07-01",
+        "until": "2026-08-01"
+      },
+      "expect": {
+        "revenue": {
+          "total": "15000"
+        }
+      }
+    },
+    {
+      "key": "august-books",
+      "report": true,
+      "input": {
+        "kind": "income_statement",
+        "currency": "USD",
+        "from": "2026-08-01",
+        "until": "2026-09-01"
+      },
+      "expect": {
+        "revenue": {
+          "total": "21000"
+        }
+      }
+    },
+    {
+      "key": "july-mrr",
+      "report": true,
+      "input": {
+        "kind": "saas_metrics",
+        "year": 2026,
+        "month": 7
+      },
+      "expect": {
+        "mrr": {
+          "minor_units": "15000"
+        },
+        "arr": {
+          "minor_units": "180000"
+        }
+      }
+    },
+    {
+      "key": "august-mrr",
+      "report": true,
+      "input": {
+        "kind": "saas_metrics",
+        "year": 2026,
+        "month": 8
+      },
+      "expect": {
+        "mrr": {
+          "minor_units": "21000"
+        },
+        "arr": {
+          "minor_units": "252000"
+        }
+      }
+    }
+  ]
+}

@@ -14,10 +14,16 @@ them to the commands they justify, so the books can be audited from the first da
   "input": {
     "kind": "source_document",
     "contentBase64": "<base64 of the exact PDF or UTF-8 text>",
-    "externalId": "email:render:INV-2026-06-0042"
+    "externalId": "email:render:INV-2026-06-0042",
+    "title": "Render invoice INV-2026-06-0042"
   }
 }
 ```
+
+- `title` is what the founder will see the document listed as (one line, at most 200
+  characters). Give one for an email or a scan; leave it out when the file names itself
+  (a Markdown heading, a PDF with a `/Title`), and Economico reads that. Without either,
+  the list shows the `externalId`.
 
 - Accepted: nonempty UTF-8 text (plain text, Markdown, an email rendered as text) or a PDF, up to
   256 KiB. Office formats and images are refused; convert to PDF or text first.
