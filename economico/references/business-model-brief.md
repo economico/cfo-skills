@@ -36,6 +36,15 @@ _As of <date>. Built by <agent> from <sources read>. Economico business: `<slug>
 |---|---|---|---|---|---|---|
 | Render | production hosting | ~$680 | monthly, usage | bank ACH | 5210 · cost of revenue | email INV-2026-06-0042 |
 
+## Ownership
+
+| Holder | Instrument | Units | Ownership | Capital put in | Source |
+|---|---|---|---|---|---|
+| Ada Park | common stock | 8,000,000 | 100% | $800 at par | stock purchase agreement, certificate of incorporation |
+
+<Legal form and jurisdiction, and any SAFE or note outstanding. "None found" is not an answer
+for a company: say which document is missing and ask for it.>
+
 ## Run rate today
 
 | | Monthly |

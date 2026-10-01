@@ -34,6 +34,7 @@ the background reads the session afterwards, and the views are what they read. A
 | Record | One contract that needed a judgment | `subjects {action: "get", type: "contract", id}` | The contract's terms, its activities and what each one posts, in a few lines |
 | Prove | How the business makes and spends money | `reports run income_statement` with `from` and `until` | The flow in one line, then the table (below) |
 | Prove | Where the money is | `reports run balance_sheet` with `as_of` | Assets, liabilities and equity with their main lines, and the check that they balance |
+| Prove | Who owns the company | `reports run cap_table`, and `capital_accounts` for an LLC, partnership or project | One row per holder: name, instrument, units, ownership percentage, vested; then each owner's capital balance |
 | Prove | Who owes whom | `reports run aging` with `direction` `receivable`, then `payable` | One row per open invoice or bill: counterparty, amount, due date, bucket |
 | Prove | Recurring revenue | `reports run saas_metrics` with `year` and `month` | MRR, ARR and ACV, then gross margin, burn and runway, each with its basis; an undefined metric says why |
 | Prove | What bills next | `reports run activity_plan` with `contract_id`, `from` and `through`, for the contracts the founder asks about | One row per upcoming activity: due date, activity, period, what it posts or what it waits for |
@@ -65,6 +66,17 @@ Revenue $6,000 → cost of revenue $1,800 → gross margin $4,200 → operating 
 
 **Balance sheet.** Totals first, with the check stated, then the lines a founder recognizes:
 cash per account, receivables, deferred revenue, payables, what is owed to the founder.
+
+**Cap table.** A table, never a sentence: one row per holder with the instrument, units,
+ownership percentage and vested units, then a row per SAFE or note with its holder, amount and
+"converts at the next priced round" (no share count, no percentage). For an LLC or a project, add
+each owner's capital balance from `capital_accounts`.
+
+| Holder | Instrument | Units | Ownership | Vested |
+|---|---|---|---|---|
+| Ada Park | restricted common | 6,000,000 | 66.7% | 0 |
+| Ben Ito | restricted common | 3,000,000 | 33.3% | 0 |
+| Hartwell Ventures | SAFE, $250,000 | — | — | converts at the next priced round |
 
 **Aging.** Only open items. A receipt paid at purchase or on a card never appears; say so if the
 founder expects to see one.

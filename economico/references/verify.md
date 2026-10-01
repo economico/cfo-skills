@@ -13,6 +13,7 @@ parameters and a runnable example; dates are `YYYY-MM-DD` or UTC instants, `unti
 | Is the price book right? | `subjects {action: "list", type: "template", plan: "on_sale"}` | One template per purchasable plan in the brief |
 | What is the recurring revenue? | `reports run saas_metrics` with `year` and `month` | MRR equals the sum of fixed monthly fees in the brief; usage adds nothing |
 | What did the business earn and spend? | `reports run income_statement` with `from` and `until` | Revenue per account and expenses per nature and function match recorded occurrences |
+| Who owns the company? | `reports run cap_table`, and `capital_accounts` for an LLC, partnership or project | Every owner from the formation documents with their units; never empty for a company that has owners |
 | Where is the money? | `reports run balance_sheet` with `as_of` | Cash per account matches the bank and card statements at that date, where history was recorded |
 | Who owes what? | `reports run aging` with `direction` `receivable` or `payable` and `as_of` | Open invoices and bills only; card and paid-at-purchase receipts never appear |
 | What is open on one contract? | `reports run activity_claims` with `contract_id` | `outstanding` per invoice; `"0"` once paid |
