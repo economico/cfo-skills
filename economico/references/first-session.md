@@ -11,6 +11,9 @@ does.
 
 ## 0. Agree the scope (one round of questions)
 
+First look for `business-model.md` in the founder's repository. If it is there, an earlier
+session wrote it: this is [a later session](#a-later-session), which starts from it.
+
 Read `businesses {action: "list"}` and note which integrations you can reach, then ask once, in
 one round, as in [asking the founder](asking-the-founder.md), and work without further
 interruption until the review point:
@@ -75,8 +78,15 @@ line traceable to its source and mapped to what will be recorded. It must contai
 6. Assumptions and gaps: every value you could not source, and every judgment you made.
 7. What will be recorded, in order.
 
+Then preview it: `reports run model_preview` with the brief's tables as data
+([how](business-model-brief.md#preview-the-model-before-recording-it)). Always, even when the
+founder told you to proceed without review: the preview is the check before anything is recorded,
+not a courtesy for the review. It checks the proposal and computes the run rate the brief reports;
+a refusal is a mistake in the brief, so fix the brief and preview again. Record nothing until it
+passes.
+
 Stop here for the founder's review unless they told you to proceed. The review message shows
-the model: the price book, the cost table and the run-rate line, as in
+the model from the preview: the price book, the cost table and the run-rate line, as in
 [show the founder](show-the-founder.md). If they told you to proceed, the price book opens the
 final message instead. Keep the review short, then ask the three to five judgments that change the
 numbers as one round of questions (a plan you treated as legacy, a vendor you classified as cost of
@@ -126,10 +136,38 @@ table (party, customer or vendor, template,
 status), the income statement (its flow line and its table), the balance sheet table and the open
 items from the aging, inline or as text
 ([show the founder](show-the-founder.md)). A sentence that quotes the totals is not the view.
+Before the final message, update "For the next session" in the brief: the standing answers,
+the rules the founder set, and the questions still waiting for them
+([template](business-model-brief.md)).
+
 Then report in five lines or fewer: the business
 written to, what was recorded (counts of templates, contracts, occurrences, documents), the
 headline numbers, the open gaps, and the one thing the founder should do next (usually: grant email or Stripe access that was missing, or confirm a
 judgment).
+
+## A later session
+
+A founder who comes back should not be asked again what they already answered. When
+`business-model.md` exists:
+
+1. **Read it first**, "For the next session" before anything else. Its business slug is the one
+   to write to (still check `businesses` lists it; if it does not, ask). Its standing answers
+   are this session's scope: ask the scope round only for what they do not cover or what the
+   founder's request changes.
+2. **Do not relitigate.** A judgment under "Judgments and gaps" stands, whoever made it, and a
+   rule the founder set applies to everything new. Change one only when the founder asks, or when
+   new evidence contradicts it; then say which and why.
+3. **Ask what is waiting.** The open questions are the first round of questions when the
+   founder is present ([asking the founder](asking-the-founder.md)); when they are away, keep
+   them open. Every one has a recommended option first, a gap only the founder can fill
+   included: recommend what you would record if they did not answer, and say why.
+4. **Read the books for what exists**: `subjects`, `parties` and `documents` by `externalId`
+   and `sourceFactId`, and extend them. Record only what is new since the last session, with the
+   same idempotency keys, so a rerun replays instead of duplicating.
+5. **Update the brief** at the end: its tables where the business changed, and "For the next
+   session".
+
+Say in the final message what you took from the brief and what, if anything, was new.
 
 ## When the founder has not incorporated
 

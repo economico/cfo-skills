@@ -47,10 +47,11 @@ you will store under 256 KiB.
 | "We charged your Visa/Mastercard ending 4242" and 4242 is a company card | Card expense, nothing owed to the vendor | [vendor-receipt-company-card](recipes/vendor-receipt-company-card.json) |
 | "Paid", "auto-debit", "ACH debit" from the company bank | Expense and payment in one occurrence | [vendor-receipt-paid-from-bank](recipes/vendor-receipt-paid-from-bank.json) |
 | "Amount due", "due by", "net 30" | A bill on terms; pay later | [vendor-bill-paid-from-bank](recipes/vendor-bill-paid-from-bank.json) |
-| Charged to the founder's personal card | Owed to the founder | [founder-paid-expense](recipes/founder-paid-expense.json) |
+| Charged to the founder's personal card | The vendor's bill, then the founder's payment of it; owed to the founder until repaid or contributed | [founder-paid-expense](recipes/founder-paid-expense.json) |
 
-If you cannot tell which card was charged, ask once for the list of company cards (last four
-digits) and apply it to every receipt.
+If you cannot tell which card was charged, ask once which cards (last four digits) are the
+company's and which are the founder's own, and apply the answer to every receipt. Register the
+founder's with `ownerPartyId` ([vendor contracts](vendor-contracts.md)).
 
 ## Dedup before you record
 

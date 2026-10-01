@@ -4,6 +4,9 @@ A founder answers a question fastest when it arrives as a choice: what is being 
 you recommend and why, and the options with yours first. Ask only for **decisions**. Facts are
 yours to find: a price, a customer or a vendor that the code, Stripe or the mailbox can tell you
 is never a question.
+A missing source is not a question either: when you need a document only the founder has (the
+incorporation papers, a signed order form), list it as a gap in the brief and name it in the
+final message, rather than asking for it with options that decide nothing.
 
 ## Use the host's question tool
 
@@ -45,4 +48,8 @@ cannot be undone by a later command, such as writing to a real business instead 
 | Before discovery | Which business, what you may read, how far back, whether to record after review without asking again | [first session](first-session.md#0-agree-the-scope-one-round-of-questions) |
 | At the review | The three to five judgments that change the numbers, including every disagreement between sources you could not settle ([reconcile](first-session.md#2-reconcile)) | [first session](first-session.md#3-propose-write-business-modelmd) |
 
-Everything else runs without interruption between those two rounds.
+| A later session, founder present | The open questions in `business-model.md`, and only the scope questions its standing answers do not settle | [a later session](first-session.md#a-later-session) |
+
+Everything else runs without interruption between those rounds. A question the brief already
+answers is not asked again: an answer the founder gave once is a standing answer until they
+change it.

@@ -1,18 +1,9 @@
 {
-  "name": "Founder paid a business expense personally, company reimburses",
-  "description": "The founder bought the domain on a personal card. The obligation is to the founder, not the registrar, so the contract is the founder expense-reimbursement agreement: the expense posts against 2135 Due to related parties keyed by the founder, and the reimbursement clears it from the bank. The vendor stays visible through the receipt document and the activity's external reference.",
+  "name": "Founder paid a vendor bill personally, company reimburses",
+  "description": "The founder bought the domain on a personal card. The bill is the registrar's: its contract is with the vendor, and the bill posts the expense against 2110 payables for the vendor. The founder paying it is a second recording on the same vendor contract: pay_related settles the vendor's payable and credits 2135 Due to related parties for the founder (toPartyRole names who is owed), naming the founder's own card, an account registered with ownerPartyId from the last four digits on the receipt. Repaying the founder is recorded on the founder's own contract (its party is the founder): reimburse_related from the bank, bounded by everything the business owes them. If the founder instead contributes it, contribute_related on that contract moves it to their capital. Ask the founder which, once, and record the answer (asking-the-founder.md).",
   "setupAt": "2026-03-01T00:00:00Z",
   "recordedAt": "2026-05-01T00:00:00Z",
   "steps": [
-    {
-      "key": "policy",
-      "command": "documents.receive",
-      "input": {
-        "kind": "source_document",
-        "contentBase64": "RXhwZW5zZSByZWltYnVyc2VtZW50IHBvbGljeQpUaGUgY29tcGFueSByZWltYnVyc2VzIGZvdW5kZXJzIGZvciBwcmUtYXBwcm92ZWQgYnVzaW5lc3MgZXhwZW5zZXMgcGFpZCBwZXJzb25hbGx5LCB3aXRoaW4gMzAgZGF5cyBvZiBhIHN1Ym1pdHRlZCByZWNlaXB0Lg==",
-        "externalId": "policy:founder-reimbursement"
-      }
-    },
     {
       "key": "receipt",
       "command": "documents.receive",
@@ -34,6 +25,29 @@
       }
     },
     {
+      "key": "vendor",
+      "command": "parties.create",
+      "input": {
+        "partyId": "ven_namecheap",
+        "name": "Namecheap",
+        "iri": "https://www.namecheap.com",
+        "categories": [
+          "vendor"
+        ]
+      }
+    },
+    {
+      "key": "founder-card",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "card_ada_mc_1881",
+        "name": "Ada's Mastercard ending 1881",
+        "currency": "USD",
+        "kind": "card",
+        "ownerPartyId": "founder_ada"
+      }
+    },
+    {
       "key": "bank",
       "command": "accounts.register",
       "input": {
@@ -48,7 +62,7 @@
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Adopt the reimbursement policy",
+          "name": "Accept the vendor's terms of service",
           "trigger": {
             "type": "transition",
             "from": [
@@ -60,11 +74,11 @@
       }
     },
     {
-      "key": "def-software",
+      "key": "def-bill",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Founder-paid software and domains",
+          "name": "Domain registration",
           "trigger": {
             "type": "recorded"
           },
@@ -86,11 +100,56 @@
           },
           "effects": [
             {
-              "pattern": "related_expense",
+              "pattern": "accrue_expense",
               "ledger": "money",
               "amount": "fact:amount",
               "expenseAccount": 5310,
               "expenseFunction": "general_and_administrative"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "def-paid",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Paid personally by the founder",
+          "trigger": {
+            "type": "recorded"
+          },
+          "repeatable": true,
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "bill": {
+              "type": "text"
+            },
+            "card": {
+              "type": "text"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "pay_related",
+              "ledger": "money",
+              "amount": "fact:amount",
+              "accountingKey": "bill",
+              "claimFact": "bill",
+              "toPartyRole": "founder",
+              "financialAccountFact": "card"
             }
           ]
         }
@@ -129,7 +188,6 @@
               "pattern": "reimburse_related",
               "ledger": "money",
               "amount": "fact:amount",
-              "accountingKey": "software",
               "financialAccountFact": "bank"
             }
           ]
@@ -137,7 +195,165 @@
       }
     },
     {
-      "key": "reimbursement-template",
+      "key": "vendor-template",
+      "command": "templates.create",
+      "input": {
+        "definition": {
+          "name": "Namecheap (vendor terms)",
+          "parties": [
+            "vendor",
+            "founder"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "activities": [
+            {
+              "key": "accept",
+              "activityDocumentId": {
+                "$ref": "def-accept.documentId"
+              },
+              "partyRole": "vendor",
+              "ledgers": {}
+            },
+            {
+              "key": "bill",
+              "activityDocumentId": {
+                "$ref": "def-bill.documentId"
+              },
+              "partyRole": "vendor",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "paid",
+              "activityDocumentId": {
+                "$ref": "def-paid.documentId"
+              },
+              "partyRole": "vendor",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "contract",
+      "command": "contracts.create",
+      "input": {
+        "templateDocumentId": {
+          "$ref": "vendor-template.documentId"
+        },
+        "parties": {
+          "vendor": "ven_namecheap",
+          "founder": "founder_ada"
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "receipt.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "accept",
+      "command": "contracts.record",
+      "at": "2026-03-04T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "accept",
+        "occurrenceKey": "accept",
+        "sourceFactId": "namecheap:account:terms",
+        "effectiveAt": "2026-03-04T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "other",
+              "ref": "https://www.namecheap.com/legal/"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "bill",
+      "command": "contracts.record",
+      "at": "2026-03-04T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "bill",
+        "occurrenceKey": "184233",
+        "sourceFactId": "namecheap:order:184233",
+        "effectiveAt": "2026-03-04T00:00:00Z",
+        "facts": {
+          "amount": "1816"
+        },
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "receipt.documentId"
+              }
+            }
+          ]
+        }
+      },
+      "sourceDocumentId": {
+        "$ref": "receipt.documentId"
+      }
+    },
+    {
+      "key": "paid",
+      "command": "contracts.record",
+      "at": "2026-03-04T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "paid",
+        "occurrenceKey": "184233:paid",
+        "sourceFactId": "namecheap:order:184233:paid-by-founder",
+        "effectiveAt": "2026-03-04T00:00:00Z",
+        "facts": {
+          "amount": "1816",
+          "bill": "184233",
+          "card": "card_ada_mc_1881"
+        },
+        "evidence": {
+          "payment": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "receipt.documentId"
+              }
+            }
+          ]
+        }
+      },
+      "sourceDocumentId": {
+        "$ref": "receipt.documentId"
+      }
+    },
+    {
+      "key": "founder-template",
       "command": "templates.create",
       "input": {
         "definition": {
@@ -164,17 +380,7 @@
               "ledgers": {}
             },
             {
-              "key": "software",
-              "activityDocumentId": {
-                "$ref": "def-software.documentId"
-              },
-              "partyRole": "founder",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "reimburse",
+              "key": "repay",
               "activityDocumentId": {
                 "$ref": "def-reimburse.documentId"
               },
@@ -188,11 +394,11 @@
       }
     },
     {
-      "key": "contract",
+      "key": "founder-contract",
       "command": "contracts.create",
       "input": {
         "templateDocumentId": {
-          "$ref": "reimbursement-template.documentId"
+          "$ref": "founder-template.documentId"
         },
         "parties": {
           "founder": "founder_ada"
@@ -202,64 +408,32 @@
         },
         "sourceDocumentIds": [
           {
-            "$ref": "policy.documentId"
+            "$ref": "receipt.documentId"
           }
         ]
       }
     },
     {
-      "key": "accept",
-      "command": "contracts.record",
-      "at": "2026-03-01T00:00:00Z",
-      "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "accept",
-        "occurrenceKey": "accept",
-        "sourceFactId": "policy:founder-reimbursement:adopted",
-        "effectiveAt": "2026-03-01T00:00:00Z",
-        "facts": {},
-        "evidence": {
-          "acceptance": [
-            {
-              "kind": "signed_doc",
-              "ref": {
-                "$ref": "policy.documentId"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "domain",
+      "key": "founder-accept",
       "command": "contracts.record",
       "at": "2026-03-04T00:00:00Z",
       "input": {
         "contractId": {
-          "$ref": "contract.id"
+          "$ref": "founder-contract.id"
         },
-        "activityKey": "software",
-        "occurrenceKey": "namecheap-184233",
-        "sourceFactId": "namecheap:order:184233",
+        "activityKey": "accept",
+        "occurrenceKey": "accept",
+        "sourceFactId": "founder_ada:reimbursement:adopted",
         "effectiveAt": "2026-03-04T00:00:00Z",
-        "facts": {
-          "amount": "1816"
-        },
+        "facts": {},
         "evidence": {
-          "payment": [
+          "acceptance": [
             {
               "kind": "other",
-              "ref": {
-                "$ref": "receipt.documentId"
-              }
+              "ref": "founder decision: founder-paid costs are owed back"
             }
           ]
         }
-      },
-      "sourceDocumentId": {
-        "$ref": "receipt.documentId"
       }
     },
     {
@@ -282,9 +456,9 @@
       "at": "2026-03-20T00:00:00Z",
       "input": {
         "contractId": {
-          "$ref": "contract.id"
+          "$ref": "founder-contract.id"
         },
-        "activityKey": "reimburse",
+        "activityKey": "repay",
         "occurrenceKey": "reimburse:2026-03",
         "sourceFactId": "bank:transfer:founder_ada:2026-03-20",
         "effectiveAt": "2026-03-20T00:00:00Z",

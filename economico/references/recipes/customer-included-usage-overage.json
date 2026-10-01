@@ -1,0 +1,737 @@
+{
+  "name": "Plan fee with included usage, overage billed above the allowance",
+  "description": "A $500/month Growth plan includes 100,000 API calls. Billing the plan fee also grants the month's included calls as a lot on a capacity ledger (the template's `included` allowance), expiring at the end of the month. The usage activity draws accepted calls from that lot first and bills only the excess at $2.00 per 1,000: 150,000 September calls consume all 100,000 included calls and bill $100 of overage (4120 usage revenue), earned when the measurement is accepted. The fee is earned over the month as subscription revenue (4110). September revenue is $600, MRR stays $500 (overage is not recurring), and the capacity report shows 100,000 consumed, none free. Record the measurement before the lot expires: one recorded after expiry finds no included calls and bills every call as overage. An allowance lot's expiry is a term on its grant, so each month's allowance is its own grant: this contract covers the September period.",
+  "setupAt": "2026-09-01T00:00:00Z",
+  "recordedAt": "2026-10-05T00:00:00Z",
+  "steps": [
+    {
+      "key": "order-form",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "THVtZW4gRnJlaWdodCAtIEdyb3d0aCBwbGFuIG9yZGVyIGZvcm0KUGxhbiBmZWU6ICQ1MDAuMDAgcGVyIG1vbnRoLCBiaWxsZWQgbW9udGhseSBpbiBhZHZhbmNlLiBJbmNsdWRlcyAxMDAsMDAwIEFQSSBjYWxscyBwZXIgbW9udGguCkNhbGxzIGFib3ZlIHRoZSBpbmNsdWRlZCAxMDAsMDAwIGluIGEgbW9udGg6ICQyLjAwIHBlciAxLDAwMCwgbWVhc3VyZWQgYXQgbW9udGggZW5kIGFuZCBpbnZvaWNlZCB3aXRoIHRoZSBtZWFzdXJlbWVudC4gVW51c2VkIGluY2x1ZGVkIGNhbGxzIGV4cGlyZSBhdCB0aGUgZW5kIG9mIHRoZSBtb250aCBhbmQgZG8gbm90IHJvbGwgb3Zlci4KUGVyaW9kOiAyMDI2LTA5LTAxIHRvIDIwMjYtMTAtMDEuIEFjY2VwdGVkIDIwMjYtMDktMDEgYnkgb3BzQGx1bWVuZnJlaWdodC5leGFtcGxlLg==",
+        "externalId": "lumen:order-form:growth"
+      }
+    },
+    {
+      "key": "customer",
+      "command": "parties.create",
+      "input": {
+        "partyId": "cus_lumen",
+        "name": "Lumen Freight",
+        "categories": [
+          "customer"
+        ]
+      }
+    },
+    {
+      "key": "bank",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "bank_main",
+        "name": "Operating bank",
+        "currency": "USD",
+        "kind": "checking"
+      }
+    },
+    {
+      "key": "def-accept",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Accept signed order form",
+          "trigger": {
+            "type": "transition",
+            "from": [
+              "draft"
+            ],
+            "to": "active"
+          }
+        }
+      }
+    },
+    {
+      "key": "def-fee",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Bill the plan fee and grant the month's included calls",
+          "trigger": {
+            "type": "recorded"
+          },
+          "terms": {
+            "fee": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "50000"
+            },
+            "included": {
+              "type": "integer",
+              "unit": "call",
+              "default": "100000"
+            },
+            "start": {
+              "type": "date"
+            },
+            "end": {
+              "type": "date"
+            },
+            "expires": {
+              "type": "instant"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            },
+            "included": {
+              "classification": "operational",
+              "unitKind": "usage",
+              "unitCode": "call",
+              "decimals": 0,
+              "accountTemplate": "capacity"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "grant",
+              "ledger": "included",
+              "amount": "term:included"
+            },
+            {
+              "pattern": "bill",
+              "ledger": "money",
+              "amount": "term:fee"
+            }
+          ],
+          "recurringValue": {
+            "amount": "term:fee",
+            "interval": "monthly",
+            "ledger": "money",
+            "startTerm": "start",
+            "endTerm": "end"
+          }
+        }
+      }
+    },
+    {
+      "key": "def-service",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Completed month of the Growth plan",
+          "trigger": {
+            "type": "scheduled"
+          },
+          "repeatable": true,
+          "product": "growth",
+          "terms": {
+            "fee": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "50000"
+            },
+            "start": {
+              "type": "date"
+            },
+            "end": {
+              "type": "date"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "recognize",
+              "ledger": "money",
+              "amount": "term:fee",
+              "accountingKey": "fee",
+              "category": "subscription"
+            }
+          ],
+          "schedule": {
+            "startTerm": "start",
+            "endTerm": "end",
+            "everyMonths": 1,
+            "timing": "end",
+            "serviceEvidence": "elapsed_time"
+          }
+        }
+      }
+    },
+    {
+      "key": "def-usage",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Accepted monthly API calls, overage above the included calls",
+          "trigger": {
+            "type": "recorded"
+          },
+          "repeatable": true,
+          "product": "api-calls",
+          "terms": {
+            "rate": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "200"
+            },
+            "per": {
+              "type": "integer",
+              "unit": "call",
+              "default": "1000"
+            }
+          },
+          "facts": {
+            "calls": {
+              "type": "integer",
+              "unit": "call"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            },
+            "included": {
+              "classification": "operational",
+              "unitKind": "usage",
+              "unitCode": "call",
+              "decimals": 0,
+              "accountTemplate": "capacity"
+            },
+            "calls": {
+              "classification": "operational",
+              "unitKind": "usage",
+              "unitCode": "call",
+              "decimals": 0,
+              "accountTemplate": "meter"
+            }
+          },
+          "calculations": [
+            {
+              "key": "draw",
+              "type": "allowance",
+              "quantity": "fact:calls",
+              "link": "included-calls",
+              "allowExcess": true
+            },
+            {
+              "key": "overage",
+              "type": "rate",
+              "quantity": "calc:draw:extra",
+              "rate": "term:rate",
+              "unitsPerPrice": "term:per"
+            }
+          ],
+          "effects": [
+            {
+              "pattern": "observe",
+              "ledger": "calls",
+              "amount": "fact:calls"
+            },
+            {
+              "pattern": "consume",
+              "ledger": "included",
+              "amount": "calc:draw:covered"
+            },
+            {
+              "pattern": "bill",
+              "ledger": "money",
+              "amount": "calc:overage:amount"
+            },
+            {
+              "pattern": "recognize",
+              "ledger": "money",
+              "amount": "calc:overage:amount",
+              "category": "usage"
+            },
+            {
+              "pattern": "meter_billed",
+              "ledger": "calls",
+              "amount": "fact:calls"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "def-fee-receipt",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Plan fee payment received",
+          "trigger": {
+            "type": "recorded"
+          },
+          "repeatable": true,
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "bank": {
+              "type": "text"
+            },
+            "billed": {
+              "type": "text"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "collect",
+              "ledger": "money",
+              "amount": "fact:amount",
+              "accountingKey": "fee",
+              "financialAccountFact": "bank",
+              "claimFact": "billed"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "def-usage-receipt",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "name": "Overage payment received",
+          "trigger": {
+            "type": "recorded"
+          },
+          "repeatable": true,
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "bank": {
+              "type": "text"
+            },
+            "billed": {
+              "type": "text"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "effects": [
+            {
+              "pattern": "collect",
+              "ledger": "money",
+              "amount": "fact:amount",
+              "accountingKey": "usage",
+              "financialAccountFact": "bank",
+              "claimFact": "billed"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "plan-growth",
+      "command": "templates.create",
+      "input": {
+        "definition": {
+          "name": "Growth plan: monthly fee with 100,000 included API calls",
+          "plan": "on_sale",
+          "parties": [
+            "customer"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            },
+            "included": {
+              "classification": "operational",
+              "unitKind": "usage",
+              "unitCode": "call",
+              "decimals": 0,
+              "accountTemplate": "capacity"
+            },
+            "calls": {
+              "classification": "operational",
+              "unitKind": "usage",
+              "unitCode": "call",
+              "decimals": 0,
+              "accountTemplate": "meter"
+            }
+          },
+          "activities": [
+            {
+              "key": "accept",
+              "activityDocumentId": {
+                "$ref": "def-accept.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {}
+            },
+            {
+              "key": "fee",
+              "activityDocumentId": {
+                "$ref": "def-fee.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money",
+                "included": "included"
+              }
+            },
+            {
+              "key": "service",
+              "activityDocumentId": {
+                "$ref": "def-service.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "usage",
+              "activityDocumentId": {
+                "$ref": "def-usage.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money",
+                "included": "included",
+                "calls": "calls"
+              }
+            },
+            {
+              "key": "fee-receipt",
+              "activityDocumentId": {
+                "$ref": "def-fee-receipt.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "usage-receipt",
+              "activityDocumentId": {
+                "$ref": "def-usage-receipt.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ],
+          "allowances": [
+            {
+              "key": "included-calls",
+              "kind": "included",
+              "grantActivity": "fee",
+              "consumeActivities": [
+                "usage"
+              ],
+              "capacityLedger": "included",
+              "quantityTerm": "included",
+              "expiresAtTerm": "expires"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "contract",
+      "command": "contracts.create",
+      "input": {
+        "templateDocumentId": {
+          "$ref": "plan-growth.documentId"
+        },
+        "parties": {
+          "customer": "cus_lumen"
+        },
+        "terms": {
+          "fee": {
+            "start": "2026-09-01",
+            "end": "2026-10-01",
+            "expires": "2026-10-01T00:00:00Z"
+          },
+          "service": {
+            "start": "2026-09-01",
+            "end": "2026-10-01"
+          }
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "order-form.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "contract-state",
+      "read": "subjects",
+      "input": {
+        "action": "get",
+        "type": "contract",
+        "id": {
+          "$ref": "contract.id"
+        }
+      },
+      "expect": {
+        "status": "draft"
+      }
+    },
+    {
+      "key": "accept",
+      "command": "contracts.record",
+      "at": "2026-09-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "accept",
+        "occurrenceKey": "accept",
+        "sourceFactId": "lumen:order-form:accepted",
+        "effectiveAt": "2026-09-01T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "order-form.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "fee-sep",
+      "command": "contracts.record",
+      "at": "2026-09-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "fee",
+        "occurrenceKey": "fee:2026-09",
+        "sourceFactId": "lumen:invoice:fee:2026-09",
+        "effectiveAt": "2026-09-01T00:00:00Z",
+        "facts": {},
+        "evidence": {}
+      }
+    },
+    {
+      "key": "paid-fee-sep",
+      "command": "contracts.record",
+      "at": "2026-09-02T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "fee-receipt",
+        "occurrenceKey": "stripe:charge:ch_lumen_fee_2026_09",
+        "sourceFactId": "stripe:charge:ch_lumen_fee_2026_09",
+        "effectiveAt": "2026-09-02T00:00:00Z",
+        "facts": {
+          "amount": "50000",
+          "bank": "bank_main",
+          "billed": "fee:2026-09"
+        },
+        "evidence": {
+          "payment": [
+            {
+              "kind": "stripe_object",
+              "ref": "ch_lumen_fee_2026_09"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "usage-sep",
+      "command": "contracts.record",
+      "at": "2026-09-30T23:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "usage",
+        "occurrenceKey": "usage:2026-09",
+        "sourceFactId": "lumen:usage:2026-09",
+        "effectiveAt": "2026-09-30T23:00:00Z",
+        "facts": {
+          "calls": "150000"
+        },
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "product-db:usage_rollup:lumen:2026-09"
+            }
+          ]
+        }
+      },
+      "recordedAt": "2026-09-30T23:00:00Z"
+    },
+    {
+      "key": "included-calls-used",
+      "report": true,
+      "input": {
+        "kind": "activity_capacity",
+        "contract_id": {
+          "$ref": "contract.id"
+        },
+        "as_of": "2026-09-30T23:30:00Z"
+      },
+      "expect": {
+        "lots": [
+          {
+            "key": "included-calls",
+            "free": "0",
+            "consumed": "100000",
+            "expired": "0"
+          }
+        ]
+      }
+    },
+    {
+      "key": "service-sep",
+      "command": "contracts.record",
+      "at": "2026-09-30T23:59:59.999Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "service",
+        "occurrenceKey": "schedule:2026-09-01:2026-10-01",
+        "sourceFactId": "lumen:service:2026-09",
+        "effectiveAt": "2026-09-30T23:59:59.999Z",
+        "facts": {},
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "elapsed:2026-09-01:2026-10-01"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "paid-usage-sep",
+      "command": "contracts.record",
+      "at": "2026-10-03T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "usage-receipt",
+        "occurrenceKey": "stripe:charge:ch_lumen_usage_2026_09",
+        "sourceFactId": "stripe:charge:ch_lumen_usage_2026_09",
+        "effectiveAt": "2026-10-03T00:00:00Z",
+        "facts": {
+          "amount": "10000",
+          "bank": "bank_main",
+          "billed": "usage:2026-09"
+        },
+        "evidence": {
+          "payment": [
+            {
+              "kind": "stripe_object",
+              "ref": "ch_lumen_usage_2026_09"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "claims",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
+      },
+      "expect": {
+        "claims": [
+          {
+            "occurrenceKey": "fee:2026-09",
+            "outstanding": "0"
+          },
+          {
+            "occurrenceKey": "usage:2026-09",
+            "outstanding": "0"
+          }
+        ]
+      }
+    },
+    {
+      "key": "september-books",
+      "report": true,
+      "input": {
+        "kind": "income_statement",
+        "currency": "USD",
+        "from": "2026-09-01",
+        "until": "2026-10-01"
+      },
+      "expect": {
+        "revenue": {
+          "total": "60000"
+        }
+      }
+    },
+    {
+      "key": "september-mrr",
+      "report": true,
+      "input": {
+        "kind": "saas_metrics",
+        "year": 2026,
+        "month": 9
+      },
+      "expect": {
+        "mrr": {
+          "minor_units": "50000"
+        },
+        "arr": {
+          "minor_units": "600000"
+        }
+      }
+    }
+  ]
+}

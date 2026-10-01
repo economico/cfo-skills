@@ -30,13 +30,48 @@ that vendor lands in the same place, and it keeps the vendor's terms and pricing
 | Invoice on terms, paid later | `accrue_expense` with `dueDate`, then `pay` against the bill's key | [vendor-bill-paid-from-bank](recipes/vendor-bill-paid-from-bank.json) |
 | Auto-debited or paid at purchase from the bank | `accrue_expense` and `pay` in one activity | [vendor-receipt-paid-from-bank](recipes/vendor-receipt-paid-from-bank.json) |
 | Charged to the company card | `card_expense`; the card statement later `pay_card` | [vendor-receipt-company-card](recipes/vendor-receipt-company-card.json) |
-| Paid on the founder's personal card | `related_expense` on a founder reimbursement contract; `reimburse_related` when paid back | [founder-paid-expense](recipes/founder-paid-expense.json) |
-| Annual plan paid upfront | `prepay_expense` into 1150, then a monthly `expense` activity | `catalog describe activities.create` |
+| Paid on the founder's personal card | The vendor's bill (`accrue_expense`), then the founder's payment of it (`pay_related` with `toPartyRole: "founder"`); later `reimburse_related` or `contribute_related` on the founder's own contract | [founder-paid-expense](recipes/founder-paid-expense.json) |
+| Annual plan paid upfront | `prepay_expense` into 1150 with a `pay` from the bank, then a monthly `expense` activity whose `accountingKey` names the prepay activity (without it every month is refused: nothing funded to release) | [vendor-annual-prepay](recipes/vendor-annual-prepay.json) |
 | Vendor credit on an open bill | `credit_expense` against the bill's claim | — |
 | Startup credits (cloud promotional credit) | A promotional allowance consumed before the bill | `catalog describe templates.create` |
 
-A founder-paid expense is owed to the founder, so its contract's party is the founder, not the
-store; the store stays visible through the receipt document.
+A founder-paid bill is still the vendor's bill: the contract is with the vendor (parties
+`vendor` and `founder`), every activity's `partyRole` is `vendor`, so lists, the vendor's page
+and its profit and loss name the vendor. Record two occurrences per receipt: the bill, then the
+founder's payment (`pay_related`, `claimFact` naming the bill), which moves what is owed from the
+vendor to the founder (2135, keyed to the `toPartyRole` party). Never make the founder the
+activity's party: every screen would then call the founder the counterparty.
+
+Register each personal card the receipts show as the founder's own account, once:
+`accounts.register` with `kind: "card"`, `ownerPartyId` the founder, `providerPartyId` the
+card issuer's registered party, `last4`, `network`, and a clear name
+(`"Pelle's Visa ending 8570"`). It is not a company card (2190) and not cash: it
+sits on 2135, keyed to its owner. Name it on every `pay_related` (`financialAccountFact`), which
+refuses a card owned by anyone but the party it is owed to.
+
+## Payment providers and fees
+
+A bank, processor or card issuer is a vendor. Create its party, then model its signed pricing
+as an ordinary vendor template and contract. Give the template one repeatable fee activity per
+rail. Each activity has a `feeAmount` integer fact, an `accrue_expense` effect whose amount is
+`fact:feeAmount`, and an expense account: `5230` for processing or `5910` for bank charges.
+Its bound terms carry `rail`, `direction` (`in` or `out`), `asset`, `fixedMinor`, `bps`, and
+optional `minMinor` and `maxMinor`. The fixed, minimum and maximum amounts are minor units;
+`bps` is basis points. Use the agreement's actual values and source document. Accept the
+contract, then set the payment account's `providerContractId` with `accounts.update` (or
+register the account with it already set). The contract must bind the same `providerPartyId`.
+When `contracts.record` names a payment method, Economico posts its configured provider
+fee alongside the payment. Do not record that fee again on the provider contract. Record
+a separate provider fee occurrence only for an additional charge not included in the
+payment's posted fee, using its own source evidence.
+
+Before the first founder-paid receipt, ask the founder once, and write the answer into
+`business-model.md` under decisions: are founder-paid costs **owed back** to them
+(`reimburse_related` when the company repays) or **their capital contribution**
+(`contribute_related`, no cash)? Either can be recorded later; the question is which is true.
+Record either on the founder's own contract (its party is the founder), never on a vendor's:
+it is bounded by everything the business owes the founder, so one repayment can cover many
+vendors' bills, and the capital it creates is the founder's.
 
 ## Recording each receipt
 

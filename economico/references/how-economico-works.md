@@ -8,7 +8,7 @@ Read this once per session before you design anything. It is the model you map a
 |---|---|---|
 | **Business** | One set of books with one append-only, hash-chained history. Addressed by a slug. | `businesses`, `business {action: "get"}` |
 | **Command** | A persisted, authorized, idempotent intent. The only way anything is written. | `catalog` to discover, `commands` to execute |
-| **Party** | A counterparty: customer, vendor, founder, investor, provider. It has no role by itself; the contract gives it one. | `parties.create`, `parties` read |
+| **Party** | A counterparty: a customer, vendor, founder, investor or employee. A contract gives it a role in that contract only; what it is to the business is its `categories`, set when you create it, and every list groups it by them. | `parties.create`, `parties` read |
 | **Financial account** | A named bank account, wallet or company card, so cash and card balances are kept per account. Bookkeeping only; nothing is connected. | `accounts.register`, `accounts` read |
 | **Document** | Immutable bytes addressed by content hash: an uploaded source (a PDF or text receipt, an order form), or a definition, contract or statement Economico produced. | `documents.receive`, `documents` read |
 | **Activity** | A reusable, immutable definition of something that happens under an agreement: its trigger, the terms it is priced by, the facts observed when it happens, and the effects it posts. | `activities.create` |
@@ -89,7 +89,8 @@ non-zero amount.
 | `pay` | 2110 payables | 1110 cash | payment | Paying a vendor claim from a bank account |
 | `card_expense` | expense | 2190 card payable | service | A purchase already charged to the company card |
 | `pay_card` | 2190 card payable | 1110 cash | payment | Paying the card statement |
-| `related_expense` | expense | 2135 due to related parties | payment | A founder paid a business cost personally |
+| `pay_related` | 2110 payables | 2135 due to related parties (`toPartyRole`) | payment | A founder paid a vendor's bill personally; now owed to them |
+| `related_expense` | expense | 2135 due to related parties | payment | A founder cost with no vendor contract of its own (a per diem, mileage) |
 | `reimburse_related` | 2135 | 1110 cash | payment | Paying the founder back |
 | `prepay_expense` | 1150 prepaid | 2110 payables | — | A vendor charge for a future period (annual plans) |
 | `expense` | expense | 1150 prepaid | service | Using up a prepaid vendor period |

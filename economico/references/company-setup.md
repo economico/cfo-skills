@@ -13,12 +13,18 @@ year end, and, under `ownership`, the recipes (ownership setups) that apply to t
 
 ## Financial accounts
 
-Register one financial account per real place money sits, before anything pays or is paid.
+Register one financial account per real place money sits, before anything pays or is paid. First
+register each bank, card issuer, wallet provider or processor as a party, then link its account
+with `providerPartyId`. The account registration classifies that party as a provider. Ask for
+the last four digits and network when they identify the account; never record the full number.
 
 ```json
-{ "name": "accounts.register", "input": { "financialAccountId": "bank_mercury_checking", "name": "Mercury checking", "currency": "USD", "kind": "checking" } }
-{ "name": "accounts.register", "input": { "financialAccountId": "card_ramp", "name": "Ramp card", "currency": "USD", "glAccountCode": 2190, "kind": "card" } }
-{ "name": "accounts.register", "input": { "financialAccountId": "stripe_balance", "name": "Stripe balance", "currency": "USD", "kind": "other" } }
+{ "name": "parties.create", "input": { "partyId": "mercury", "name": "Mercury" } }
+{ "name": "accounts.register", "input": { "financialAccountId": "bank_mercury_checking", "name": "Mercury checking", "currency": "USD", "kind": "checking", "providerPartyId": "mercury", "last4": "1234", "network": "ACH" } }
+{ "name": "parties.create", "input": { "partyId": "ramp", "name": "Ramp" } }
+{ "name": "accounts.register", "input": { "financialAccountId": "card_ramp", "name": "Ramp card", "currency": "USD", "glAccountCode": 2190, "kind": "card", "providerPartyId": "ramp", "last4": "8570", "network": "Visa" } }
+{ "name": "parties.create", "input": { "partyId": "stripe", "name": "Stripe" } }
+{ "name": "accounts.register", "input": { "financialAccountId": "stripe_balance", "name": "Stripe balance", "currency": "USD", "kind": "other", "providerPartyId": "stripe" } }
 ```
 
 - The kind picks the account when `glAccountCode` is omitted: a bank account posts to `1110`,
@@ -27,6 +33,19 @@ Register one financial account per real place money sits, before anything pays o
 - Checking and savings at the same bank are two accounts. One account reachable by several rails
   is one account.
 - These are bookkeeping records. Economico does not connect to them, read balances or move money.
+- When the provider's fee agreement is known, create its vendor contract as described in
+  [vendor contracts](vendor-contracts.md#payment-providers-and-fees) and link it with
+  `providerContractId`. The account and contract remain separate records.
+- Register each payment instruction with `payment_endpoints.register`: the account or
+  counterparty party, its payto/CAIP-10 URI, and the supported direction, rail and asset.
+  Card collection methods attach to the account without a URI. Deactivate a retired
+  instruction with `payment_endpoints.update` and register its replacement.
+- `payment_routes {action: "quote"}` ranks the active methods that have a matching fee
+  term in the account's provider contract. It returns `methodId` and exact minor-unit
+  cost; with `party_id`, outbound routes also need that party's matching receiving
+  instruction. It is a read, not a payment. When recording a vendor payment through
+  `contracts.record`, pass the selected `paymentMethodId` to freeze the provider fee
+  beside its `pay` or `pay_related` effect. Corrections reverse the previous fee.
 - The opening balance is not typed in. It comes from the recorded history (founder investment,
   SAFE funding) or, when the founder is starting mid-stream, from an opening `journal.post`
   with the bank statement as its source document, agreed with the founder.
@@ -41,6 +60,10 @@ accounting framework, or registering for sales tax are separate commands
 `source_document_id` naming the filing or certificate. Never guess a registration number: ask for
 it exactly as printed. A headless agent cannot run these.
 
+These commands appear in `catalog list` only when the owner approved this connection with
+**"Administer, and keep the legal records (owner)"**. If they are missing, ask the owner to
+reconnect and choose it; never try to work around it.
+
 ## Ownership
 
 Founders' shares, SAFEs, LLC members and project owners are contracts too, with the same
@@ -49,6 +72,11 @@ founder asks, or when the brief needs cash that came from them (a SAFE or the fo
 purchases are where the opening cash came from). The rules that matter:
 
 - Founders are individual parties, never one "Founders" party.
+- Give every holder its role when you create it, because no contract sets one: a founder, an
+  LLC member or partner who runs the business, and a project's owner are
+  `categories: ["founder"]`; a SAFE or priced-round investor, or a parent company that funds a
+  project, is `["investor"]`; an employee granted restricted stock is `["employee"]`. A party
+  without one is listed under "Other".
 - A SAFE is financing (`fund_liability`, 2240) until it converts; it is not equity and not
   revenue.
 - Cash received never implies a share count; the share purchase agreement does.

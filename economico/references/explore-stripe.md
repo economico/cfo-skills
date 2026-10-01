@@ -91,3 +91,6 @@ There is no shortcut that records only payouts: a payout is a net sum across man
 recording it alone leaves every invoice open in receivables, and recording the fee against the
 bank as well takes it off cash twice. Cash at the bank then equals the payouts, and the Stripe
 balance account returns to zero after each payout.
+[stripe-gross-net-payout](recipes/stripe-gross-net-payout.json) is the whole sequence, tested: two
+charges at gross, their fees, one payout of the net, and a payout too large for the balance
+refused.

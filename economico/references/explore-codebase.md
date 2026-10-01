@@ -37,7 +37,9 @@ For each plan, write down:
 
 For each service the product depends on, write down: the vendor, what it is for, whether it
 serves customers in production (cost of revenue) or the team (research and development, or
-general and administrative), and how its cost scales (flat, per seat, per usage).
+general and administrative), how its cost scales (flat, per seat, per usage), and which
+product actions call it ("generate text" calls the model API and the hosting): those are the
+vendor's `drivers` in the [model preview](business-model-brief.md#preview-the-model-before-recording-it).
 
 Classify by environment, not by vendor: production hosting is cost of revenue; a staging
 environment or CI is research and development. Say which you assumed.
