@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.1 (2026-10-02)
+
+- The Claude Code plugin now has its own manifest, `.claude-plugin/plugin.json`, listing its
+  skills, and an icon. The marketplace entry only points at it. Installing works as before.
+
 ## 1.4.0 (2026-10-02)
 
 - Backfilled history now lands in revenue in the same session. The skill records each
