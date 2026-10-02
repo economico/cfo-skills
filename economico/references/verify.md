@@ -17,6 +17,7 @@ parameters and a runnable example; dates are `YYYY-MM-DD` or UTC instants, `unti
 | Where is the money? | `reports run balance_sheet` with `as_of` | Cash per account matches the bank and card statements at that date, where history was recorded |
 | Who owes what? | `reports run aging` with `direction` `receivable` or `payable` and `as_of` | Open invoices and bills only; card and paid-at-purchase receipts never appear |
 | What is open on one contract? | `reports run activity_claims` with `contract_id` | `outstanding` per invoice; `"0"` once paid |
+| Is every completed month earned? | `reports run activity_plan` per contract, from its start through today; `ledgers {action: "balances", ledger_id}` for 2150 | No period due before today left unrecorded, whatever its status (`blocked` and `contingent` say why in `reason`); deferred revenue is only the billed, unearned part (this month of a monthly plan, the rest of an annual one). Record any missing `service` ([recording history](customer-contracts.md#recording-history)) |
 | What happens next? | `reports run activity_plan` with `contract_id`, `from`, `through` | The next scheduled periods; usage shows as contingent until measured |
 | Billing and cash for a period | `reports run revenue_summary` with `period_start`, `period_end` | Invoiced, paid, outstanding and recognized per currency |
 | Is the history intact? | `events {action: "head"}` and, over REST, `POST /v1/events/verify` | Verification ok |

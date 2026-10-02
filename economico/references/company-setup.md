@@ -159,7 +159,9 @@ holds the whole company. Adapt [llc-members](recipes/llc-members.json) to one me
    ["founder"]`): `accept`, `authorize` the membership units on an `issued_instrument` ledger
    (100 units for a 100% interest when the agreement states a percentage rather than units, and
    say so in the brief), and an `allocate` activity admitting the member with all of them.
-   Record all three at the formation date with the formation document as acceptance evidence.
+   Record all three at the formation date with the formation document as acceptance evidence,
+   and create the contract with `effective_at` at that date too, or the formation-date
+   recordings are refused.
 3. Add the money activities the member's capital needs: `fund_capital` for cash put in,
    `contribute_related` for founder-paid costs the member contributes rather than gets back,
    and `owner_draw` for draws. A member who has put in nothing yet still holds the units:
@@ -174,6 +176,11 @@ The same shape, one party and one contract per holder, with the recipe `business
 |---|---|
 | A SAFE, held as financing until it converts | [safe](recipes/safe.json) |
 | An LLC's or partnership's members: capital, draws, year-end allocation | [llc-members](recipes/llc-members.json) |
-| A project's owner: investment, repayable advances, draws | [project-owner](recipes/project-owner.json) |
+| A project's owner: investment, repayable advances, draws, year-end allocation of a loss | [project-owner](recipes/project-owner.json) |
+
+At year end, an LLC's, partnership's or project's result goes to the owners' capital: a profit
+with `allocate_profit`, a loss with `allocate_loss`, each owner's share by the agreement, so
+`capital_accounts` shows nothing left undistributed. The ledger refuses an allocation larger
+than the profit or loss not yet allocated.
 
 `catalog {action: "describe"}` the effect patterns a recipe uses before adapting it.

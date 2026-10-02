@@ -139,11 +139,22 @@ effects in one activity and omit `claimFact`; the payment settles the claim this
 - **Keys are identities.** `occurrenceKey` is unique within the contract activity;
   `sourceFactId` is unique across the whole business. Identical input replays the original
   statement (`duplicate: true`); the same key with different facts is refused.
+- **A contract starts where `contracts.create` is dated.** Its first version takes effect at the
+  envelope's `effective_at`, and nothing can be recorded on it before then
+  (`no applicable version at that date`). Date `contracts.create` at the real start: the signing,
+  the subscription's start, the formation date. Never leave it at today when you backfill.
+- **A wrongly dated draft is discarded, not reused.** `contracts.discard` with `contractId` and
+  `expectedDocumentId` (the contract's current `documentId`) ends a draft that never recorded
+  anything. Create the contract again with the right `effective_at`; the discarded one stays in
+  history. Record acceptance at the real acceptance date too: on a misdated draft that is
+  refused, which keeps the draft discardable. An accepted or used contract cannot be discarded:
+  it ends through its own lifecycle.
 - **Dates go forward per contract.** A recording may not be in the future, nor earlier than the
   contract's latest recorded activity. Backfill history in date order, contract by contract.
 - **Scheduled periods record themselves.** The daily timer records each fixed scheduled period
   (occurrence key `schedule:<start>:<end>`) once it is due, and skips any period already recorded.
-  Record one by hand only when you need it on the books now; use that same occurrence key.
+  Record one by hand when you need it on the books now, which includes every past period when
+  you backfill history; use that same occurrence key.
 - **Corrections are new events.** Nothing is edited. A wrong occurrence is corrected with
   `correctsOccurrenceId`, and only the latest active occurrence of that activity can be
   corrected: fix mistakes as you go, not at the end. A contract change is `contracts.amend`; a

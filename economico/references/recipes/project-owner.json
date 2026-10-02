@@ -1,6 +1,6 @@
 {
   "name": "Project owned by one person or company",
-  "description": "The owner invests $5,000 and advances $10,000 repayable; a $400 expense paid personally is left in as investment; $4,000 of the advance is repaid and the owner draws $1,000. Owner's capital $4,400; due to owner $6,000; cash $10,000. At year end, year-end closes the draws into the owner's capital; the year's $400 loss stays in undistributed earnings, since a loss has no allocation pattern yet.",
+  "description": "The owner invests $5,000 and advances $10,000 repayable; a $400 expense paid personally is left in as investment; $4,000 of the advance is repaid and the owner draws $1,000. Owner's capital $4,400; due to owner $6,000; cash $10,000. At year end, year-end closes the draws into the owner's capital and allocates the year's $400 loss to it (allocate_loss), so undistributed earnings are zero.",
   "recordedAt": "2026-01-02T00:00:00Z",
   "setupAt": "2025-01-01T00:00:00Z",
   "steps": [
@@ -299,13 +299,17 @@
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Year-end: close the draws into the owner's capital",
+          "name": "Year-end: close the draws and allocate the year's result to the owner's capital",
           "trigger": {
             "type": "recorded"
           },
           "terms": {},
           "facts": {
             "draws": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "loss": {
               "type": "integer",
               "unit": "USD"
             }
@@ -325,6 +329,11 @@
               "ledger": "money",
               "amount": "fact:draws",
               "accountingKey": "draw"
+            },
+            {
+              "pattern": "allocate_loss",
+              "ledger": "money",
+              "amount": "fact:loss"
             }
           ],
           "repeatable": true
@@ -732,7 +741,8 @@
         "sourceFactId": "year-end",
         "effectiveAt": "2025-12-31T23:00:00Z",
         "facts": {
-          "draws": "100000"
+          "draws": "100000",
+          "loss": "40000"
         },
         "evidence": {
           "acceptance": [
@@ -770,12 +780,12 @@
           {
             "partyId": "owner",
             "contributed": "540000",
-            "allocated": "0",
+            "allocated": "-40000",
             "distributed": "100000",
-            "balance": "440000"
+            "balance": "400000"
           }
         ],
-        "undistributedEarnings": "-40000",
+        "undistributedEarnings": "0",
         "totalEquity": "400000"
       }
     },

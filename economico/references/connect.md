@@ -5,15 +5,14 @@ name the business before any write.
 
 ## Which host
 
-The new system runs at `https://ng.economi.co` until cutover; after cutover it is
-`https://economi.co`. The discovery documents tell you which one you are on:
-`/.well-known/oauth-protected-resource/mcp` names the resource. If the founder gives you a URL,
-use theirs. Everything below uses `ng.economi.co`.
+Economico runs at `https://economi.co`. The discovery document
+`/.well-known/oauth-protected-resource/mcp` names the resource you are on. If the founder gives
+you a URL, use theirs.
 
 ## MCP (preferred when the host speaks MCP)
 
 ```bash
-claude mcp add --transport http economico https://ng.economi.co/mcp
+claude mcp add --transport http economico https://economi.co/mcp
 ```
 
 The host drives OAuth: a browser opens, the founder signs in with an emailed one-time code or
@@ -28,7 +27,7 @@ Keep books at least. The tools you get are `businesses`, `catalog`, `commands`,
 
 ```bash
 npm install -g @economico/cli          # Node 24+
-economico login --server https://ng.economi.co --local
+economico login --server https://economi.co --local
 economico businesses list
 economico --business <slug> catalog list
 economico --business <slug> catalog describe --name contracts.record
@@ -39,7 +38,9 @@ economico --business <slug> reports run --kind balance_sheet --currency USD --hu
 `--local` keeps the credentials in `./.economico/config.json` (gitignored for you), so one
 directory is one identity. The CLI has no command tree of its own: `--help` at any level reads the
 server's OpenAPI document. `--args` takes JSON, `@file` or `-` for stdin. Command calls are never
-retried automatically; retry deliberately with the same `idempotency_key`.
+retried automatically; retry deliberately with the same `idempotency_key`. The one exception is
+`busy` (HTTP 503): the business was receiving other uploads or serving other large documents and
+did not start the request, so the CLI waits and sends it again a few times, and so should you.
 
 ## REST (for a product backend)
 

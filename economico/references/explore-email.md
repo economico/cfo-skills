@@ -40,7 +40,9 @@ collect the full series of that vendor's receipts.
 | Links to terms of service and pricing | The vendor contract's source documents |
 
 Use the attached PDF when there is one; otherwise the message body as text. Keep the raw bytes
-you will store under 256 KiB.
+you will store under 10 MiB, and send anything beyond a small file over REST or the CLI
+(`--args @receive.json`, a JSON file of the arguments with the bytes base64-encoded in
+`contentBase64`): an MCP call carries the bytes inline.
 
 ## How it was paid decides the recipe
 
