@@ -7,13 +7,13 @@
   },
   "metadata": {
     "description": "Agent skills for running a founder-run company's books on Economico, the double-entry ledger your own agent operates",
-    "version": "1.4.1"
+    "version": "1.4.2"
   },
   "plugins": [
     {
       "name": "economico",
       "description": "Set up Economico and model your business in it from your code, Stripe and email, then keep the books: customers, invoices, payments, vendor bills, receipts and investor updates",
-      "version": "1.4.1",
+      "version": "1.4.2",
       "category": "productivity",
       "source": "./"
     }

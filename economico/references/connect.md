@@ -16,12 +16,11 @@ claude mcp add --transport http economico https://economi.co/mcp
 ```
 
 The host drives OAuth: a browser opens, the founder signs in with an emailed one-time code or
-Google, and approves which businesses this connection may reach and with what access
-(**Read books**, **Keep books**, **Administer books and sharing**). Modeling a business needs
-Keep books at least. The tools you get are `businesses`, `catalog`, `commands`,
-`command_receipt`, `reports`, `export`, `ping`, and one read tool per read model (`subjects`,
-`documents`, `events`, `ledgers`, `parties`, `accounts`, `categories`, `tax_codes`,
-`shared_views`, `business`). Every tool except `businesses` takes a required `business` slug.
+Google, and approves which businesses this connection may reach. Every connection gets full
+access to those businesses, up to the founder's own permissions. The tools you get are
+`businesses`, `catalog`, `commands`, `command_receipt`, `reports`, `export`, `ping`, and one
+read tool per read model (`subjects`, `documents`, `events`, `ledgers`, `parties`, `accounts`,
+`categories`, `tax_codes`, `shared_views`, `business`). Every tool except `businesses` takes a required `business` slug.
 
 ## CLI (for shell agents, CI, or several businesses at once)
 
@@ -85,7 +84,8 @@ State the target out loud before the first write: "Writing to `acme-sandbox-3f2a
 `business get` returns the legal form, `functionalCurrency`, `primaryLedgerId` (the GAAP ledger
 contracts bind; USD is `led_00000000000000000000000840`) and `fiscalYearEnd`. `catalog
 permissions` shows exactly what this token may do. If `commands` is missing from the tool list,
-the grant is read-only: ask the founder to reconnect with Keep books.
+the grant is read-only (a connection approved before full access became the rule, or a member
+whose own permissions are read-only): ask the founder to reconnect, or to widen the membership.
 
 ## Troubleshooting
 
