@@ -11,6 +11,10 @@ you a URL, use theirs.
 
 ## MCP (preferred when the host speaks MCP)
 
+The Claude Code plugin (`economico@cfo-skills`) declares this server, so after installing it
+there is nothing to add: sign in from `/mcp` when Claude Code lists `economico` as needing
+authentication. Otherwise, add it yourself:
+
 ```bash
 claude mcp add --transport http economico https://economi.co/mcp
 ```
