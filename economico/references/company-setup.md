@@ -88,9 +88,10 @@ accounting framework, or registering for sales tax are separate commands
 `source_document_id` naming the filing or certificate. Never guess a registration number: ask for
 it exactly as printed. A headless agent cannot run these.
 
-These commands appear in `catalog list` only when the owner approved this connection with
-**"Administer, and keep the legal records (owner)"**. If they are missing, ask the owner to
-reconnect and choose it; never try to work around it.
+These commands appear in `catalog list` only when the business's owner approved this
+connection: every connection gets full access, but only up to the approving person's own
+permissions. If they are missing, ask the owner to connect the agent themselves; never try to
+work around it.
 
 ## Ownership
 

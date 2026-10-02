@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.2 (2026-10-02)
+
+- Connecting the ledger always grants full access to each business you approve, up to your
+  own permissions; there is no access level to pick on the consent screen any more. The
+  skill no longer tells you to choose Read books, Keep books or Administer, and asks the
+  business's owner to connect when the legal-record commands are missing.
+
 ## 1.4.1 (2026-10-02)
 
 - The Claude Code plugin now has its own manifest, `.claude-plugin/plugin.json`, listing its
