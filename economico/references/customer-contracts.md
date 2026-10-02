@@ -14,7 +14,10 @@ payments that happened under it.
    through. See [evidence](evidence.md).
 3. **Contract**: `contracts.create` with the plan's `templateDocumentId`, `parties: { "customer":
    "<partyId>" }`, per-activity `terms` for this customer (start and end dates, any negotiated
-   price), `ledgerBindings: { "money": "<primaryLedgerId>" }`, and `sourceDocumentIds`.
+   price), `ledgerBindings: { "money": "<primaryLedgerId>" }`, and `sourceDocumentIds`. Date
+   the envelope's `effective_at` at the start, never today: the contract cannot record anything
+   before it. If you created one at the wrong date, `contracts.discard` the draft and create it
+   again ([how Economico works](how-economico-works.md#recording-rules-that-matter)).
 4. **Acceptance**: `contracts.record` the `accept` activity with
    `evidence.acceptance: [{ "kind": "signed_doc", "ref": "<document id>" }]` and
    `effectiveAt` = the date the customer accepted. The contract becomes `active`.
@@ -51,6 +54,39 @@ A scheduled bill's occurrence key is `schedule:<period start>:<period end>`; a p
 in `billed`. Each recording returns an immutable `activity_statement` document: the invoice or
 receipt, readable with `documents {action: "get"}` and shown as a labeled document in the
 workspace.
+
+## Recording history
+
+Backfilling past months is one timeline per contract, recorded oldest first. Put every event on
+it at its own date, then record them in that order:
+
+- each period's `bill`, occurrence key `schedule:<start>:<end>`, at the period start;
+- each `receipt`, at its payment date, `billed` naming the key of the bill it paid;
+- each period's `usage` and `usage-bill`;
+- each completed period's `service`, same occurrence key as its bill, at the instant
+  `activity_plan` gives for it (just before the period end), with the `elapsed_time` service
+  evidence the plan shows.
+
+A payment that comes late lands after the next period's bill, and that is right: the order is
+the dates, not the periods. Three rules make it matter:
+
+- **Recorded activities go forward.** A `receipt` or `usage` dated before the contract's latest
+  recorded activity is refused. Recording every bill first, or finishing one period's payment
+  before a later-dated one, leaves the earlier payments unrecordable.
+- **A scheduled period needs its bill first.** A `service` before its `bill` is refused
+  (`recognize exceeds its available balance`), and so is a `receipt` naming a bill that is not
+  recorded yet.
+- **The timer runs daily.** It records any scheduled period you leave, but not until its next
+  run, so a completed period you do not record stays in deferred revenue for the rest of the
+  session. Backfill a contract in one pass, right after accepting it: if the timer runs in
+  between and records later periods, the payments dated before them are refused. Report that as
+  a gap; do not work around it.
+
+Check it with `reports run activity_plan` for the contract from its start through today: no
+period due before today may be left unrecorded, whatever its status. `fixed` is one you skipped;
+`blocked` and `contingent` give a `reason` (a missing bill, missing evidence) to fix. Deferred
+revenue (2150) should hold only what is billed and not yet earned: the current month of each
+monthly plan and the unearned rest of each annual one.
 
 Customers who pay an invoice rather than a card need a due date on the claim, or `aging` lists
 the invoice under "unknown due date": give the billing effect `"dueDate": "fact:due"` (a `due`

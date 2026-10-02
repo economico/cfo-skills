@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.4.0 (2026-10-02)
+
+- Backfilled history now lands in revenue in the same session. The skill records each
+  contract's history as one timeline in date order (bills, payments at their own dates, usage,
+  and each completed month's service) instead of leaving completed months to the ledger's
+  daily timer, which kept them in deferred revenue until its next run. Verifying the books
+  now checks that no period due before today is left unrecorded.
+- A loss year can now be allocated to the owners' capital with the new `allocate_loss`
+  pattern, the way a profit year already is with `allocate_profit`. The project-owner recipe
+  allocates its year's loss again, so its `capital_accounts` shows nothing left
+  undistributed.
+- Contracts are created at their real start date (the signing, the subscription's start, the
+  formation date) rather than today, so backfilled history is never refused for predating
+  the contract; a draft created at the wrong date is discarded with `contracts.discard` and
+  created again.
+- Economico's address is now `https://economi.co`: connecting over MCP and logging in with the
+  CLI use it.
+
 ## 1.3.0 (2026-10-01)
 
 - Every first session now records who owns the company. The skill reads the legal form and

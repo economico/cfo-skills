@@ -26,7 +26,9 @@ them to the commands they justify, so the books can be audited from the first da
   the list shows the `externalId`.
 
 - Accepted: nonempty UTF-8 text (plain text, Markdown, an email rendered as text) or a PDF, up to
-  256 KiB. Office formats and images are refused; convert to PDF or text first.
+  10 MiB. The bytes ride inline in the tool call, so send anything beyond a small file over
+  REST or the CLI (`--args @receive.json`, a JSON file of these arguments with the bytes
+  base64-encoded in `contentBase64`). Office formats and images are refused; convert to PDF or text first.
 - The bytes are stored exactly and addressed by hash. Sending identical bytes again returns
   `no_change` with the existing document id in `details`.
 - `externalId` is how you find it again: `documents {action: "list", kind: "source_document",

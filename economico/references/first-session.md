@@ -124,11 +124,17 @@ session replays instead of duplicating.
 5. **Activities and templates.** One template per plan in the price book, one per vendor. Start
    from [the recipes](modeling-products.md#recipes). Preview each template's money effects with
    `activity_effects` before binding a customer to it.
-6. **Contracts.** One per customer subscription or agreement, one per vendor relationship. Record
-   acceptance on each, with the source that evidences it.
-7. **History** (if in scope). Per contract, in date order: invoices, payments, receipts, usage.
-   Scheduled periods record themselves daily; record past ones only if the founder wants the
-   history on the books today.
+6. **Contracts.** One per customer subscription or agreement, one per vendor relationship, each
+   created with `effective_at` at its start date (an ownership contract at the formation date).
+   Record acceptance on each, with the source that evidences it. A draft created at the wrong
+   date is discarded with `contracts.discard` and created again.
+7. **History** (if in scope). Per contract, every event in date order: each period's bill,
+   each payment at its own date, usage, and each completed period's `service`. Recording
+   history means recording every completed `service` by hand: the timer that records scheduled
+   periods runs once a day, so a period left to it stays in deferred revenue (2150) for the
+   rest of this session, and the statements you prove and show are wrong. A payment cannot be
+   dated before a later recording on the same contract, so do not record all the bills first.
+   See [customer contracts](customer-contracts.md#recording-history).
 
 Once the contracts are recorded, show them in a message: one table, not one view per command
 (see [show the founder](show-the-founder.md)).
