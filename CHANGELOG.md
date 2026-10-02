@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0 (2026-10-02)
+
+- Installing the Claude Code plugin now connects the MCP servers the skills work through:
+  Economico (`https://economi.co/mcp`) and Stripe (`https://mcp.stripe.com`). Sign in to each
+  with OAuth from `/mcp`. If you added Economico with `claude mcp add` before,
+  you can remove that entry.
+
 ## 1.4.2 (2026-10-02)
 
 - Connecting the ledger always grants full access to each business you approve, up to your
