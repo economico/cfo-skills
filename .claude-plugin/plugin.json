@@ -1,0 +1,21 @@
+{
+  "name": "economico",
+  "description": "Set up Economico and model your business in it from your code, Stripe and email, then keep the books: customers, invoices, payments, vendor bills, receipts and investor updates",
+  "version": "1.4.1",
+  "author": {
+    "name": "Economico",
+    "email": "support@economi.co"
+  },
+  "homepage": "https://economi.co",
+  "repository": "https://github.com/economico/cfo-skills",
+  "license": "MIT",
+  "skills": [
+    "./economico",
+    "./add-customer",
+    "./investor-update",
+    "./record-payment",
+    "./record-receipts",
+    "./record-vendor-invoice",
+    "./send-invoice"
+  ]
+}
