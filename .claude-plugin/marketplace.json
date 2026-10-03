@@ -6,14 +6,14 @@
     "email": "support@economi.co"
   },
   "metadata": {
-    "description": "Agent skills for running a founder-run company's books on Economico, the double-entry ledger your own agent operates",
-    "version": "1.5.1"
+    "description": "Economico for Claude Code: real books your agent runs, numbers you can explain",
+    "version": "1.5.2"
   },
   "plugins": [
     {
       "name": "economico",
-      "description": "Set up Economico and model your business in it from your code, Stripe and email, then keep the books: customers, invoices, payments, vendor bills, receipts and investor updates",
-      "version": "1.5.1",
+      "description": "See the business behind your product. Your agent reads your code, Stripe and email, then keeps real double-entry books in Economico: customers and contracts, invoices and payments, vendor bills and receipts, investor updates. Ask your burn, runway or revenue and see the entries behind every number. Free forever for a single founder under $10k a month in recognized revenue.",
+      "version": "1.5.2",
       "category": "productivity",
       "source": "./"
     }
