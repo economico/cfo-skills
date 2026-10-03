@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.2 (2026-10-03)
+
+- The plugin directory listing now says what Economico does for you, with search keywords and a
+  link to Economico's privacy policy (`https://economi.co/privacy/`). Nothing changes in the
+  skills.
+
 ## 1.5.1 (2026-10-03)
 
 - The Claude Code plugin declares only Economico's own MCP server. It no longer adds Stripe:

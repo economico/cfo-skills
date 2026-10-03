@@ -1,14 +1,17 @@
 {
   "name": "economico",
-  "description": "Set up Economico and model your business in it from your code, Stripe and email, then keep the books: customers, invoices, payments, vendor bills, receipts and investor updates",
-  "version": "1.5.1",
+  "displayName": "Economico",
+  "description": "See the business behind your product. Your agent reads your code, Stripe and email, then keeps real double-entry books in Economico: customers and contracts, invoices and payments, vendor bills and receipts, investor updates. Ask your burn, runway or revenue and see the entries behind every number. Free forever for a single founder under $10k a month in recognized revenue.",
+  "version": "1.5.2",
   "author": {
     "name": "Economico",
     "email": "support@economi.co"
   },
   "homepage": "https://economi.co",
+  "privacyPolicyUrl": "https://economi.co/privacy/",
   "repository": "https://github.com/economico/cfo-skills",
   "license": "MIT",
+  "keywords": ["bookkeeping", "accounting", "double-entry", "ledger", "invoicing", "accounts-receivable", "expenses", "receipts", "burn-rate", "runway", "startup-finance", "investor-update", "founder", "mcp"],
   "skills": [
     "./economico",
     "./add-customer",
