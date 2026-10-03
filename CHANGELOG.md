@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.1 (2026-10-03)
+
+- The Claude Code plugin declares only Economico's own MCP server. It no longer adds Stripe:
+  connect Stripe yourself if you want your agent to read it, as before 1.5.0.
+
 ## 1.5.0 (2026-10-02)
 
 - Installing the Claude Code plugin now connects the MCP servers the skills work through:

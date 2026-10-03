@@ -9,8 +9,8 @@ what you learned.
 
 Use whatever the founder grants, read-only:
 
-- the Stripe MCP server (`https://mcp.stripe.com`; the Claude Code plugin declares it), if
-  connected to your host. It can also write: call only its read tools;
+- the Stripe MCP server, if the founder connected it to your host. It can also write: call only
+  its read tools;
 - the Stripe CLI after the founder runs `stripe login`, or with a restricted read-only key the
   founder puts in the `STRIPE_API_KEY` environment variable. Never type, paste or echo a key
   into a command yourself: command lines end up in shell history, process lists and

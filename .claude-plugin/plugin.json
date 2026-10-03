@@ -1,7 +1,7 @@
 {
   "name": "economico",
   "description": "Set up Economico and model your business in it from your code, Stripe and email, then keep the books: customers, invoices, payments, vendor bills, receipts and investor updates",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "author": {
     "name": "Economico",
     "email": "support@economi.co"
@@ -19,7 +19,6 @@
     "./send-invoice"
   ],
   "mcpServers": {
-    "economico": { "type": "http", "url": "https://economi.co/mcp" },
-    "stripe": { "type": "http", "url": "https://mcp.stripe.com" }
+    "economico": { "type": "http", "url": "https://economi.co/mcp" }
   }
 }
