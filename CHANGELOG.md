@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.3 (2026-10-06)
+
+- The plugin directory listing now opens "Discover the business behind your product".
+  Nothing changes in the skills.
+
 ## 1.5.2 (2026-10-03)
 
 - The plugin directory listing now says what Economico does for you, with search keywords and a
