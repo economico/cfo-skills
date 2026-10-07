@@ -1,6 +1,6 @@
 {
   "name": "Monthly platform fee plus metered usage billed in arrears",
-  "description": "$500/month platform fee billed in advance and earned over the month, plus API calls at $2.00 per 1,000 measured from the product's own usage records and billed after the month closes. The meter keeps native call counts in its own ledger; usage revenue (4120) is earned when the measurement is accepted and billed from unbilled receivables (1125). MRR counts only the fixed fee.",
+  "description": "One fixed platform-access right bills $500 monthly in advance; one metered API-call right earns $2,500 for accepted August usage before September invoicing. Independent collections settle both claims. August earns $3,000 while fixed MRR remains $500.",
   "setupAt": "2026-08-01T00:00:00Z",
   "recordedAt": "2026-09-10T00:00:00Z",
   "steps": [
@@ -35,31 +35,12 @@
       }
     },
     {
-      "key": "def-accept",
+      "key": "platform-right",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Accept signed order form",
-          "trigger": {
-            "type": "transition",
-            "from": [
-              "draft"
-            ],
-            "to": "active"
-          }
-        }
-      }
-    },
-    {
-      "key": "def-fee",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Bill the monthly platform fee",
-          "trigger": {
-            "type": "scheduled"
-          },
-          "repeatable": true,
+          "model": "priced-rights-v1",
+          "name": "Platform access",
           "terms": {
             "fee": {
               "type": "integer",
@@ -71,8 +52,13 @@
             },
             "end": {
               "type": "date"
+            },
+            "currency": {
+              "type": "text",
+              "default": "USD"
             }
           },
+          "facts": {},
           "ledgers": {
             "money": {
               "classification": "gaap",
@@ -82,92 +68,59 @@
               "accountTemplate": "gaap_startup"
             }
           },
-          "effects": [
-            {
-              "pattern": "bill",
-              "ledger": "money",
+          "price": {
+            "treatment": "priced",
+            "calculation": {
+              "type": "fixed",
               "amount": "term:fee"
-            }
-          ],
-          "schedule": {
-            "startTerm": "start",
-            "endTerm": "end",
-            "everyMonths": 1,
-            "timing": "start"
-          }
-        }
-      }
-    },
-    {
-      "key": "def-platform",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Completed month of platform access",
-          "trigger": {
-            "type": "scheduled"
-          },
-          "repeatable": true,
-          "product": "platform",
-          "terms": {
-            "fee": {
-              "type": "integer",
-              "unit": "USD",
-              "default": "50000"
             },
-            "start": {
-              "type": "date"
-            },
-            "end": {
-              "type": "date"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "recognize",
-              "ledger": "money",
-              "amount": "term:fee",
-              "accountingKey": "fee",
-              "category": "subscription"
-            }
-          ],
-          "schedule": {
-            "startTerm": "start",
-            "endTerm": "end",
-            "everyMonths": 1,
-            "timing": "end",
-            "serviceEvidence": "elapsed_time"
+            "currencyTerm": "currency"
           },
           "recurringValue": {
-            "amount": "term:fee",
             "interval": "monthly",
-            "ledger": "money",
             "startTerm": "start",
             "endTerm": "end"
+          },
+          "economics": {
+            "kind": "service",
+            "direction": "provide",
+            "billing": {
+              "timing": "advance",
+              "schedule": {
+                "startTerm": "start",
+                "endTerm": "end",
+                "everyMonths": 1,
+                "timing": "start",
+                "offsetDays": 0
+              }
+            },
+            "recognition": {
+              "timing": "ratable",
+              "schedule": {
+                "startTerm": "start",
+                "endTerm": "end",
+                "everyMonths": 1,
+                "timing": "end",
+                "offsetDays": 0,
+                "serviceEvidence": "elapsed_time"
+              }
+            },
+            "classification": {
+              "monetaryLedger": "money",
+              "revenueCategory": "subscription",
+              "product": "platform"
+            }
           }
         }
       }
     },
     {
-      "key": "def-usage",
+      "key": "usage-right",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Accepted monthly API calls",
-          "trigger": {
-            "type": "recorded"
-          },
-          "repeatable": true,
-          "product": "api-calls",
+          "model": "priced-rights-v1",
+          "name": "Metered API calls",
           "terms": {
             "rate": {
               "type": "integer",
@@ -178,6 +131,10 @@
               "type": "integer",
               "unit": "call",
               "default": "1000"
+            },
+            "currency": {
+              "type": "text",
+              "default": "USD"
             }
           },
           "facts": {
@@ -193,181 +150,33 @@
               "unitCode": "USD",
               "decimals": 2,
               "accountTemplate": "gaap_startup"
-            },
-            "calls": {
-              "classification": "operational",
-              "unitKind": "usage",
-              "unitCode": "call",
-              "decimals": 0,
-              "accountTemplate": "meter"
             }
           },
-          "calculations": [
-            {
-              "key": "charge",
+          "price": {
+            "treatment": "priced",
+            "calculation": {
               "type": "rate",
               "quantity": "fact:calls",
               "rate": "term:rate",
               "unitsPerPrice": "term:per"
-            }
-          ],
-          "effects": [
-            {
-              "pattern": "observe",
-              "ledger": "calls",
-              "amount": "fact:calls"
             },
-            {
-              "pattern": "accrue_revenue",
-              "ledger": "money",
-              "amount": "calc:charge:amount",
-              "category": "usage"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "def-usage-bill",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Invoice accepted usage",
-          "trigger": {
-            "type": "recorded"
+            "currencyTerm": "currency"
           },
-          "repeatable": true,
-          "facts": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD"
+          "economics": {
+            "kind": "service",
+            "direction": "provide",
+            "billing": {
+              "timing": "arrears"
             },
-            "calls": {
-              "type": "integer",
-              "unit": "call"
+            "recognition": {
+              "timing": "usage"
             },
-            "due": {
-              "type": "date"
+            "classification": {
+              "monetaryLedger": "money",
+              "revenueCategory": "usage",
+              "product": "api-calls"
             }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            },
-            "calls": {
-              "classification": "operational",
-              "unitKind": "usage",
-              "unitCode": "call",
-              "decimals": 0,
-              "accountTemplate": "meter"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "bill_accrued",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "accountingKey": "usage",
-              "dueDate": "fact:due"
-            },
-            {
-              "pattern": "meter_billed",
-              "ledger": "calls",
-              "amount": "fact:calls"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "def-receipt",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Customer payment received",
-          "trigger": {
-            "type": "recorded"
-          },
-          "repeatable": true,
-          "facts": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD"
-            },
-            "bank": {
-              "type": "text"
-            },
-            "billed": {
-              "type": "text"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "collect",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "accountingKey": "fee",
-              "financialAccountFact": "bank",
-              "claimFact": "billed"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "def-usage-receipt",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Usage invoice payment received",
-          "trigger": {
-            "type": "recorded"
-          },
-          "repeatable": true,
-          "facts": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD"
-            },
-            "bank": {
-              "type": "text"
-            },
-            "billed": {
-              "type": "text"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "collect",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "accountingKey": "usage",
-              "financialAccountFact": "bank",
-              "claimFact": "billed"
-            }
-          ]
+          }
         }
       }
     },
@@ -388,38 +197,13 @@
               "unitCode": "USD",
               "decimals": 2,
               "accountTemplate": "gaap_startup"
-            },
-            "calls": {
-              "classification": "operational",
-              "unitKind": "usage",
-              "unitCode": "call",
-              "decimals": 0,
-              "accountTemplate": "meter"
             }
           },
           "activities": [
             {
-              "key": "accept",
-              "activityDocumentId": {
-                "$ref": "def-accept.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {}
-            },
-            {
-              "key": "fee",
-              "activityDocumentId": {
-                "$ref": "def-fee.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
               "key": "platform",
               "activityDocumentId": {
-                "$ref": "def-platform.documentId"
+                "$ref": "platform-right.documentId"
               },
               "partyRole": "customer",
               "ledgers": {
@@ -429,46 +213,15 @@
             {
               "key": "usage",
               "activityDocumentId": {
-                "$ref": "def-usage.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {
-                "money": "money",
-                "calls": "calls"
-              }
-            },
-            {
-              "key": "usage-bill",
-              "activityDocumentId": {
-                "$ref": "def-usage-bill.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {
-                "money": "money",
-                "calls": "calls"
-              }
-            },
-            {
-              "key": "receipt",
-              "activityDocumentId": {
-                "$ref": "def-receipt.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "usage-receipt",
-              "activityDocumentId": {
-                "$ref": "def-usage-receipt.documentId"
+                "$ref": "usage-right.documentId"
               },
               "partyRole": "customer",
               "ledgers": {
                 "money": "money"
               }
             }
-          ]
+          ],
+          "model": "priced-rights-v1"
         }
       }
     },
@@ -483,10 +236,6 @@
           "customer": "cus_initech"
         },
         "terms": {
-          "fee": {
-            "start": "2026-08-01",
-            "end": "2027-08-01"
-          },
           "platform": {
             "start": "2026-08-01",
             "end": "2027-08-01"
@@ -504,17 +253,14 @@
     },
     {
       "key": "accept",
-      "command": "contracts.record",
+      "command": "contracts.accept",
       "at": "2026-08-01T00:00:00Z",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "accept",
-        "occurrenceKey": "accept",
         "sourceFactId": "initech:order-form:accepted",
         "effectiveAt": "2026-08-01T00:00:00Z",
-        "facts": {},
         "evidence": {
           "acceptance": [
             {
@@ -524,6 +270,10 @@
               }
             }
           ]
+        },
+        "expectedStatus": "draft",
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
         }
       }
     },
@@ -535,39 +285,65 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "fee",
         "occurrenceKey": "schedule:2026-08-01:2026-09-01",
         "sourceFactId": "initech:invoice:fee:2026-08",
         "effectiveAt": "2026-08-01T00:00:00Z",
         "facts": {},
-        "evidence": {}
+        "evidence": {
+          "billing": [
+            {
+              "kind": "other",
+              "ref": "initech:invoice:fee:2026-08"
+            }
+          ]
+        },
+        "activityKey": "platform",
+        "phase": "billing",
+        "period": {
+          "from": "2026-08-01T00:00:00Z",
+          "through": "2026-09-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "key": "paid-fee-aug-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
       }
     },
     {
       "key": "paid-fee-aug",
-      "command": "contracts.record",
+      "command": "payments.record",
       "at": "2026-08-03T00:00:00Z",
       "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "receipt",
-        "occurrenceKey": "stripe:charge:ch_initech_fee_2026_08",
-        "sourceFactId": "stripe:charge:ch_initech_fee_2026_08",
+        "financialAccountId": "bank_main",
+        "direction": "in",
+        "amount": "50000",
+        "currency": "USD",
+        "partyId": "cus_initech",
         "effectiveAt": "2026-08-03T00:00:00Z",
-        "facts": {
-          "amount": "50000",
-          "bank": "bank_main",
-          "billed": "schedule:2026-08-01:2026-09-01"
-        },
-        "evidence": {
-          "payment": [
-            {
-              "kind": "stripe_object",
-              "ref": "ch_initech_fee_2026_08"
-            }
-          ]
-        }
+        "sourceFactId": "stripe:charge:ch_initech_fee_2026_08",
+        "evidence": [
+          {
+            "kind": "stripe_object",
+            "ref": "ch_initech_fee_2026_08"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "paid-fee-aug-claim.claims.0.claimId"
+            },
+            "component": {
+              "$ref": "paid-fee-aug-claim.claims.0.component"
+            },
+            "amount": "50000"
+          }
+        ]
       }
     },
     {
@@ -578,7 +354,6 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "platform",
         "occurrenceKey": "schedule:2026-08-01:2026-09-01",
         "sourceFactId": "initech:platform:2026-08",
         "effectiveAt": "2026-08-31T23:59:59.999Z",
@@ -590,6 +365,12 @@
               "ref": "elapsed:2026-08-01:2026-09-01"
             }
           ]
+        },
+        "activityKey": "platform",
+        "phase": "recognition",
+        "period": {
+          "from": "2026-08-01T00:00:00Z",
+          "through": "2026-09-01T00:00:00Z"
         }
       }
     },
@@ -601,7 +382,6 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "usage",
         "occurrenceKey": "usage:2026-08",
         "sourceFactId": "initech:usage:2026-08",
         "effectiveAt": "2026-08-31T23:59:59.999Z",
@@ -615,7 +395,37 @@
               "ref": "product-db:usage_rollup:initech:2026-08"
             }
           ]
-        }
+        },
+        "activityKey": "usage",
+        "obligationKey": "usage:2026-08",
+        "phase": "usage"
+      }
+    },
+    {
+      "key": "usage-aug-recognized",
+      "command": "contracts.record",
+      "at": "2026-08-31T23:59:59.999Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "occurrenceKey": "usage:2026-08:recognized",
+        "sourceFactId": "initech:usage:2026-08:recognized",
+        "effectiveAt": "2026-08-31T23:59:59.999Z",
+        "facts": {
+          "calls": "1250000"
+        },
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "product-db:usage_rollup:initech:2026-08"
+            }
+          ]
+        },
+        "activityKey": "usage",
+        "obligationKey": "usage:2026-08",
+        "phase": "recognition"
       }
     },
     {
@@ -626,43 +436,65 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "usage-bill",
         "occurrenceKey": "usage-invoice:2026-08",
         "sourceFactId": "initech:invoice:usage:2026-08",
         "effectiveAt": "2026-09-01T00:00:00Z",
         "facts": {
-          "amount": "250000",
-          "calls": "1250000",
-          "due": "2026-09-15"
+          "calls": "1250000"
         },
-        "evidence": {}
+        "evidence": {
+          "billing": [
+            {
+              "kind": "other",
+              "ref": "initech:invoice:usage:2026-08"
+            }
+          ]
+        },
+        "activityKey": "usage",
+        "obligationKey": "usage:2026-08",
+        "phase": "billing",
+        "dueDate": "2026-09-15"
+      }
+    },
+    {
+      "key": "paid-usage-aug-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
       }
     },
     {
       "key": "paid-usage-aug",
-      "command": "contracts.record",
+      "command": "payments.record",
       "at": "2026-09-03T00:00:00Z",
       "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "usage-receipt",
-        "occurrenceKey": "stripe:charge:ch_initech_usage_2026_08",
-        "sourceFactId": "stripe:charge:ch_initech_usage_2026_08",
+        "financialAccountId": "bank_main",
+        "direction": "in",
+        "amount": "250000",
+        "currency": "USD",
+        "partyId": "cus_initech",
         "effectiveAt": "2026-09-03T00:00:00Z",
-        "facts": {
-          "amount": "250000",
-          "bank": "bank_main",
-          "billed": "usage-invoice:2026-08"
-        },
-        "evidence": {
-          "payment": [
-            {
-              "kind": "stripe_object",
-              "ref": "ch_initech_usage_2026_08"
-            }
-          ]
-        }
+        "sourceFactId": "stripe:charge:ch_initech_usage_2026_08",
+        "evidence": [
+          {
+            "kind": "stripe_object",
+            "ref": "ch_initech_usage_2026_08"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "paid-usage-aug-claim.claims.1.claimId"
+            },
+            "component": {
+              "$ref": "paid-usage-aug-claim.claims.1.component"
+            },
+            "amount": "250000"
+          }
+        ]
       }
     },
     {
@@ -677,11 +509,11 @@
       "expect": {
         "claims": [
           {
-            "occurrenceKey": "schedule:2026-08-01:2026-09-01",
+            "original": "50000",
             "outstanding": "0"
           },
           {
-            "occurrenceKey": "usage-invoice:2026-08",
+            "original": "250000",
             "outstanding": "0"
           }
         ]

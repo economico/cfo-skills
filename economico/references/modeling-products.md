@@ -1,94 +1,95 @@
 # Modeling products and pricing
 
-A product in Economico is not a catalog row. It is a **template**: the reusable bundle of
-activities a customer contract is created from, with the price as a term. A template with
-`plan: "on_sale"` is a price-book entry; `subjects {action: "list", type: "template", plan:
-"on_sale"}` is the price book. Each customer contract binds a template to that customer, with
-their own start date and any negotiated terms.
+A product plan is a reusable agreement template containing the rights a customer receives.
+Model the rights before recording invoices or payments. A monthly platform access right can be
+billed in advance, earned over the month and paid later without becoming three activities.
 
-## Pick the shape
+## Identify rights and prices
 
-| The pricing says | Shape | Recipe |
-|---|---|---|
-| $X per month, billed monthly | Scheduled bill at period start, scheduled recognition at period end, `recurringValue` monthly | [customer-monthly-subscription](recipes/customer-monthly-subscription.json) |
-| $Y per year, paid upfront | Scheduled annual bill, monthly recognition of Y/12 | [customer-annual-prepaid](recipes/customer-annual-prepaid.json) |
-| Platform fee plus usage (per call, per GB, per token) | Fee as a subscription; usage as a recorded measurement with a `rate` calculation, earned when measured and invoiced after the period | [customer-platform-fee-plus-usage](recipes/customer-platform-fee-plus-usage.json) |
-| Usage only, tiered | The usage activity alone, with a `tiered` calculation (`graduated` or `volume`) | the usage part of the fee-plus-usage recipe |
-| $Z per seat per month | The subscription with the price computed as seats × price (`rate` calculation over a `seats` term); a seat change is a dated `contracts.amend` of the seat term | [customer-per-seat-subscription](recipes/customer-per-seat-subscription.json) |
-| Included usage, then overage | An `included` allowance granted by the fee activity, which the usage activity draws before billing only the overage; one grant per period, and record the measurement before the lot expires | [customer-included-usage-overage](recipes/customer-included-usage-overage.json) |
-| Prepaid credits or packs | A `paid` allowance granted and billed on purchase into deferred revenue, recognized as usage consumes it | [customer-prepaid-credits](recipes/customer-prepaid-credits.json) |
-| Minimum commitment | A `minimum` calculation with a reconciliation activity | `catalog describe activities.create` |
-| Hourly or fixed-fee services | A recorded activity with hours × rate, or a milestone amount, on `consulting` | the fee-plus-usage recipe with `consulting` as the category |
-| Free tier | No template; note it in the brief | — |
-| Free trial that converts | The subscription template with a later bill start term than the service start | subscription recipe |
+List what the party receives, the evidence, price treatment, billing timing and recognition
+basis. Separate access from measured overage when they are distinct rights. Keep included,
+free and promotional rights visible. Preserve the agreement's explicit treatment: `included`
+means supplied as part of that agreement, `free` means independently granted without charge,
+and `promotional` means an evidenced promotion. Zero money alone does not make these interchangeable. Mark incomplete pricing as unknown rather than inventing
+a rate or dropping the right. Two real rights may use identical posting shapes; do not merge
+them because their account codes match.
 
-## Rules that keep the numbers right
+Use `model: "priced-rights-v1"` on activity and template definitions. An activity's `price`
+contains `treatment`, and for a priced right, a fixed/rate/tiered calculation and currency term.
+Agreed values live in `terms`; measured quantities live in `facts`. State quantity scaling in the
+right's description: for example, the consulting recipe uses integer millionths of an hour,
+so 1,000,000 measured units and `unitsPerPrice: 1000000` mean one hour at the stated rate.
+Keep the same scale in each phase and verify a sample quantity against the source price. Classification and payment
+method are not rights. Neither is a currency variant, invoice, acceptance or cancellation.
 
-- **Terms hold the agreed price; facts hold what happened.** Put list prices as term defaults in
-  the template. Override per customer in `contracts.create` `terms`, keyed by activity key:
-  `{ "bill": { "price": "3900", "start": "2026-07-01", "end": "2027-07-01" } }`. Every activity
-  that uses a term needs its own override (the bill and the recognition in the subscription
-  recipe both carry `start` and `end`).
-- **Bill and earn are different activities.** Subscriptions bill in advance (`bill` into
-  deferred revenue) and earn as service elapses (`recognize`). Usage earns when measured
-  (`accrue_revenue`) and is billed after (`bill_accrued`). Never book the whole year as revenue
-  on the day an annual plan is paid.
-- **MRR comes from `recurringValue`**, declared on the activity that earns the fixed fee. Usage,
-  overage, one-off fees and allowances never contribute to MRR.
-- **Category chooses the revenue account.** `subscription` → 4110, `usage` → 4120, `consulting`
-  → 4210, `services` → 4100, `grant` → 4500. Set `revenueAccount` only to pick a different
-  revenue leaf, for example 4200 for implementation fees (see [accounts](accounts.md)).
-- **Tag the product.** Set the activity's `product` (for example `pro`, `api-calls`) so revenue
-  is reported per product line; the name may not be a category word. Put the Stripe product and
-  price ids in `externalReferences`.
-- **Sub-cent prices.** Rates are integers in minor units over `unitsPerPrice`: $0.002 per call
-  (0.2¢) is rate `200` per `1000` calls, and 0.002¢ a call (Stripe's `unit_amount_decimal`
-  `"0.002"`, which is in cents) is rate `2` per `1000`. Rounding happens once per recording, not
-  per unit.
-- **Uneven annual splits.** $290 a year does not divide into twelve equal cents. Recognize the
-  rounded-down monthly amount and record the remainder in the final month (a separate final
-  activity or a corrected last period); never recognize more than was billed. Say so in the
-  brief.
-- **One template per purchasable plan.** Monthly and annual versions of the same plan are two
-  templates. A negotiated deal that differs only in price is the same template with a term
-  override; one that differs in structure is its own template with no `plan` flag.
-- **Retire, do not delete.** A plan no longer sold is `templates.replace` with
-  `plan: "off_sale"`; existing contracts keep their frozen terms.
+- Fixed access: one service right with its agreed price, independent billing and recognition.
+- Usage: a service right with measured quantity and an evidenced rate/tier schedule. Record
+  usage, recognition and billing for the same obligation/period at their respective instants.
+- Per-seat access: price from evidenced seat quantity and rate. Use evidenced prospective
+  amendments at service/billing boundaries, preserving earlier terms and recorded obligations.
+  Consequence-bearing rights require explicit adjustment.
+- Annual prepayment: annual billing plus ratable recognition under the agreed service schedule.
+  Do not manufacture twelve posting activities or recognize the whole year when paid.
+- A period minimum is a bounded consequence of the period's rights, not another invented service.
+- Included/free rights retain their identity and explicit treatment even when priced at zero.
 
-## Build and check a template
+For an evidenced included/free/promotional quantity, bind a capacity right to its native
+capacity ledger. `grant_capacity` specifies `capacityLedger`, `quantity` and `expiresAtTerm`;
+`consume_capacity` specifies that ledger, quantity and a typed `grantOccurrenceFact`. Record
+these as exercise consequences with service evidence and explicit consequence selection.
+`expire_capacity` is a period-close consequence with economic evidence. Check `activity_capacity`
+for each lot's free, consumed and expired quantities. For prepaid credits, bill once, settle independently, and grant using that billed obligation
+key. A priced capacity right declares usage recognition and usage revenue classification.
+Each measured consumption releases its share of the original invoice value, with exact final
+rounding; it never invoices or collects again. Expiry alone grants no breakage or refund
+authority. For included usage, declare `overageRight` on consumption and use `capacity_excess`
+pricing on that separate usage right. Record the full measured quantity once; the kernel
+freezes covered and excess units. Later usage, recognition and billing reference that consumption
+through its typed `consumptionFact` and use its occurrence ID as `obligationKey`. Never invent
+the excess quantity or record a second allowance draw just to bill it. Expired lots cover zero.
+Not every historical allowance/capacity workflow has a complete priced-right replacement yet.
+If the live catalog cannot execute a required economic consequence, retain the source and gap;
+do not imitate it with arbitrary postings or suppress the right to make a recipe pass.
 
-1. `catalog {action: "describe", name: "activities.create"}` and `templates.create`, once per
-   session, to confirm the current schema.
-2. `activities.create` for each activity; keep the returned `documentId`s.
-3. `templates.create` binding them under keys. The keys are what contracts, claims and
-   `accountingKey`s refer to; choose short, stable ones (`accept`, `bill`, `service`,
-   `receipt`, `usage`).
-4. Bind a first contract, then preview before recording anything:
-   `reports {action: "run", kind: "activity_effects", contract_id, activity_key, effective_at,
-   facts}` and `reports {action: "run", kind: "activity_plan", contract_id, from, through}`.
-   The plan shows every scheduled period the timer will record.
+## Reuse and identity
+
+A template follows an agreement boundary. Reuse across customers when their rights and timing
+are the same. A negotiated price belongs in per-right term overrides. Split an agreement only
+when evidence shows distinct agreements or materially different rights, not for different bank
+accounts, tax classifications or GL accounts. Preserve several agreements with one party where
+that is what the source shows.
+
+Name keys for the rights (`access`, `api-use`, `hosting`), not for accounting stages (`bill`,
+`pay`, `accept`). A different spelling is not proof of a different right: explain its economic
+meaning from source evidence. Keep external product/price identifiers as provenance where the
+catalog supports them.
+
+## Build and prove
+
+1. Describe the live activity, template and contract commands. Create immutable rights, bind
+   them in the template, and create a real party's contract at its agreement start date.
+2. Accept through `contracts.accept`, with the current contract document ID and evidence.
+3. Record delivery/usage, billing and recognition against consistent obligation/period identity.
+   Give each phase a stable distinct source identity. Recognition never creates a second invoice.
+4. Read claims and use independent [payments](payments.md). Test a different supported paying
+   account without changing the contract. Check exact balances and outstanding claim amounts.
+5. Compare the recorded economics with the source: what was received, owed, earned and paid,
+   including missing evidence. Do not declare success from a template's name or an empty model.
+
+The [vendor service examples](vendor-contracts.md) and the validated recipes below are
+executable priced-right command sequences. Recipes still marked historical are not instructions
+for new agreements. A recipe's `steps` run in order; `{"$ref":"step.field"}` copies an actual
+prior result, including array paths such as `claim-read.claims.0.component`. Report `expect`
+values assert exact books, not just successful commands.
 
 ## Recipes
 
-Each recipe is a complete, tested sequence of public commands (`steps`), run in order, where
-`{"$ref": "step-key.field"}` means "the `field` of the result of step `step-key`" (usually a
-`documentId` or a contract `id`). `setupAt` is the envelope `effective_at` for setup steps; a
-step's `at` is its own. Steps with `read` or `report` are the checks, with the result expected
-under `expect`. Replace the synthetic names, amounts and dates with the business's own; keep the
-structure.
-
-| Recipe | Models |
-|---|---|
-| [customer-monthly-subscription](recipes/customer-monthly-subscription.json) | Monthly plan as a price-book template; customer contract; acceptance, bill, Stripe payment, month of service; MRR |
-| [customer-annual-prepaid](recipes/customer-annual-prepaid.json) | Annual plan paid upfront, recognized monthly |
-| [customer-platform-fee-plus-usage](recipes/customer-platform-fee-plus-usage.json) | Monthly platform fee plus metered API usage invoiced in arrears |
-| [customer-per-seat-subscription](recipes/customer-per-seat-subscription.json) | Per-seat monthly plan; a seat expansion amended from a date; MRR before and after |
-| [customer-included-usage-overage](recipes/customer-included-usage-overage.json) | Monthly fee with included calls; usage draws the allowance, only the overage is billed; MRR excludes it |
-| [customer-prepaid-credits](recipes/customer-prepaid-credits.json) | Credit pack paid upfront, deferred, recognized as credits are used |
-| [stripe-gross-net-payout](recipes/stripe-gross-net-payout.json) | Card payments at gross into the Stripe balance, Stripe's fee on 5230, the net paid out to the bank |
-| [vendor-bill-paid-from-bank](recipes/vendor-bill-paid-from-bank.json) | Vendor invoice on terms, paid later |
-| [vendor-receipt-paid-from-bank](recipes/vendor-receipt-paid-from-bank.json) | Receipt already paid by bank debit |
-| [vendor-receipt-company-card](recipes/vendor-receipt-company-card.json) | Receipt charged to the company card; card statement paid |
-| [founder-paid-expense](recipes/founder-paid-expense.json) | Founder paid personally; company reimburses |
-| [vendor-annual-prepay](recipes/vendor-annual-prepay.json) | Annual vendor plan paid upfront into prepaid expenses, released monthly |
-| [corporation-founders](recipes/corporation-founders.json) | Founders buy restricted common stock: charter authorization, one contract per founder, cliff and monthly vesting; the cap table |
+Validated service examples: [monthly subscription](recipes/customer-monthly-subscription.json),
+[annual subscription](recipes/customer-annual-prepaid.json),
+[consulting hours and milestone](recipes/customer-consulting-hourly-milestone.json),
+[seat expansion](recipes/customer-per-seat-subscription.json),
+[platform and usage](recipes/customer-platform-fee-plus-usage.json),
+[prepaid credits](recipes/customer-prepaid-credits.json),
+[included usage and overage](recipes/customer-included-usage-overage.json),
+[Stripe gross charges, fees and payout](recipes/stripe-gross-net-payout.json), and
+[annual vendor prepayment](recipes/vendor-annual-prepay.json).

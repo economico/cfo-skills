@@ -69,3 +69,7 @@ a transaction hash or a URL.
 
 Deterministic identities make the whole session safe to rerun: a repeat returns the original
 receipt instead of posting twice.
+
+When the founder or source already supplies a fact ID or agreement external ID, preserve it
+exactly. The examples above explain how to create an ID only when none was supplied; they do
+not authorize renaming an existing ID or appending a billing/payment suffix to it.

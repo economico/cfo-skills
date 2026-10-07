@@ -1,6 +1,6 @@
 ---
 name: economico
-description: "Set up Economico and model a founder's business in it: connect the ledger, read the product's code, Stripe and email to learn what it sells, to whom and what it costs to run, record plans as templates, customers and vendors as contracts and receipts as evidence-backed activity, then prove the books with reports. Use when someone wants to set up or connect Economico or their books, model their business, pick up the books where an earlier session left off, turn Stripe or pricing into contracts, set up vendors, record receipts or invoices, or asks how Economico works."
+description: "Model a founder's business in Economico: connect the ledger, read the product's code, Stripe and email to learn what it sells, to whom and what it costs to run, record plans as rights templates, customer and vendor agreements as contracts, and evidence-backed economics and independent payments, then prove the books with reports. Use when someone wants to set up or connect Economico or their books, model their business, pick up the books where an earlier session left off, turn Stripe or pricing into contracts, set up vendors, record receipts or invoices, or asks how Economico works."
 ---
 
 # Economico
@@ -8,13 +8,12 @@ description: "Set up Economico and model a founder's business in it: connect the
 Economico is a double-entry ledger that the founder's own agent operates. Every business is
 one append-only, hash-chained history. Every write is a **command** from one catalog, run through
 one door (`commands` over MCP, `POST /v1/commands` over REST, `economico commands execute` in the
-CLI). Money moves on the books only as the declared **effects** of an **activity** recorded on a
-**contract**. There is no invoice command, no bill command and no product catalog: a price plan is
-a template, a customer or vendor relationship is a contract, and an invoice, a receipt or a
-payment is a recorded activity with evidence.
+CLI). Contracts describe priced rights and independently timed economic consequences.
+Billing creates commercial claims; payments settle identified claims using a registered account.
+Changing who pays does not change the underlying right. Lifecycle commands, invoices and
+payments are not additional activities.
 
-You are the operator. Economico does not read the founder's code, Stripe or inbox. You do,
-with the access the founder gives you, and you turn what you find into reviewed commands.
+You gather source facts with the founder’s authorized access and turn them into reviewed commands.
 
 ## Ground rules
 
@@ -31,9 +30,9 @@ with the access the founder gives you, and you turn what you find into reviewed 
    using the ledger's `decimals` from `ledgers {action: "get", ledger_id}`. For USD (2 decimals),
    `"4900"` is $49.00; for JPY (0 decimals), `"4900"` is ¥4,900. Dates are `YYYY-MM-DD`;
    instants are UTC with `Z`.
-5. **Every fact has an identity and a source.** Use stable `idempotency_key`s and business-wide
-   unique `sourceFactId`s derived from the source (a Stripe object id, an email Message-ID, an
-   invoice number), and store the source itself with `documents.receive`.
+5. **Preserve supplied IDs exactly.** Copy source IDs into `sourceFactId` and agreement IDs into
+   document `externalId`; never reorder or suffix them. Create IDs only when none were supplied.
+   Store evidence with `documents.receive`; use stable `idempotency_key`s.
 6. **Never invent a number.** Prices, dates and amounts come from code, Stripe, a signed order form
    or a receipt. If none says it, ask, or record the gap in the business model.
 7. **Refusals are information.** A refusal names the rule it applied. Read `code` and `message`,
@@ -44,7 +43,7 @@ with the access the founder gives you, and you turn what you find into reviewed 
 ## The one-session run
 
 When the founder says "set up Economico and model my business", run these phases in order.
-Each phase has a reference; read it when you reach that phase, not before. If the repository
+Read each reference when you reach its phase. If the repository
 already has `business-model.md`, read it first: it holds the business, the standing answers and
 the open questions, so resume from it ([a later session](references/first-session.md#a-later-session)).
 
@@ -54,11 +53,11 @@ the open questions, so resume from it ([a later session](references/first-sessio
 | 2 | Understand the machine | The mental model you will map the business onto | [how Economico works](references/how-economico-works.md) |
 | 3 | Discover | Notes on product, pricing, customers, costs, entity | [codebase](references/explore-codebase.md), [Stripe](references/explore-stripe.md), [email](references/explore-email.md) |
 | 4 | Propose | `business-model.md` in the founder's repo, always previewed with `model_preview`, then reviewed by them, its price book and costs shown in the review message | [first session](references/first-session.md), [brief template](references/business-model-brief.md) |
-| 5 | Record | The legal form and the owners (the cap table, even for a sole owner), parties, accounts, templates, contracts, activity, evidence; the contracts shown as one table | [products](references/modeling-products.md), [customers](references/customer-contracts.md), [vendors](references/vendor-contracts.md), [evidence](references/evidence.md), [accounts](references/accounts.md), [company](references/company-setup.md) |
+| 5 | Record | The legal form and the owners (the cap table, even for a sole owner), parties, accounts, templates, contracts, activity, evidence; the contracts shown as one table | [products](references/modeling-products.md), [customers](references/customer-contracts.md), [vendors](references/vendor-contracts.md), [evidence](references/evidence.md), [accounts](references/accounts.md), [payments](references/payments.md), [company](references/company-setup.md) |
 | 6 | Prove | A final message that opens with the price book, the contracts, the income statement, the balance sheet and the cap table as views, then a short summary | [verify](references/verify.md) |
 
 [first-session.md](references/first-session.md) is the playbook that strings these together,
-including where to stop for the founder and what to do when access is missing. At the end of
+including founder review and missing access. At the end of
 phases 4, 5 and 6, show the founder their business as it takes shape:
 [show the founder](references/show-the-founder.md) says which view, from which read, inline where
 the host renders Economico's app and as text everywhere else.
@@ -72,6 +71,7 @@ the host renders Economico's app and as text everywhere else.
 | turn pricing (code, Stripe or a pricing page) into plans | [modeling products](references/modeling-products.md) |
 | add a customer, record a signed deal, bill or collect | [customer contracts](references/customer-contracts.md) |
 | set up vendors, process receipts or invoices from email | [explore email](references/explore-email.md), [vendor contracts](references/vendor-contracts.md) |
+| record payments, reimbursements, transfers or payment corrections | [payments](references/payments.md) |
 | choose an account for a cost or a revenue line | [accounts](references/accounts.md) |
 | set the company profile, bank accounts, cards, legal identity, founders' shares or the cap table | [company setup](references/company-setup.md) |
 | check the books after a change | [verify](references/verify.md) |

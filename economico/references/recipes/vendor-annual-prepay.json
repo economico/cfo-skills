@@ -1,6 +1,6 @@
 {
   "name": "Vendor annual plan paid upfront, expensed monthly",
-  "description": "A $1,020 annual business insurance premium is paid in full from the bank on day one. The payment lands in 1150 Prepaid expenses, not in expense; a scheduled monthly activity releases $85 per completed month from 1150 to 5530 Insurance. The release's accountingKey names the prepay activity: without it every month is refused with 'available 0' and 5530 stays empty. After March the amortization report shows $255 released and $765 remaining, and the income statement shows $255 of insurance expense.",
+  "description": "One annual insurance coverage right costs $1,020, billed separately from its bank payment and recognized $85 for each completed calendar month. After March, prepaid value is $765 and insurance expense $255.",
   "setupAt": "2026-01-01T00:00:00Z",
   "recordedAt": "2026-04-01T00:00:00Z",
   "steps": [
@@ -35,87 +35,30 @@
       }
     },
     {
-      "key": "def-accept",
+      "key": "service-right",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Bind the insurance policy",
-          "trigger": {
-            "type": "transition",
-            "from": [
-              "draft"
-            ],
-            "to": "active"
-          }
-        }
-      }
-    },
-    {
-      "key": "def-prepay",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Annual premium paid upfront from the bank",
-          "trigger": {
-            "type": "recorded"
-          },
-          "facts": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD"
-            },
-            "bank": {
-              "type": "text"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "prepay_expense",
-              "ledger": "money",
-              "amount": "fact:amount"
-            },
-            {
-              "pattern": "pay",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "financialAccountFact": "bank"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "def-coverage",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Completed month of insurance coverage",
-          "trigger": {
-            "type": "scheduled"
-          },
-          "repeatable": true,
+          "model": "priced-rights-v1",
+          "name": "Business insurance coverage",
           "terms": {
-            "monthly": {
+            "price": {
               "type": "integer",
               "unit": "USD",
-              "default": "8500"
+              "default": "102000"
             },
             "start": {
               "type": "date"
             },
             "end": {
               "type": "date"
+            },
+            "currency": {
+              "type": "text",
+              "default": "USD"
             }
           },
+          "facts": {},
           "ledgers": {
             "money": {
               "classification": "gaap",
@@ -125,22 +68,44 @@
               "accountTemplate": "gaap_startup"
             }
           },
-          "effects": [
-            {
-              "pattern": "expense",
-              "ledger": "money",
-              "amount": "term:monthly",
-              "accountingKey": "prepay",
+          "price": {
+            "treatment": "priced",
+            "calculation": {
+              "type": "fixed",
+              "amount": "term:price"
+            },
+            "currencyTerm": "currency"
+          },
+          "economics": {
+            "kind": "service",
+            "direction": "receive",
+            "billing": {
+              "timing": "advance",
+              "schedule": {
+                "startTerm": "start",
+                "endTerm": "end",
+                "everyMonths": 12,
+                "timing": "start",
+                "offsetDays": 0
+              }
+            },
+            "recognition": {
+              "timing": "ratable",
+              "schedule": {
+                "startTerm": "start",
+                "endTerm": "end",
+                "everyMonths": 1,
+                "timing": "end",
+                "offsetDays": 0,
+                "serviceEvidence": "elapsed_time"
+              },
+              "allocation": "equal_periods"
+            },
+            "classification": {
+              "monetaryLedger": "money",
               "expenseAccount": 5530,
               "expenseFunction": "general_and_administrative"
             }
-          ],
-          "schedule": {
-            "startTerm": "start",
-            "endTerm": "end",
-            "everyMonths": 1,
-            "timing": "end",
-            "serviceEvidence": "elapsed_time"
           }
         }
       }
@@ -165,34 +130,17 @@
           },
           "activities": [
             {
-              "key": "accept",
-              "activityDocumentId": {
-                "$ref": "def-accept.documentId"
-              },
-              "partyRole": "vendor",
-              "ledgers": {}
-            },
-            {
-              "key": "prepay",
-              "activityDocumentId": {
-                "$ref": "def-prepay.documentId"
-              },
-              "partyRole": "vendor",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
               "key": "coverage",
               "activityDocumentId": {
-                "$ref": "def-coverage.documentId"
+                "$ref": "service-right.documentId"
               },
               "partyRole": "vendor",
               "ledgers": {
                 "money": "money"
               }
             }
-          ]
+          ],
+          "model": "priced-rights-v1"
         }
       }
     },
@@ -224,17 +172,14 @@
     },
     {
       "key": "accept",
-      "command": "contracts.record",
+      "command": "contracts.accept",
       "at": "2026-01-01T00:00:00Z",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "accept",
-        "occurrenceKey": "accept",
         "sourceFactId": "harborline:BOP-26-11873:bound",
         "effectiveAt": "2026-01-01T00:00:00Z",
-        "facts": {},
         "evidence": {
           "acceptance": [
             {
@@ -244,36 +189,87 @@
               }
             }
           ]
+        },
+        "expectedStatus": "draft",
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
+        }
+      }
+    },
+    {
+      "key": "bill-year",
+      "command": "contracts.record",
+      "at": "2026-01-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "coverage",
+        "phase": "billing",
+        "period": {
+          "from": "2026-01-01T00:00:00Z",
+          "through": "2027-01-01T00:00:00Z"
+        },
+        "occurrenceKey": "policy:annual-premium",
+        "sourceFactId": "BOP-26-11873:annual-premium",
+        "effectiveAt": "2026-01-01T00:00:00Z",
+        "evidence": {
+          "billing": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "policy.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "annual-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
         }
       }
     },
     {
       "key": "premium",
-      "command": "contracts.record",
+      "command": "payments.record",
       "at": "2026-01-05T00:00:00Z",
       "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "prepay",
-        "occurrenceKey": "BOP-26-11873:premium",
-        "sourceFactId": "harborline:ach:2026-01-05",
+        "financialAccountId": "bank_main",
+        "direction": "out",
+        "amount": "102000",
+        "currency": "USD",
+        "partyId": "ven_harborline",
         "effectiveAt": "2026-01-05T00:00:00Z",
-        "facts": {
-          "amount": "102000",
-          "bank": "bank_main"
-        },
-        "evidence": {
-          "payment": [
-            {
-              "kind": "other",
-              "ref": "bank:statement:2026-01:line-3"
+        "sourceFactId": "harborline:ach:2026-01-05",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "bank:statement:2026-01:line-3"
+          },
+          {
+            "kind": "other",
+            "ref": {
+              "$ref": "policy.documentId"
             }
-          ]
-        }
-      },
-      "sourceDocumentId": {
-        "$ref": "policy.documentId"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "annual-claim.claims.0.claimId"
+            },
+            "component": {
+              "$ref": "annual-claim.claims.0.component"
+            },
+            "amount": "102000"
+          }
+        ]
       }
     },
     {
@@ -284,7 +280,6 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "coverage",
         "occurrenceKey": "schedule:2026-01-01:2026-02-01",
         "sourceFactId": "harborline:BOP-26-11873:2026-01",
         "effectiveAt": "2026-01-31T23:59:59.999Z",
@@ -296,6 +291,12 @@
               "ref": "elapsed:2026-01-01:2026-02-01"
             }
           ]
+        },
+        "activityKey": "coverage",
+        "phase": "recognition",
+        "period": {
+          "from": "2026-01-01T00:00:00Z",
+          "through": "2026-02-01T00:00:00Z"
         }
       }
     },
@@ -307,7 +308,6 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "coverage",
         "occurrenceKey": "schedule:2026-02-01:2026-03-01",
         "sourceFactId": "harborline:BOP-26-11873:2026-02",
         "effectiveAt": "2026-02-28T23:59:59.999Z",
@@ -319,6 +319,12 @@
               "ref": "elapsed:2026-02-01:2026-03-01"
             }
           ]
+        },
+        "activityKey": "coverage",
+        "phase": "recognition",
+        "period": {
+          "from": "2026-02-01T00:00:00Z",
+          "through": "2026-03-01T00:00:00Z"
         }
       }
     },
@@ -330,7 +336,6 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "coverage",
         "occurrenceKey": "schedule:2026-03-01:2026-04-01",
         "sourceFactId": "harborline:BOP-26-11873:2026-03",
         "effectiveAt": "2026-03-31T23:59:59.999Z",
@@ -342,6 +347,12 @@
               "ref": "elapsed:2026-03-01:2026-04-01"
             }
           ]
+        },
+        "activityKey": "coverage",
+        "phase": "recognition",
+        "period": {
+          "from": "2026-03-01T00:00:00Z",
+          "through": "2026-04-01T00:00:00Z"
         }
       }
     },
@@ -355,7 +366,7 @@
       "expect": {
         "items": [
           {
-            "activityKey": "prepay",
+            "activityKey": "coverage",
             "funded": "102000",
             "released": "25500",
             "remaining": "76500"

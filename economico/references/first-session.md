@@ -110,31 +110,28 @@ session replays instead of duplicating.
 1. **Company basics.** Profile description and URL; the legal form and jurisdiction when
    `business get` does not have them yet, evidenced by the formation document; financial accounts
    for each real bank account, card and wallet. See [company setup](company-setup.md).
-2. **Ownership.** One contract per holder from the recipe `business get` names under
-   `ownership` (its recipes), so `cap_table` lists every owner with their units and
-   `capital_accounts` (LLCs, partnerships, projects) names each one. A sole owner is recorded too:
-   a single-member LLC's member holds all the units. Record it even when the owners put in no
-   cash yet. The quantities come from a document or the founder, never from cash received; when
-   neither says, ask in the scope round and list the gap. See
-   [company setup](company-setup.md#ownership).
+2. **Ownership.** Establish the actual owners and units from formation documents or the founder,
+   never from cash received. Discover supported priced ownership rights and evidenced
+   authorization/subscription/vesting or conversion consequences. The ownership recipe links
+   returned by `business get` use priced rights and separate payments. Record unsupported ownership
+   families and missing quantities as explicit gaps. See [company setup](company-setup.md#ownership).
 3. **Parties.** One per customer, vendor and founder. Stable ids from the source: `cus_<stripe id
    or slug>`, `ven_<domain slug>`, `founder_<name>`.
 4. **Source documents.** Every order form, terms page, receipt and invoice you will cite, with
    `externalId` set to its source identity. See [evidence](evidence.md).
-5. **Activities and templates.** One template per plan in the price book, one per vendor. Start
-   from [the recipes](modeling-products.md#recipes). Preview each template's money effects with
-   `activity_effects` before binding a customer to it.
-6. **Contracts.** One per customer subscription or agreement, one per vendor relationship, each
-   created with `effective_at` at its start date (an ownership contract at the formation date).
-   Record acceptance on each, with the source that evidences it. A draft created at the wrong
-   date is discarded with `contracts.discard` and created again.
-7. **History** (if in scope). Per contract, every event in date order: each period's bill,
-   each payment at its own date, usage, and each completed period's `service`. Recording
-   history means recording every completed `service` by hand: the timer that records scheduled
-   periods runs once a day, so a period left to it stays in deferred revenue (2150) for the
-   rest of this session, and the statements you prove and show are wrong. A payment cannot be
-   dated before a later recording on the same contract, so do not record all the bills first.
-   See [customer contracts](customer-contracts.md#recording-history).
+5. **Rights and templates.** One template per actual agreement shape, reused across equivalent
+   agreements. Start with the supported [modeling guidance](modeling-products.md#recipes).
+   Name rights by what the party receives; keep billing, recognition and payment separate.
+6. **Contracts.** Bind each real agreement at its actual start date, with source documents and
+   its party roles. Accept through `contracts.accept` with evidence. A wrongly dated unused
+   draft can be discarded and recreated; accepted history is preserved.
+7. **History** (if in scope). Record evidenced fulfillment, billing and recognition at their own
+   dates and against consistent obligation/period identities. Settle the resulting claims with
+   independent [payments](payments.md), not payment activities. Verify recorded phases instead
+   of assuming a timer has run. Supported historical claims and claims carried through currency
+   succession use the payment guide's explicit identities and amounts. Preserve and report
+   unsupported facts rather than re-recording existing history. See [customer contracts](customer-contracts.md).
+
 
 Once the contracts are recorded, show them in a message: one table, not one view per command
 (see [show the founder](show-the-founder.md)).
@@ -146,9 +143,10 @@ effect because service evidence is missing: ask for the evidence or record the g
 ## 5. Prove
 
 Run the reads in [verify](verify.md) and put the results in the brief under "What the books say
-now": MRR and ARR, revenue and expenses to date, open receivables and payables, cash per account,
+now": actual revenue and expenses, open receivables and payables, cash per account,
 and who owns the company (`cap_table`, and `capital_accounts` for an LLC, partnership or project).
-Every figure should be explainable from rows in the brief. A figure you cannot explain is a
+Label any MRR/ARR computed from agreement prices as an estimate, not a ledger metric;
+disclose unsupported new-model metric coverage. Every figure should be explainable from rows in the brief. A figure you cannot explain is a
 modeling error; find it before you finish. Show the income statement, the balance sheet, the
 aging and the cap table to the founder as you read them, inline or as text ([show the founder](show-the-founder.md)).
 

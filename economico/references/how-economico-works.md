@@ -1,179 +1,136 @@
 # How Economico works
 
-Read this once per session before you design anything. It is the model you map a business onto.
+Economico records contractual rights and their economic consequences separately from payments.
+An activity is a right a party gets under an agreement: access to software, measured API use,
+consulting work, a domain registration or an ownership subscription. The right carries its
+price and independent billing and recognition timing. A bank or card payment is a separate fact.
+
+Discover `activities.create`, `contracts.record` and `payments.record` through `catalog` before
+writing. These instructions use `model: "priced-rights-v1"`. If the connected deployment does
+not expose this model, report the capability gap; do not invent equivalent posting activities.
+Existing effect-based histories still replay, but their shapes are not the model for new work.
 
 ## The pieces
 
-| Piece | What it is | How you touch it |
-|---|---|---|
-| **Business** | One set of books with one append-only, hash-chained history. Addressed by a slug. | `businesses`, `business {action: "get"}` |
-| **Command** | A persisted, authorized, idempotent intent. The only way anything is written. | `catalog` to discover, `commands` to execute |
-| **Party** | A counterparty: a customer, vendor, founder, investor or employee. A contract gives it a role in that contract only; what it is to the business is its `categories`, set when you create it, and every list groups it by them. | `parties.create`, `parties` read |
-| **Financial account** | A named bank account, wallet or company card, so cash and card balances are kept per account. Bookkeeping only; nothing is connected. | `accounts.register`, `accounts` read |
-| **Document** | Immutable bytes addressed by content hash: an uploaded source (a PDF or text receipt, an order form), or a definition, contract or statement Economico produced. | `documents.receive`, `documents` read |
-| **Activity** | A reusable, immutable definition of something that happens under an agreement: its trigger, the terms it is priced by, the facts observed when it happens, and the effects it posts. | `activities.create` |
-| **Template** | A reusable bundle of activities for a set of party roles. A price plan is a template marked `plan: "on_sale"`; a vendor's standard terms are a template. | `templates.create` |
-| **Contract** | A template bound to real parties, resolved terms and ledgers. Starts `draft`; money is refused until an acceptance transition makes it `active`. | `contracts.create`, `contracts.amend` |
-| **Occurrence** | One recorded happening of a bound activity, with facts and evidence. It posts the declared effects atomically and returns an immutable `activity_statement` (the invoice, bill or receipt document). | `contracts.record` |
-| **Ledger** | One independently balanced set of accounts in one unit. The GAAP books are one ledger per currency; usage meters, capacity pools and share classes are their own ledgers and never net with money. | `ledgers` read |
-| **Report** | A calculation over ledgers: statements, aging, SaaS metrics, claims, plans. | `reports {action: "list" \| "run"}` |
-
-The chain an agent builds is always the same:
-
-```text
-party ─┐
-       ├─ contract (template + terms + ledgers) ── accept ── record occurrences ── reports
-activity definitions ── template ─┘                          │
-                                                   facts + evidence + source documents
-```
+- **Activity:** one reusable right, its agreed terms, observed facts, price treatment and
+  economics. `activities.create` saves an immutable definition.
+- **Template:** the rights under one agreement, bound to party roles and ledger aliases.
+  Reuse it across equivalent agreements; a price-only difference is a term override.
+- **Contract:** the template bound to real parties, dates, terms and ledgers. Preserve the
+  actual agreement boundary: several agreements with the same party are valid.
+- **Lifecycle:** `contracts.accept`, `contracts.cancel` and `contracts.terminate` are evidenced
+  state changes. Do not define an acceptance or cancellation activity. A separately priced
+  exit right may produce economics on a transition; cancellation itself does not pay a refund.
+- **Economic occurrence:** `contracts.record` records a phase of a right for an identified
+  obligation or period. Billing, delivery/usage and recognition can happen at different times.
+- **Claim:** a named receivable or payable. Commercial billing produces a claim; investments,
+  owner funding and other obligations need not have a commercial invoice.
+- **Payment:** `payments.record` identifies money, its account, counterparty and claim
+  allocations. It contains no contract or activity input. Account ownership decides who funded it.
+- **Document:** immutable source bytes or a generated statement, with provenance to the command
+  and event. **Reports** derive balances and claims from the recorded facts.
 
 ## The envelope
 
-Every write is this shape, on MCP `commands` (with `"action": "execute"`), REST
-`POST /v1/commands`, or the CLI's `commands execute --args`:
+MCP `commands`, REST `POST /v1/commands` and the CLI's `commands execute` use the same registry.
+For example:
 
 ```json
 {
   "business": "acme-sandbox-3f2a",
   "action": "execute",
   "name": "parties.create",
-  "input": { "partyId": "cus_globex", "name": "Globex Corp", "categories": ["customer"] },
+  "input": { "partyId": "cus_globex", "name": "Globex", "categories": ["customer"] },
   "idempotency_key": "model:party:cus_globex",
   "effective_at": "2026-09-01T00:00:00Z"
 }
 ```
 
-The receipt is `{ commandId, replayed, result, events }`. Replaying the same key returns the
-original receipt with `replayed: true`; the same key with a different command is
-`idempotency_conflict`. A domain no-op returns `{ code: "no_change" }` without an error, so read
-`code` before `result`. `effective_at` is the book date. Some commands also take a
-`source_document_id` on the envelope; `catalog describe` lists which document kinds each accepts
-under `sourceDocumentKinds`.
+The receipt is `{commandId, replayed, result, events}`. Retry identical input with the same
+idempotency key. Reusing it with different input conflicts. Read a domain `no_change` response
+before assuming `result` exists. `source_document_id`, when supported by the described command,
+links the source document. Money is a string of minor units; instants are UTC with `Z`.
 
-## Terms, facts, calculations, effects
+## Terms, facts and price
 
-An activity definition separates what was agreed from what was observed:
+Terms state the agreement: price, rate, currency, dates, limits. Facts state what happened:
+delivered work, measured usage, or an identified claim/grant where that right requires one.
+A financial account is a payment input, never a right's pricing fact.
 
-- **terms** are agreed values: a price, a start and end date, an included quantity. Each has a
-  type (`integer`, `text`, `date`, `instant`), an optional unit, and an optional default. A
-  template supplies defaults; each contract can override them per activity key in
-  `contracts.create` `terms`.
-- **facts** are observed when the activity is recorded: an amount on a receipt, a usage count,
-  the bank account the money landed in, the occurrence key of the invoice being paid. Facts never
-  have defaults.
-- **calculations** derive amounts: `rate` (quantity × rate ÷ unitsPerPrice), `tiered` (graduated
-  or volume), `allowance`, `minimum`, `reprice`, `tax`. Their result is `calc:<key>:amount`.
-- **effects** name a code-owned posting pattern, a ledger alias and an amount reference
-  (`term:x`, `fact:x` or `calc:k:amount`). The pattern owns the account pair; you only choose
-  the classification (category, revenue or expense account, expense function).
+Use `price.treatment` explicitly: `priced`, `included`, `free`, `promotional` or `unknown`.
+Included and free rights still exist. Unknown pricing is a gap, not zero and not permission to
+invent a formula. Fixed, rate and tiered calculations refer to integer terms or facts. For
+example a fixed price uses `calculation: {type: "fixed", amount: "term:price"}` and
+`currencyTerm: "currency"`. A rate needs its measured quantity, rate and units-per-price.
 
-The trigger decides when an activity happens: `transition` (a lifecycle move such as
-`draft → active`), `recorded` (you record it with facts), or `scheduled` (a date schedule over
-start/end terms; the daily timer records fixed periods itself). Anything that happens more than
-once must say `repeatable: true`.
-
-## Effect patterns
-
-The patterns you will use to model a business. Each debits and credits fixed accounts; the
-evidence column is the evidence purpose `contracts.record` must carry when the effect posts a
-non-zero amount.
-
-| Pattern | Debit | Credit | Needs | Use for |
-|---|---|---|---|---|
-| `bill` | 1120 receivables | 2150 deferred revenue | — | Invoicing a customer ahead of or at delivery |
-| `recognize` | 2150 deferred revenue | revenue | service | Earning billed service as it is delivered |
-| `accrue_revenue` | 1125 unbilled | revenue | service | Earning usage or work before it is invoiced |
-| `bill_accrued` | 1120 receivables | 1125 unbilled | — | Invoicing what was already earned |
-| `collect` | 1110 cash | 1120 receivables | payment | A customer payment against a billed claim |
-| `accrue_expense` | expense | 2110 payables | service | A vendor invoice for delivered service |
-| `pay` | 2110 payables | 1110 cash | payment | Paying a vendor claim from a bank account |
-| `card_expense` | expense | 2190 card payable | service | A purchase already charged to the company card |
-| `pay_card` | 2190 card payable | 1110 cash | payment | Paying the card statement |
-| `pay_related` | 2110 payables | 2135 due to related parties (`toPartyRole`) | payment | A founder paid a vendor's bill personally; now owed to them |
-| `related_expense` | expense | 2135 due to related parties | payment | A founder cost with no vendor contract of its own (a per diem, mileage) |
-| `reimburse_related` | 2135 | 1110 cash | payment | Paying the founder back |
-| `prepay_expense` | 1150 prepaid | 2110 payables | — | A vendor charge for a future period (annual plans) |
-| `expense` | expense | 1150 prepaid | service | Using up a prepaid vendor period |
-| `credit_expense` | 2110 payables | expense | acceptance | A vendor credit against an open bill |
-| `receive_unapplied` | 1110 cash | 2185 unapplied receipts | payment | Money in before you know what it pays |
-| `apply_receipt` | 2185 | 1120 receivables | acceptance | Applying that money to an invoice later |
-| `refund_deferred` | 2150 deferred revenue | 1110 cash | payment | Refunding an unearned customer balance |
-| `bill_tax` | 1120 receivables | 2160 output tax | — | Sales tax, GST or VAT charged on an invoice |
-| `accrue_input_tax` | 1170 recoverable tax | 2110 payables | — | Recoverable tax on a vendor bill |
-| `observe` | meter | meter | — | Recording a measured quantity in its own usage ledger |
-| `meter_billed` | meter | meter | — | Marking measured quantity as invoiced |
-| `grant` | capacity | capacity | — | Granting seats, credits or included usage |
-| `consume` | capacity | capacity | — | Drawing that capacity down |
-| `commit` | contract flow | contract flow | acceptance | The accepted contract value, without cash or revenue |
-| `fund_liability` | 1110 cash | 2240 financing | payment | SAFE or convertible money received |
-| `fund_capital` | 1110 cash | 3100 legal capital | payment | Cash paid for shares at par |
-
-`reports {action: "run", kind: "activity_effects"}` without a contract lists every pattern with
-its accounts; with `contract_id`, `activity_key`, `effective_at` and `facts` it previews exactly
-what a recording would post, without writing.
-
-## Claims: how payments find their invoice
-
-A billing effect opens a **claim** identified by contract, the billing activity's binding key and
-the occurrence key. A settlement effect (`collect`, `pay`) names that claim:
-
-- `accountingKey` on the settlement effect names the claim's key: the **binding key of the
-  billing activity** in the template (for example `bill`), unless the billing effect carries its
-  own `accountingKey`, which then wins. `bill_accrued` does: it bills what an earlier activity
-  earned, so its claim is keyed by that earning activity (`usage`), and the payment must name
-  `usage`, not the invoicing activity. When unsure, record the invoice, then read
-  `reports run activity_claims` and copy the claim's key.
-- `claimFact` names a text fact that will carry the **occurrence key** of the invoice being paid
-  (not its occurrence id).
-- `financialAccountFact` names a text fact that will carry a registered financial account id.
-
-When the charge and the payment happen in one recording (a receipt that says "paid"), put both
-effects in one activity and omit `claimFact`; the payment settles the claim this occurrence opens.
+Classification belongs in `economics.classification`: the monetary ledger, revenue category
+or expense account/function, product and applicable tax code. It does not create another right.
+Separate rights only when what the party receives differs, even if two rights post alike.
 
 ## Recording rules that matter
 
-- **Acceptance first.** A draft contract refuses every money effect. Record the `draft → active`
-  transition with `acceptance` evidence (the signed order form, the accepted terms of service).
-- **Evidence is computed from the effects**: `service` for anything earned or incurred,
-  `payment` for anything that moves cash, `acceptance` for activation and credits.
-- **Keys are identities.** `occurrenceKey` is unique within the contract activity;
-  `sourceFactId` is unique across the whole business. Identical input replays the original
-  statement (`duplicate: true`); the same key with different facts is refused.
-- **A contract starts where `contracts.create` is dated.** Its first version takes effect at the
-  envelope's `effective_at`, and nothing can be recorded on it before then
-  (`no applicable version at that date`). Date `contracts.create` at the real start: the signing,
-  the subscription's start, the formation date. Never leave it at today when you backfill.
-- **A wrongly dated draft is discarded, not reused.** `contracts.discard` with `contractId` and
-  `expectedDocumentId` (the contract's current `documentId`) ends a draft that never recorded
-  anything. Create the contract again with the right `effective_at`; the discarded one stays in
-  history. Record acceptance at the real acceptance date too: on a misdated draft that is
-  refused, which keeps the draft discardable. An accepted or used contract cannot be discarded:
-  it ends through its own lifecycle.
-- **Dates go forward per contract.** A recording may not be in the future, nor earlier than the
-  contract's latest recorded activity. Backfill history in date order, contract by contract.
-- **Scheduled periods record themselves.** The daily timer records each fixed scheduled period
-  (occurrence key `schedule:<start>:<end>`) once it is due, and skips any period already recorded.
-  Record one by hand when you need it on the books now, which includes every past period when
-  you backfill history; use that same occurrence key.
-- **Corrections are new events.** Nothing is edited. A wrong occurrence is corrected with
-  `correctsOccurrenceId`, and only the latest active occurrence of that activity can be
-  corrected: fix mistakes as you go, not at the end. A contract change is `contracts.amend`; a
-  wrong definition is `activities.replace`, which only future contracts use, because existing
-  contracts keep their frozen version. The cheapest fix is prevention: preview with
-  `activity_effects`, and record the first occurrence of every activity (including the payment)
-  on one contract before binding the template to the rest.
+1. Date `contracts.create` at the actual agreement start and accept with evidence of acceptance,
+   its current document ID and expected status. A source terms URL proves the terms' location,
+   not that someone accepted them; keep evidence of signup, signature or use as appropriate.
+2. Record a stable `obligationKey` for a one-off item or the same `period` for all phases of a
+   recurring obligation. Give each phase its own occurrence and source identity.
+3. `delivery` or `usage` records fulfillment. `recognition` consumes that entitlement; it does
+   not bill. Ratable recognition needs evidenced elapsed coverage under the frozen schedule.
+4. `billing` records the commercial claim and optional `dueDate`. Advance billing stays deferred
+   or prepaid until earned/consumed. Recognition before billing accrues independently; later
+   billing clears the accrual rather than recording the income or expense twice.
+5. Payment settles the claim independently. Read `activity_claims` and copy its `claimId` and
+   full `component`, not an activity name, invoice text or counterparty total. See
+   [payments](payments.md). Outstanding claims can still be settled after cancellation.
+6. Retain immutable evidence and retry identities. Never re-record old history to convert its
+   model. Payment correction uses reversal/unallocation; service correction uses
+   `contracts.reverse_economics`. Supported historical claims settle through independent
+   [payments](payments.md) without reissuing their invoices.
+
+Do not assume a declared schedule has executed itself. Read returned phase statements, claims
+and balances. The new model's forecast/scheduling surface is not yet equivalent to the historical
+one; do not promise an `activity_plan` forecast or automatic recognition without confirming the
+connected catalog's supported behavior and the recorded result.
+
+## Preserve source identities
+
+Copy a supplied source-fact identity exactly into `sourceFactId`, and an agreement's supplied
+external identity into its source document's `externalId`. Do not reorder segments, rename it,
+or add a phase suffix: `invoice:vendor:october` must not become `vendor:invoice:october:bill`.
+A later recognition, acceptance or other distinct fact needs its own distinct identity; it does
+not rename the original invoice or payment. Contract source documents may include supporting
+evidence; keep the actual agreement linked and identifiable among them.
 
 ## Reading back
 
-| Question | Read |
-|---|---|
-| What types can I list, with which filters? | `subjects {action: "types"}` |
-| Which plans are on sale? | `subjects {action: "list", type: "template", plan: "on_sale"}` |
-| What state is this contract in? | `subjects {action: "get", type: "contract", id}` |
-| What was recorded on it? | `subjects {action: "list", type: "activity_occurrence", contract_id}` |
-| What is owed on it, per invoice? | `reports run activity_claims` with `contract_id` |
-| What will it do next? | `reports run activity_plan` with `contract_id`, `from`, `through` |
-| The source or statement bytes | `documents {action: "get", id}` |
+Use `subjects` to inspect the contract and `documents` for source and generated statement
+bytes, retaining the document IDs returned by phase commands. New economic phases are not
+listed under the historical `activity_occurrence` subject type. Follow actual footprint entries
+to their statement documents instead. `reports run activity_claims` returns commercial and
+noncommercial claim identities, original/outstanding amounts and their current components.
+`aging`, `income_statement` and `balance_sheet` prove what is owed, earned and held.
+`ledgers {action: "footprint", party_id}` shows the counterparty's actual postings, including
+unapplied funds. Read the live report schema; reports do not all accept the same parameters.
+
+For evidenced financing, distributions and draws, follow [company setup](company-setup.md).
+For currency succession, valued settlement, owner/card advances and refunds after
+reimbursement, follow [payments](payments.md). These supported paths do not imply every
+admitted economic shape is executable: keep unsupported facts and questions visible.
 
 `reports {action: "list"}` names each report kind's parameters and gives a runnable example;
 a parameter another kind takes is refused.
+
+## Telling Economico
+
+When something is broken, unclear or missing, tell the Economico team in-band with
+`messages.send`, leaving out `to`: `topic` is `support` or `feature_suggestion`, then a
+`subject`, a `body` in your own words, and optional `context` such as the command you tried.
+Tell the founder you did, once its record says `delivered` (it is `sent` while queued, and
+`undeliverable` with the reason if it could not arrive). Messages go only to a business this one
+has an agreement with in both books (Economico), or has connected with: ask with
+`connections.request` (`to` its exact slug, `partyId` the party in these books it is), and the
+other business accepts with `connections.accept`; then `messages.send` with `to` that party. Answer a message you received with `inReplyTo` (its id) and a
+`body`, and name the documents a message concerns, such as an invoice Economico delivered,
+with `about` (their document ids).
+The message is kept permanently in this business's history and in Economico's own books, so
+never include secrets or credentials. Sent and received messages are both `message` subjects.

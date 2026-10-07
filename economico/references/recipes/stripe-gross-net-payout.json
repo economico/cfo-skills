@@ -1,6 +1,6 @@
 {
   "name": "Stripe card payments: gross charges, fees, and a net payout",
-  "description": "Two customers pay their July invoices by card through Stripe: $49 and $99 monthly subscriptions. Each charge is collected at GROSS ($49.00, $99.00) into a financial account for the Stripe balance, which clears that invoice's receivable. Stripe is a vendor with its own contract: its fee on each charge (2.9% + 30 cents: $1.72 and $3.17, $4.89 in all) is an expense on 5230 payment processing paid out of the Stripe balance account, and the payout is a transfer_cash of the net ($143.11) from the Stripe balance account to the bank. The provider fee a payment method posts with a recorded payment applies to outbound pay effects only, so a card collection's fee is recorded here on the Stripe contract, once. After the payout the Stripe balance is zero, the bank holds $143.11, receivables are zero, 5230 holds $4.89, and July revenue is the gross $148.00.",
+  "description": "Two subscription rights collect gross card charges of $49 and $99. One processor-service right prices 2.9% plus $0.30 and records each fee exactly once through payments.process. Net $143.11 transfers from Stripe balance to bank independently of all contracts. Gross revenue remains $148 and processing expense $4.89.",
   "setupAt": "2026-07-01T00:00:00Z",
   "recordedAt": "2026-08-05T00:00:00Z",
   "steps": [
@@ -67,41 +67,12 @@
       }
     },
     {
-      "key": "stripe-balance",
-      "command": "accounts.register",
-      "input": {
-        "financialAccountId": "stripe_balance",
-        "name": "Stripe balance",
-        "currency": "USD",
-        "kind": "other"
-      }
-    },
-    {
-      "key": "def-accept",
+      "key": "access-right",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Accept terms",
-          "trigger": {
-            "type": "transition",
-            "from": [
-              "draft"
-            ],
-            "to": "active"
-          }
-        }
-      }
-    },
-    {
-      "key": "def-bill",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Bill a month in advance",
-          "trigger": {
-            "type": "scheduled"
-          },
-          "repeatable": true,
+          "model": "priced-rights-v1",
+          "name": "Monthly platform access",
           "terms": {
             "price": {
               "type": "integer",
@@ -112,8 +83,13 @@
             },
             "end": {
               "type": "date"
+            },
+            "currency": {
+              "type": "text",
+              "default": "USD"
             }
           },
+          "facts": {},
           "ledgers": {
             "money": {
               "classification": "gaap",
@@ -123,99 +99,96 @@
               "accountTemplate": "gaap_startup"
             }
           },
-          "effects": [
-            {
-              "pattern": "bill",
-              "ledger": "money",
+          "price": {
+            "treatment": "priced",
+            "calculation": {
+              "type": "fixed",
               "amount": "term:price"
-            }
-          ],
-          "schedule": {
-            "startTerm": "start",
-            "endTerm": "end",
-            "everyMonths": 1,
-            "timing": "start"
-          }
-        }
-      }
-    },
-    {
-      "key": "def-service",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Completed month of service",
-          "trigger": {
-            "type": "scheduled"
-          },
-          "repeatable": true,
-          "terms": {
-            "price": {
-              "type": "integer",
-              "unit": "USD"
             },
-            "start": {
-              "type": "date"
-            },
-            "end": {
-              "type": "date"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "recognize",
-              "ledger": "money",
-              "amount": "term:price",
-              "accountingKey": "bill",
-              "category": "subscription"
-            }
-          ],
-          "schedule": {
-            "startTerm": "start",
-            "endTerm": "end",
-            "everyMonths": 1,
-            "timing": "end",
-            "serviceEvidence": "elapsed_time"
+            "currencyTerm": "currency"
           },
           "recurringValue": {
-            "amount": "term:price",
             "interval": "monthly",
-            "ledger": "money",
             "startTerm": "start",
             "endTerm": "end"
+          },
+          "economics": {
+            "kind": "service",
+            "direction": "provide",
+            "billing": {
+              "timing": "advance",
+              "schedule": {
+                "startTerm": "start",
+                "endTerm": "end",
+                "everyMonths": 1,
+                "timing": "start",
+                "offsetDays": 0
+              }
+            },
+            "recognition": {
+              "timing": "ratable",
+              "schedule": {
+                "startTerm": "start",
+                "endTerm": "end",
+                "everyMonths": 1,
+                "timing": "end",
+                "offsetDays": 0,
+                "serviceEvidence": "elapsed_time"
+              }
+            },
+            "classification": {
+              "monetaryLedger": "money",
+              "revenueCategory": "subscription",
+              "product": "pro"
+            }
           }
         }
       }
     },
     {
-      "key": "def-charge",
+      "key": "processing-right",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Card charge collected at gross into the Stripe balance",
-          "trigger": {
-            "type": "recorded"
+          "model": "priced-rights-v1",
+          "name": "Card processing service",
+          "terms": {
+            "rail": {
+              "type": "text",
+              "default": "card"
+            },
+            "direction": {
+              "type": "text",
+              "default": "in"
+            },
+            "asset": {
+              "type": "text",
+              "default": "USD"
+            },
+            "currency": {
+              "type": "text",
+              "default": "USD"
+            },
+            "flat": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "30"
+            },
+            "rate": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "290"
+            },
+            "block": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "10000"
+            }
           },
-          "repeatable": true,
           "facts": {
-            "amount": {
+            "grossAmount": {
               "type": "integer",
               "unit": "USD"
-            },
-            "balance": {
-              "type": "text"
-            },
-            "billed": {
-              "type": "text"
             }
           },
           "ledgers": {
@@ -227,105 +200,37 @@
               "accountTemplate": "gaap_startup"
             }
           },
-          "effects": [
-            {
-              "pattern": "collect",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "accountingKey": "bill",
-              "financialAccountFact": "balance",
-              "claimFact": "billed"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "def-fee",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Stripe processing fee, deducted from the Stripe balance",
-          "trigger": {
-            "type": "recorded"
-          },
-          "repeatable": true,
-          "facts": {
-            "feeAmount": {
-              "type": "integer",
-              "unit": "USD"
+          "price": {
+            "treatment": "priced",
+            "calculation": {
+              "type": "tiered",
+              "quantity": "fact:grossAmount",
+              "mode": "volume",
+              "tiers": [
+                {
+                  "rate": "term:rate",
+                  "unitsPerPrice": "term:block",
+                  "flat": "term:flat"
+                }
+              ]
             },
-            "balance": {
-              "type": "text"
-            }
+            "currencyTerm": "currency"
           },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "accrue_expense",
-              "ledger": "money",
-              "amount": "fact:feeAmount",
+          "economics": {
+            "kind": "service",
+            "direction": "receive",
+            "billing": {
+              "timing": "advance"
+            },
+            "recognition": {
+              "timing": "usage"
+            },
+            "classification": {
+              "monetaryLedger": "money",
               "expenseAccount": 5230,
               "expenseFunction": "cost_of_revenue"
-            },
-            {
-              "pattern": "pay",
-              "ledger": "money",
-              "amount": "fact:feeAmount",
-              "financialAccountFact": "balance"
             }
-          ]
-        }
-      }
-    },
-    {
-      "key": "def-payout",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Stripe payout of the net balance to the bank",
-          "trigger": {
-            "type": "recorded"
-          },
-          "repeatable": true,
-          "facts": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD"
-            },
-            "balance": {
-              "type": "text"
-            },
-            "bank": {
-              "type": "text"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "transfer_cash",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "financialAccountFact": "balance",
-              "toFinancialAccountFact": "bank"
-            }
-          ]
+          }
         }
       }
     },
@@ -350,44 +255,17 @@
           },
           "activities": [
             {
-              "key": "accept",
+              "key": "access",
               "activityDocumentId": {
-                "$ref": "def-accept.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {}
-            },
-            {
-              "key": "bill",
-              "activityDocumentId": {
-                "$ref": "def-bill.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "service",
-              "activityDocumentId": {
-                "$ref": "def-service.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "charge",
-              "activityDocumentId": {
-                "$ref": "def-charge.documentId"
+                "$ref": "access-right.documentId"
               },
               "partyRole": "customer",
               "ledgers": {
                 "money": "money"
               }
             }
-          ]
+          ],
+          "model": "priced-rights-v1"
         }
       }
     },
@@ -411,34 +289,17 @@
           },
           "activities": [
             {
-              "key": "accept",
-              "activityDocumentId": {
-                "$ref": "def-accept.documentId"
-              },
-              "partyRole": "vendor",
-              "ledgers": {}
-            },
-            {
               "key": "fee",
               "activityDocumentId": {
-                "$ref": "def-fee.documentId"
-              },
-              "partyRole": "vendor",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "payout",
-              "activityDocumentId": {
-                "$ref": "def-payout.documentId"
+                "$ref": "processing-right.documentId"
               },
               "partyRole": "vendor",
               "ledgers": {
                 "money": "money"
               }
             }
-          ]
+          ],
+          "model": "priced-rights-v1"
         }
       }
     },
@@ -453,12 +314,7 @@
           "customer": "cus_acme"
         },
         "terms": {
-          "bill": {
-            "price": "4900",
-            "start": "2026-07-01",
-            "end": "2027-07-01"
-          },
-          "service": {
+          "access": {
             "price": "4900",
             "start": "2026-07-01",
             "end": "2027-07-01"
@@ -480,12 +336,7 @@
           "customer": "cus_birch"
         },
         "terms": {
-          "bill": {
-            "price": "9900",
-            "start": "2026-07-01",
-            "end": "2027-07-01"
-          },
-          "service": {
+          "access": {
             "price": "9900",
             "start": "2026-07-01",
             "end": "2027-07-01"
@@ -518,17 +369,14 @@
     },
     {
       "key": "acme-accept",
-      "command": "contracts.record",
+      "command": "contracts.accept",
       "at": "2026-07-01T00:00:00Z",
       "input": {
         "contractId": {
           "$ref": "acme-contract.id"
         },
-        "activityKey": "accept",
-        "occurrenceKey": "accept",
         "sourceFactId": "stripe:checkout:cs_acme",
         "effectiveAt": "2026-07-01T00:00:00Z",
-        "facts": {},
         "evidence": {
           "acceptance": [
             {
@@ -536,22 +384,23 @@
               "ref": "stripe:checkout:cs_acme"
             }
           ]
+        },
+        "expectedStatus": "draft",
+        "expectedDocumentId": {
+          "$ref": "acme-contract.documentId"
         }
       }
     },
     {
       "key": "birch-accept",
-      "command": "contracts.record",
+      "command": "contracts.accept",
       "at": "2026-07-01T00:00:00Z",
       "input": {
         "contractId": {
           "$ref": "birch-contract.id"
         },
-        "activityKey": "accept",
-        "occurrenceKey": "accept",
         "sourceFactId": "stripe:checkout:cs_birch",
         "effectiveAt": "2026-07-01T00:00:00Z",
-        "facts": {},
         "evidence": {
           "acceptance": [
             {
@@ -559,22 +408,23 @@
               "ref": "stripe:checkout:cs_birch"
             }
           ]
+        },
+        "expectedStatus": "draft",
+        "expectedDocumentId": {
+          "$ref": "birch-contract.documentId"
         }
       }
     },
     {
       "key": "stripe-accept",
-      "command": "contracts.record",
+      "command": "contracts.accept",
       "at": "2026-07-01T00:00:00Z",
       "input": {
         "contractId": {
           "$ref": "stripe-contract.id"
         },
-        "activityKey": "accept",
-        "occurrenceKey": "accept",
         "sourceFactId": "stripe:account:activation",
         "effectiveAt": "2026-07-01T00:00:00Z",
-        "facts": {},
         "evidence": {
           "acceptance": [
             {
@@ -584,6 +434,24 @@
               }
             }
           ]
+        },
+        "expectedStatus": "draft",
+        "expectedDocumentId": {
+          "$ref": "stripe-contract.documentId"
+        }
+      }
+    },
+    {
+      "key": "stripe-balance",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "stripe_balance",
+        "name": "Stripe balance",
+        "currency": "USD",
+        "kind": "other",
+        "providerPartyId": "ven_stripe",
+        "providerContractId": {
+          "$ref": "stripe-contract.id"
         }
       }
     },
@@ -595,12 +463,24 @@
         "contractId": {
           "$ref": "acme-contract.id"
         },
-        "activityKey": "bill",
         "occurrenceKey": "schedule:2026-07-01:2026-08-01",
         "sourceFactId": "stripe:invoice:in_acme_2026_07",
         "effectiveAt": "2026-07-01T00:00:00Z",
         "facts": {},
-        "evidence": {}
+        "evidence": {
+          "billing": [
+            {
+              "kind": "stripe_object",
+              "ref": "stripe:invoice:in_acme_2026_07"
+            }
+          ]
+        },
+        "activityKey": "access",
+        "phase": "billing",
+        "period": {
+          "from": "2026-07-01T00:00:00Z",
+          "through": "2026-08-01T00:00:00Z"
+        }
       }
     },
     {
@@ -611,190 +491,171 @@
         "contractId": {
           "$ref": "birch-contract.id"
         },
-        "activityKey": "bill",
         "occurrenceKey": "schedule:2026-07-01:2026-08-01",
         "sourceFactId": "stripe:invoice:in_birch_2026_07",
         "effectiveAt": "2026-07-01T00:00:00Z",
         "facts": {},
-        "evidence": {}
+        "evidence": {
+          "billing": [
+            {
+              "kind": "stripe_object",
+              "ref": "stripe:invoice:in_birch_2026_07"
+            }
+          ]
+        },
+        "activityKey": "access",
+        "phase": "billing",
+        "period": {
+          "from": "2026-07-01T00:00:00Z",
+          "through": "2026-08-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "key": "acme-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "acme-contract.id"
+        }
       }
     },
     {
       "key": "acme-charge",
-      "command": "contracts.record",
+      "command": "payments.process",
       "at": "2026-07-02T00:00:00Z",
       "input": {
-        "contractId": {
-          "$ref": "acme-contract.id"
-        },
-        "activityKey": "charge",
-        "occurrenceKey": "stripe:charge:ch_acme_2026_07",
-        "sourceFactId": "stripe:charge:ch_acme_2026_07",
-        "effectiveAt": "2026-07-02T00:00:00Z",
-        "facts": {
+        "payment": {
+          "financialAccountId": "stripe_balance",
+          "direction": "in",
           "amount": "4900",
-          "balance": "stripe_balance",
-          "billed": "schedule:2026-07-01:2026-08-01"
-        },
-        "evidence": {
-          "payment": [
+          "currency": "USD",
+          "partyId": "cus_acme",
+          "effectiveAt": "2026-07-02T00:00:00Z",
+          "sourceFactId": "stripe:charge:ch_acme_2026_07",
+          "evidence": [
             {
               "kind": "stripe_object",
               "ref": "stripe:charge:ch_acme_2026_07"
             }
+          ],
+          "allocations": [
+            {
+              "claimId": {
+                "$ref": "acme-claim.claims.0.claimId"
+              },
+              "component": {
+                "$ref": "acme-claim.claims.0.component"
+              },
+              "amount": "4900"
+            }
           ]
+        },
+        "rail": "card",
+        "netAmount": "4728",
+        "evidence": [
+          {
+            "kind": "stripe_object",
+            "ref": "stripe:charge:ch_acme_2026_07"
+          },
+          {
+            "kind": "stripe_object",
+            "ref": "stripe:balance_transaction:txn_acme_2026_07"
+          }
+        ]
+      },
+      "expect": {
+        "grossAmount": "4900",
+        "netAmount": "4728",
+        "fee": {
+          "amount": "172",
+          "activityKey": "fee"
+        }
+      }
+    },
+    {
+      "key": "birch-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "birch-contract.id"
         }
       }
     },
     {
       "key": "birch-charge",
-      "command": "contracts.record",
+      "command": "payments.process",
       "at": "2026-07-02T00:00:00Z",
       "input": {
-        "contractId": {
-          "$ref": "birch-contract.id"
-        },
-        "activityKey": "charge",
-        "occurrenceKey": "stripe:charge:ch_birch_2026_07",
-        "sourceFactId": "stripe:charge:ch_birch_2026_07",
-        "effectiveAt": "2026-07-02T00:00:00Z",
-        "facts": {
+        "payment": {
+          "financialAccountId": "stripe_balance",
+          "direction": "in",
           "amount": "9900",
-          "balance": "stripe_balance",
-          "billed": "schedule:2026-07-01:2026-08-01"
-        },
-        "evidence": {
-          "payment": [
-            {
-              "kind": "stripe_object",
-              "ref": "stripe:charge:ch_birch_2026_07"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "acme-fee",
-      "command": "contracts.record",
-      "at": "2026-07-02T00:00:00Z",
-      "input": {
-        "contractId": {
-          "$ref": "stripe-contract.id"
-        },
-        "activityKey": "fee",
-        "occurrenceKey": "stripe:balance_transaction:txn_acme_2026_07",
-        "sourceFactId": "stripe:balance_transaction:txn_acme_2026_07",
-        "effectiveAt": "2026-07-02T00:00:00Z",
-        "facts": {
-          "feeAmount": "172",
-          "balance": "stripe_balance"
-        },
-        "evidence": {
-          "service": [
-            {
-              "kind": "stripe_object",
-              "ref": "stripe:charge:ch_acme_2026_07"
-            }
-          ],
-          "payment": [
-            {
-              "kind": "stripe_object",
-              "ref": "stripe:balance_transaction:txn_acme_2026_07"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "birch-fee",
-      "command": "contracts.record",
-      "at": "2026-07-02T00:00:00Z",
-      "input": {
-        "contractId": {
-          "$ref": "stripe-contract.id"
-        },
-        "activityKey": "fee",
-        "occurrenceKey": "stripe:balance_transaction:txn_birch_2026_07",
-        "sourceFactId": "stripe:balance_transaction:txn_birch_2026_07",
-        "effectiveAt": "2026-07-02T00:00:00Z",
-        "facts": {
-          "feeAmount": "317",
-          "balance": "stripe_balance"
-        },
-        "evidence": {
-          "service": [
+          "currency": "USD",
+          "partyId": "cus_birch",
+          "effectiveAt": "2026-07-02T00:00:00Z",
+          "sourceFactId": "stripe:charge:ch_birch_2026_07",
+          "evidence": [
             {
               "kind": "stripe_object",
               "ref": "stripe:charge:ch_birch_2026_07"
             }
           ],
-          "payment": [
+          "allocations": [
             {
-              "kind": "stripe_object",
-              "ref": "stripe:balance_transaction:txn_birch_2026_07"
+              "claimId": {
+                "$ref": "birch-claim.claims.0.claimId"
+              },
+              "component": {
+                "$ref": "birch-claim.claims.0.component"
+              },
+              "amount": "9900"
             }
           ]
-        }
-      }
-    },
-    {
-      "key": "payout-too-large",
-      "command": "contracts.record",
-      "at": "2026-07-04T00:00:00Z",
-      "input": {
-        "contractId": {
-          "$ref": "stripe-contract.id"
         },
-        "activityKey": "payout",
-        "occurrenceKey": "stripe:payout:po_gross",
-        "sourceFactId": "stripe:payout:po_gross",
-        "effectiveAt": "2026-07-04T00:00:00Z",
-        "facts": {
-          "amount": "14800",
-          "balance": "stripe_balance",
-          "bank": "bank_main"
-        },
-        "evidence": {
-          "payment": [
-            {
-              "kind": "stripe_object",
-              "ref": "stripe:payout:po_gross"
-            }
-          ]
-        }
+        "rail": "card",
+        "netAmount": "9583",
+        "evidence": [
+          {
+            "kind": "stripe_object",
+            "ref": "stripe:charge:ch_birch_2026_07"
+          },
+          {
+            "kind": "stripe_object",
+            "ref": "stripe:balance_transaction:txn_birch_2026_07"
+          }
+        ]
       },
-      "error": "available"
+      "expect": {
+        "grossAmount": "9900",
+        "netAmount": "9583",
+        "fee": {
+          "amount": "317",
+          "activityKey": "fee"
+        }
+      }
     },
     {
       "key": "payout",
-      "command": "contracts.record",
+      "command": "payments.transfer",
       "at": "2026-07-04T00:00:00Z",
       "input": {
-        "contractId": {
-          "$ref": "stripe-contract.id"
-        },
-        "activityKey": "payout",
-        "occurrenceKey": "stripe:payout:po_1Q2026JUL04",
-        "sourceFactId": "stripe:payout:po_1Q2026JUL04",
+        "fromAccountId": "stripe_balance",
+        "toAccountId": "bank_main",
+        "amount": "14311",
+        "currency": "USD",
         "effectiveAt": "2026-07-04T00:00:00Z",
-        "facts": {
-          "amount": "14311",
-          "balance": "stripe_balance",
-          "bank": "bank_main"
-        },
-        "evidence": {
-          "payment": [
-            {
-              "kind": "other",
-              "ref": {
-                "$ref": "payout-report.documentId"
-              }
+        "sourceFactId": "stripe:payout:po_1Q2026JUL04",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": {
+              "$ref": "payout-report.documentId"
             }
-          ]
-        }
-      },
-      "sourceDocumentId": {
-        "$ref": "payout-report.documentId"
+          }
+        ]
       }
     },
     {
@@ -805,7 +666,6 @@
         "contractId": {
           "$ref": "acme-contract.id"
         },
-        "activityKey": "service",
         "occurrenceKey": "schedule:2026-07-01:2026-08-01",
         "sourceFactId": "acme:service:2026-07",
         "effectiveAt": "2026-07-31T23:59:59.999Z",
@@ -817,6 +677,12 @@
               "ref": "elapsed:2026-07-01:2026-08-01"
             }
           ]
+        },
+        "activityKey": "access",
+        "phase": "recognition",
+        "period": {
+          "from": "2026-07-01T00:00:00Z",
+          "through": "2026-08-01T00:00:00Z"
         }
       }
     },
@@ -828,7 +694,6 @@
         "contractId": {
           "$ref": "birch-contract.id"
         },
-        "activityKey": "service",
         "occurrenceKey": "schedule:2026-07-01:2026-08-01",
         "sourceFactId": "birch:service:2026-07",
         "effectiveAt": "2026-07-31T23:59:59.999Z",
@@ -840,6 +705,12 @@
               "ref": "elapsed:2026-07-01:2026-08-01"
             }
           ]
+        },
+        "activityKey": "access",
+        "phase": "recognition",
+        "period": {
+          "from": "2026-07-01T00:00:00Z",
+          "through": "2026-08-01T00:00:00Z"
         }
       }
     },
@@ -889,6 +760,12 @@
               "partyId": "ven_stripe"
             },
             "balance": "0"
+          },
+          {
+            "accountCode": 2120,
+            "balance": "0",
+            "debits": "489",
+            "credits": "489"
           },
           {
             "accountCode": 2150,

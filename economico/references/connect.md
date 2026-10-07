@@ -69,7 +69,9 @@ changes are interactive; membership, ownership and public-access changes are bro
    for the name, where it is incorporated, the legal form, functional currency and fiscal year
    end. The CLI can prefill it: `economico login --country US` (or `SG`, `CA`, `GB`,
    `--legal-form`, `--currency`, `--fiscal-year-end MM-DD`). A founder who has not incorporated
-   picks the legal form `project`; it can incorporate in place later.
+   picks the legal form `project`; it can incorporate in place later. Get the functional currency
+   right here: it can be corrected only while the book is empty, and a move to another economy
+   later is a new business.
 3. To rehearse, create a second business named for what it is ("Acme sandbox") and approve it
    for this connection. There is no scenario or sandbox mode inside a business: a rehearsal is a
    separate business, and it costs nothing.

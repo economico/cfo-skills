@@ -1,9 +1,29 @@
 {
   "name": "Vendor receipt already charged to the company card",
-  "description": "A SaaS tool's email receipt says the company card was charged. Nothing is owed to the vendor: the expense (5320 AI and developer tools, research and development) credits the card liability 2190 for that registered card, and the card statement payment later clears the card from the bank.",
+  "description": "One vendor service right with its evidenced charge, independently recorded delivery, recognition and billing. The payment account determines funding. A separate company-bank payment reimburses the attributable issuer claim without another expense or a founder-expenses contract.",
   "setupAt": "2026-05-01T00:00:00Z",
   "recordedAt": "2026-07-01T00:00:00Z",
   "steps": [
+    {
+      "key": "acceptance-source",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "U3ludGhldGljIGFjY2VwdGFuY2UgZXZpZGVuY2UgZm9yIHRoaXMgZXhlY3V0YWJsZSBmaXh0dXJlOiB0aGUgY29tcGFueSBhY2NlcHRlZCB0aGUgdmVuZG9yIHNlcnZpY2UgYWdyZWVtZW50IG9uIDIwMjYtMDUtMDFUMDA6MDA6MDBaLiBUaGUgc3Vic2VxdWVudCBpbnZvaWNlL3JlY2VpcHQgZXN0YWJsaXNoZXMgdGhlIHNwZWNpZmljIHNlcnZpY2UgY2hhcmdlOyBiYW5rL2NhcmQgZXZpZGVuY2UgZXN0YWJsaXNoZXMgcGF5bWVudCBzZXBhcmF0ZWx5Lg==",
+        "externalId": "vendor-receipt-company-card:acceptance:2026-05-01"
+      }
+    },
+    {
+      "key": "issuer",
+      "command": "parties.create",
+      "input": {
+        "partyId": "issuer_visa",
+        "name": "Company card issuer",
+        "categories": [
+          "vendor"
+        ]
+      }
+    },
     {
       "key": "receipt",
       "command": "documents.receive",
@@ -43,44 +63,29 @@
         "name": "Company Visa 4242",
         "currency": "USD",
         "glAccountCode": 2190,
-        "kind": "card"
+        "kind": "card",
+        "providerPartyId": "issuer_visa"
       }
     },
     {
-      "key": "def-accept",
+      "key": "service-right",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Accept vendor terms of service",
-          "trigger": {
-            "type": "transition",
-            "from": [
-              "draft"
-            ],
-            "to": "active"
-          }
-        }
-      }
-    },
-    {
-      "key": "def-charge",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Subscription charged to the company card",
-          "trigger": {
-            "type": "recorded"
-          },
-          "repeatable": true,
-          "facts": {
-            "amount": {
+          "model": "priced-rights-v1",
+          "name": "Team development tools",
+          "terms": {
+            "price": {
               "type": "integer",
-              "unit": "USD"
+              "unit": "USD",
+              "default": "3200"
             },
-            "card": {
-              "type": "text"
+            "currency": {
+              "type": "text",
+              "default": "USD"
             }
           },
+          "facts": {},
           "ledgers": {
             "money": {
               "classification": "gaap",
@@ -90,60 +95,29 @@
               "accountTemplate": "gaap_startup"
             }
           },
-          "effects": [
-            {
-              "pattern": "card_expense",
-              "ledger": "money",
-              "amount": "fact:amount",
+          "price": {
+            "treatment": "priced",
+            "calculation": {
+              "type": "fixed",
+              "amount": "term:price"
+            },
+            "currencyTerm": "currency"
+          },
+          "economics": {
+            "kind": "service",
+            "direction": "receive",
+            "billing": {
+              "timing": "arrears"
+            },
+            "recognition": {
+              "timing": "delivery"
+            },
+            "classification": {
+              "monetaryLedger": "money",
               "expenseAccount": 5320,
-              "expenseFunction": "research_and_development",
-              "cardFinancialAccountFact": "card"
+              "expenseFunction": "research_and_development"
             }
-          ]
-        }
-      }
-    },
-    {
-      "key": "def-pay-card",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Card statement paid from the bank",
-          "trigger": {
-            "type": "recorded"
-          },
-          "repeatable": true,
-          "facts": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD"
-            },
-            "bank": {
-              "type": "text"
-            },
-            "card": {
-              "type": "text"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "pay_card",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "accountingKey": "charge",
-              "financialAccountFact": "bank",
-              "cardFinancialAccountFact": "card"
-            }
-          ]
+          }
         }
       }
     },
@@ -152,7 +126,8 @@
       "command": "templates.create",
       "input": {
         "definition": {
-          "name": "GitHub Team (vendor terms)",
+          "model": "priced-rights-v1",
+          "name": "Team development tools agreement",
           "parties": [
             "vendor"
           ],
@@ -167,27 +142,9 @@
           },
           "activities": [
             {
-              "key": "accept",
+              "key": "service",
               "activityDocumentId": {
-                "$ref": "def-accept.documentId"
-              },
-              "partyRole": "vendor",
-              "ledgers": {}
-            },
-            {
-              "key": "charge",
-              "activityDocumentId": {
-                "$ref": "def-charge.documentId"
-              },
-              "partyRole": "vendor",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "pay-card",
-              "activityDocumentId": {
-                "$ref": "def-pay-card.documentId"
+                "$ref": "service-right.documentId"
               },
               "partyRole": "vendor",
               "ledgers": {
@@ -214,49 +171,54 @@
         "sourceDocumentIds": [
           {
             "$ref": "receipt.documentId"
+          },
+          {
+            "$ref": "acceptance-source.documentId"
           }
         ]
       }
     },
     {
       "key": "accept",
-      "command": "contracts.record",
+      "command": "contracts.accept",
       "at": "2026-05-01T00:00:00Z",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "accept",
-        "occurrenceKey": "accept",
-        "sourceFactId": "github:account:terms",
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
+        },
+        "expectedStatus": "draft",
         "effectiveAt": "2026-05-01T00:00:00Z",
-        "facts": {},
+        "sourceFactId": "github:account:terms",
         "evidence": {
           "acceptance": [
             {
               "kind": "other",
-              "ref": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service"
+              "ref": {
+                "$ref": "acceptance-source.documentId"
+              }
             }
           ]
         }
       }
     },
     {
-      "key": "charge-may",
+      "key": "delivery",
       "command": "contracts.record",
       "at": "2026-05-31T00:00:00Z",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "charge",
-        "occurrenceKey": "GH-88231",
-        "sourceFactId": "github:receipt:GH-88231",
+        "activityKey": "service",
+        "obligationKey": "GH-88231",
         "effectiveAt": "2026-05-31T00:00:00Z",
-        "facts": {
-          "amount": "3200",
-          "card": "card_visa_4242"
-        },
+        "facts": {},
+        "phase": "delivery",
+        "occurrenceKey": "GH-88231:delivery",
+        "sourceFactId": "github:receipt:GH-88231:delivery",
         "evidence": {
           "service": [
             {
@@ -267,9 +229,79 @@
             }
           ]
         }
-      },
-      "sourceDocumentId": {
-        "$ref": "receipt.documentId"
+      }
+    },
+    {
+      "key": "recognition",
+      "command": "contracts.record",
+      "at": "2026-05-31T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "service",
+        "obligationKey": "GH-88231",
+        "effectiveAt": "2026-05-31T00:00:00Z",
+        "facts": {},
+        "phase": "recognition",
+        "occurrenceKey": "GH-88231:recognition",
+        "sourceFactId": "github:receipt:GH-88231:recognition",
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "receipt.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "paid-receipt",
+      "command": "receipts.record",
+      "at": "2026-05-31T00:00:00Z",
+      "input": {
+        "billing": {
+          "contractId": {
+            "$ref": "contract.id"
+          },
+          "activityKey": "service",
+          "obligationKey": "GH-88231",
+          "effectiveAt": "2026-05-31T00:00:00Z",
+          "facts": {},
+          "phase": "billing",
+          "occurrenceKey": "GH-88231:bill",
+          "sourceFactId": "github:receipt:GH-88231:bill",
+          "evidence": {
+            "billing": [
+              {
+                "kind": "other",
+                "ref": {
+                  "$ref": "receipt.documentId"
+                }
+              }
+            ]
+          }
+        },
+        "payment": {
+          "financialAccountId": "card_visa_4242",
+          "direction": "out",
+          "amount": "3200",
+          "currency": "USD",
+          "partyId": "ven_github",
+          "effectiveAt": "2026-05-31T00:00:00Z",
+          "sourceFactId": "github:receipt:GH-88231:payment",
+          "evidence": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "receipt.documentId"
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -287,30 +319,34 @@
       }
     },
     {
-      "key": "card-paid",
-      "command": "contracts.record",
+      "key": "reimbursement",
+      "command": "payments.record",
       "at": "2026-06-15T00:00:00Z",
       "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "pay-card",
-        "occurrenceKey": "visa-4242:statement:2026-06",
-        "sourceFactId": "visa-4242:statement:2026-06:payment",
+        "financialAccountId": "bank_main",
+        "direction": "out",
+        "amount": "3200",
+        "currency": "USD",
+        "partyId": "issuer_visa",
         "effectiveAt": "2026-06-15T00:00:00Z",
-        "facts": {
-          "amount": "3200",
-          "bank": "bank_main",
-          "card": "card_visa_4242"
-        },
-        "evidence": {
-          "payment": [
-            {
-              "kind": "other",
-              "ref": "bank:statement:2026-06:line-9"
-            }
-          ]
-        }
+        "sourceFactId": "visa-4242:statement:2026-06:payment",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "bank:statement:2026-06:line-9"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "paid-receipt.payment.fundingClaims.0.claimId"
+            },
+            "component": {
+              "$ref": "paid-receipt.payment.fundingClaims.0.component"
+            },
+            "amount": "3200"
+          }
+        ]
       }
     },
     {
@@ -324,6 +360,30 @@
       },
       "expect": {
         "net_income": "-3200"
+      }
+    },
+    {
+      "key": "economic-claims",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
+      },
+      "expect": {
+        "model": "priced-rights-v1",
+        "claims": [
+          {
+            "kind": "commercial",
+            "original": "3200",
+            "outstanding": "0"
+          },
+          {
+            "kind": "card",
+            "outstanding": "0"
+          }
+        ]
       }
     }
   ]

@@ -1,9 +1,18 @@
 {
   "name": "Vendor receipt already paid from the bank",
-  "description": "An AI inference provider auto-debited the bank for last month's API usage. The expense (5220 AI and model inference, cost of revenue) and its settlement are one recorded occurrence: the payable opens and closes in the same statement, so nothing appears in AP aging.",
+  "description": "One vendor service right with its evidenced charge, independently recorded delivery, recognition and billing. The payment account determines funding. No payment or lifecycle activity is defined.",
   "setupAt": "2026-08-01T00:00:00Z",
   "recordedAt": "2026-09-10T00:00:00Z",
   "steps": [
+    {
+      "key": "acceptance-source",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "U3ludGhldGljIGFjY2VwdGFuY2UgZXZpZGVuY2UgZm9yIHRoaXMgZXhlY3V0YWJsZSBmaXh0dXJlOiB0aGUgY29tcGFueSBhY2NlcHRlZCB0aGUgdmVuZG9yIHNlcnZpY2UgYWdyZWVtZW50IG9uIDIwMjYtMDgtMDFUMDA6MDA6MDBaLiBUaGUgc3Vic2VxdWVudCBpbnZvaWNlL3JlY2VpcHQgZXN0YWJsaXNoZXMgdGhlIHNwZWNpZmljIHNlcnZpY2UgY2hhcmdlOyBiYW5rL2NhcmQgZXZpZGVuY2UgZXN0YWJsaXNoZXMgcGF5bWVudCBzZXBhcmF0ZWx5Lg==",
+        "externalId": "vendor-receipt-paid-from-bank:acceptance:2026-08-01"
+      }
+    },
     {
       "key": "receipt",
       "command": "documents.receive",
@@ -36,40 +45,24 @@
       }
     },
     {
-      "key": "def-accept",
+      "key": "service-right",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Accept vendor commercial terms",
-          "trigger": {
-            "type": "transition",
-            "from": [
-              "draft"
-            ],
-            "to": "active"
-          }
-        }
-      }
-    },
-    {
-      "key": "def-paid-usage",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Model inference usage, paid at charge",
-          "trigger": {
-            "type": "recorded"
-          },
-          "repeatable": true,
-          "facts": {
-            "amount": {
+          "model": "priced-rights-v1",
+          "name": "API inference service",
+          "terms": {
+            "price": {
               "type": "integer",
-              "unit": "USD"
+              "unit": "USD",
+              "default": "118452"
             },
-            "bank": {
-              "type": "text"
+            "currency": {
+              "type": "text",
+              "default": "USD"
             }
           },
+          "facts": {},
           "ledgers": {
             "money": {
               "classification": "gaap",
@@ -79,21 +72,29 @@
               "accountTemplate": "gaap_startup"
             }
           },
-          "effects": [
-            {
-              "pattern": "accrue_expense",
-              "ledger": "money",
-              "amount": "fact:amount",
+          "price": {
+            "treatment": "priced",
+            "calculation": {
+              "type": "fixed",
+              "amount": "term:price"
+            },
+            "currencyTerm": "currency"
+          },
+          "economics": {
+            "kind": "service",
+            "direction": "receive",
+            "billing": {
+              "timing": "arrears"
+            },
+            "recognition": {
+              "timing": "delivery"
+            },
+            "classification": {
+              "monetaryLedger": "money",
               "expenseAccount": 5220,
               "expenseFunction": "cost_of_revenue"
-            },
-            {
-              "pattern": "pay",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "financialAccountFact": "bank"
             }
-          ]
+          }
         }
       }
     },
@@ -102,7 +103,8 @@
       "command": "templates.create",
       "input": {
         "definition": {
-          "name": "Anthropic API (vendor terms)",
+          "model": "priced-rights-v1",
+          "name": "API inference service agreement",
           "parties": [
             "vendor"
           ],
@@ -117,17 +119,9 @@
           },
           "activities": [
             {
-              "key": "accept",
+              "key": "service",
               "activityDocumentId": {
-                "$ref": "def-accept.documentId"
-              },
-              "partyRole": "vendor",
-              "ledgers": {}
-            },
-            {
-              "key": "usage",
-              "activityDocumentId": {
-                "$ref": "def-paid-usage.documentId"
+                "$ref": "service-right.documentId"
               },
               "partyRole": "vendor",
               "ledgers": {
@@ -154,49 +148,54 @@
         "sourceDocumentIds": [
           {
             "$ref": "receipt.documentId"
+          },
+          {
+            "$ref": "acceptance-source.documentId"
           }
         ]
       }
     },
     {
       "key": "accept",
-      "command": "contracts.record",
+      "command": "contracts.accept",
       "at": "2026-08-01T00:00:00Z",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "accept",
-        "occurrenceKey": "accept",
-        "sourceFactId": "anthropic:account:terms",
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
+        },
+        "expectedStatus": "draft",
         "effectiveAt": "2026-08-01T00:00:00Z",
-        "facts": {},
+        "sourceFactId": "anthropic:account:terms",
         "evidence": {
           "acceptance": [
             {
               "kind": "other",
-              "ref": "https://www.anthropic.com/legal/commercial-terms"
+              "ref": {
+                "$ref": "acceptance-source.documentId"
+              }
             }
           ]
         }
       }
     },
     {
-      "key": "usage-aug",
+      "key": "delivery",
       "command": "contracts.record",
       "at": "2026-09-01T00:00:00Z",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "usage",
-        "occurrenceKey": "2231-0098",
-        "sourceFactId": "anthropic:receipt:2231-0098",
+        "activityKey": "service",
+        "obligationKey": "2231-0098",
         "effectiveAt": "2026-09-01T00:00:00Z",
-        "facts": {
-          "amount": "118452",
-          "bank": "bank_main"
-        },
+        "facts": {},
+        "phase": "delivery",
+        "occurrenceKey": "2231-0098:delivery",
+        "sourceFactId": "anthropic:receipt:2231-0098:delivery",
         "evidence": {
           "service": [
             {
@@ -205,8 +204,27 @@
                 "$ref": "receipt.documentId"
               }
             }
-          ],
-          "payment": [
+          ]
+        }
+      }
+    },
+    {
+      "key": "recognition",
+      "command": "contracts.record",
+      "at": "2026-09-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "service",
+        "obligationKey": "2231-0098",
+        "effectiveAt": "2026-09-01T00:00:00Z",
+        "facts": {},
+        "phase": "recognition",
+        "occurrenceKey": "2231-0098:recognition",
+        "sourceFactId": "anthropic:receipt:2231-0098:recognition",
+        "evidence": {
+          "service": [
             {
               "kind": "other",
               "ref": {
@@ -215,9 +233,52 @@
             }
           ]
         }
-      },
-      "sourceDocumentId": {
-        "$ref": "receipt.documentId"
+      }
+    },
+    {
+      "key": "paid-receipt",
+      "command": "receipts.record",
+      "at": "2026-09-01T00:00:00Z",
+      "input": {
+        "billing": {
+          "contractId": {
+            "$ref": "contract.id"
+          },
+          "activityKey": "service",
+          "obligationKey": "2231-0098",
+          "effectiveAt": "2026-09-01T00:00:00Z",
+          "facts": {},
+          "phase": "billing",
+          "occurrenceKey": "2231-0098:bill",
+          "sourceFactId": "anthropic:receipt:2231-0098:bill",
+          "evidence": {
+            "billing": [
+              {
+                "kind": "other",
+                "ref": {
+                  "$ref": "receipt.documentId"
+                }
+              }
+            ]
+          }
+        },
+        "payment": {
+          "financialAccountId": "bank_main",
+          "direction": "out",
+          "amount": "118452",
+          "currency": "USD",
+          "partyId": "ven_anthropic",
+          "effectiveAt": "2026-09-01T00:00:00Z",
+          "sourceFactId": "anthropic:receipt:2231-0098:payment",
+          "evidence": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "receipt.documentId"
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -235,6 +296,26 @@
         "liabilities": {
           "total": "0"
         }
+      }
+    },
+    {
+      "key": "economic-claims",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
+      },
+      "expect": {
+        "model": "priced-rights-v1",
+        "claims": [
+          {
+            "kind": "commercial",
+            "original": "118452",
+            "outstanding": "0"
+          }
+        ]
       }
     }
   ]

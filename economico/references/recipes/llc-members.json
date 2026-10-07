@@ -1,6 +1,6 @@
 {
   "name": "LLC or partnership: member capital, draws and year-end allocation",
-  "description": "Two members each contribute $25,000 for 500 units. The business earns $40,000; each member draws $5,000. The year-end close allocates $20,000 to each and closes the draws: $40,000 capital each. For a partnership, set legalEntityType to partnership; a partner's guaranteed payment is an expense (accrue_expense, then pay).",
+  "description": "Two members each subscribe $25,000 for 500 membership units, then fund their independent claims. A separate customer agreement earns and collects $40,000. Each approved $5,000 draw creates a payable; payment leaves the draw open until period closing. The evidenced 50/50 allocation of the $40,000 result is $20,000 each. Separate year-end allocation and draw closing leave $40,000 capital per member. Draws are not expenses or direct capital returns.",
   "recordedAt": "2026-01-02T00:00:00Z",
   "setupAt": "2025-01-01T00:00:00Z",
   "steps": [
@@ -68,184 +68,116 @@
       }
     },
     {
-      "key": "definition-accept",
+      "key": "member-right",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Accept documented terms",
-          "trigger": {
-            "type": "transition",
-            "from": [
-              "draft"
-            ],
-            "to": "active"
+          "model": "priced-rights-v1",
+          "name": "Membership, capital and agreed equal profit allocation",
+          "terms": {
+            "currency": {
+              "type": "text",
+              "default": "USD"
+            },
+            "amount": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "2500000"
+            },
+            "units": {
+              "type": "integer",
+              "unit": "membership",
+              "default": "500"
+            },
+            "authorized": {
+              "type": "integer",
+              "unit": "membership",
+              "default": "1000"
+            },
+            "start": {
+              "type": "date",
+              "default": "2025-01-01"
+            },
+            "end": {
+              "type": "date",
+              "default": "2026-01-01"
+            },
+            "weight": {
+              "type": "integer",
+              "unit": "basis_points",
+              "default": "5000"
+            },
+            "whole": {
+              "type": "integer",
+              "unit": "basis_points",
+              "default": "10000"
+            }
+          },
+          "facts": {
+            "allocated": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "profit": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "completeThrough": {
+              "type": "instant"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            },
+            "shares": {
+              "classification": "ownership",
+              "unitKind": "share",
+              "unitCode": "membership",
+              "decimals": 0,
+              "accountTemplate": "issued_instrument"
+            }
+          },
+          "price": {
+            "treatment": "priced",
+            "currencyTerm": "currency",
+            "calculation": {
+              "type": "fixed",
+              "amount": "term:amount"
+            }
+          },
+          "economics": {
+            "kind": "ownership",
+            "direction": "provide",
+            "classification": {
+              "monetaryLedger": "money",
+              "capitalAccount": 3120
+            }
           }
         }
       }
     },
     {
-      "key": "definition-authorize",
+      "key": "draw-right",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Authorize membership units",
-          "trigger": {
-            "type": "recorded"
-          },
+          "model": "priced-rights-v1",
+          "name": "Approved member drawings",
           "terms": {
-            "units": {
-              "type": "integer",
-              "unit": "membership",
-              "default": "1000"
+            "currency": {
+              "type": "text",
+              "default": "USD"
             }
           },
-          "facts": {},
-          "ledgers": {
-            "shares": {
-              "classification": "ownership",
-              "unitKind": "share",
-              "unitCode": "membership",
-              "decimals": 0,
-              "accountTemplate": "issued_instrument"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "authorize",
-              "ledger": "shares",
-              "amount": "term:units"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "definition-earn",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Customer work (stands in for the business's own revenue contracts)",
-          "trigger": {
-            "type": "recorded"
-          },
-          "terms": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD",
-              "default": "4000000"
-            }
-          },
-          "facts": {
-            "bank": {
-              "type": "text"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "bill",
-              "ledger": "money",
-              "amount": "term:amount"
-            },
-            {
-              "pattern": "recognize",
-              "ledger": "money",
-              "amount": "term:amount",
-              "category": "consulting"
-            },
-            {
-              "pattern": "collect",
-              "ledger": "money",
-              "amount": "term:amount",
-              "financialAccountFact": "bank"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "definition-contribute-member-a",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Capital contribution for membership units",
-          "trigger": {
-            "type": "recorded"
-          },
-          "terms": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD",
-              "default": "2500000"
-            },
-            "units": {
-              "type": "integer",
-              "unit": "membership",
-              "default": "500"
-            }
-          },
-          "facts": {
-            "bank": {
-              "type": "text"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            },
-            "shares": {
-              "classification": "ownership",
-              "unitKind": "share",
-              "unitCode": "membership",
-              "decimals": 0,
-              "accountTemplate": "issued_instrument"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "fund_capital",
-              "ledger": "money",
-              "amount": "term:amount",
-              "financialAccountFact": "bank"
-            },
-            {
-              "pattern": "allocate",
-              "ledger": "shares",
-              "amount": "term:units"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "definition-draw-member-a",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Member draw",
-          "trigger": {
-            "type": "recorded"
-          },
-          "terms": {},
           "facts": {
             "amount": {
               "type": "integer",
               "unit": "USD"
-            },
-            "bank": {
-              "type": "text"
             }
           },
           "ledgers": {
@@ -257,247 +189,22 @@
               "accountTemplate": "gaap_startup"
             }
           },
-          "effects": [
-            {
-              "pattern": "owner_draw",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "financialAccountFact": "bank"
-            }
-          ],
-          "repeatable": true
-        }
-      }
-    },
-    {
-      "key": "definition-year-end-member-a",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Year-end: share of profit and draws into capital",
-          "trigger": {
-            "type": "recorded"
-          },
-          "terms": {
-            "weight": {
-              "type": "integer",
-              "unit": "basis_points",
-              "default": "5000"
-            },
-            "whole": {
-              "type": "integer",
-              "unit": "basis_points",
-              "default": "10000"
+          "price": {
+            "treatment": "priced",
+            "currencyTerm": "currency",
+            "calculation": {
+              "type": "fixed",
+              "amount": "fact:amount"
             }
           },
-          "facts": {
-            "profit": {
-              "type": "integer",
-              "unit": "USD"
-            },
-            "draws": {
-              "type": "integer",
-              "unit": "USD"
+          "economics": {
+            "kind": "distribution",
+            "direction": "provide",
+            "classification": {
+              "monetaryLedger": "money",
+              "capitalAccount": 3120
             }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "allocate_profit",
-              "ledger": "money",
-              "amount": "calc:share:amount",
-              "accountingKey": "contribute-member-a"
-            },
-            {
-              "pattern": "close_draws",
-              "ledger": "money",
-              "amount": "fact:draws",
-              "accountingKey": "draw-member-a"
-            }
-          ],
-          "repeatable": true,
-          "calculations": [
-            {
-              "key": "share",
-              "type": "rate",
-              "quantity": "term:weight",
-              "rate": "fact:profit",
-              "unitsPerPrice": "term:whole"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "definition-contribute-member-b",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Capital contribution for membership units",
-          "trigger": {
-            "type": "recorded"
-          },
-          "terms": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD",
-              "default": "2500000"
-            },
-            "units": {
-              "type": "integer",
-              "unit": "membership",
-              "default": "500"
-            }
-          },
-          "facts": {
-            "bank": {
-              "type": "text"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            },
-            "shares": {
-              "classification": "ownership",
-              "unitKind": "share",
-              "unitCode": "membership",
-              "decimals": 0,
-              "accountTemplate": "issued_instrument"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "fund_capital",
-              "ledger": "money",
-              "amount": "term:amount",
-              "financialAccountFact": "bank"
-            },
-            {
-              "pattern": "allocate",
-              "ledger": "shares",
-              "amount": "term:units"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "definition-draw-member-b",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Member draw",
-          "trigger": {
-            "type": "recorded"
-          },
-          "terms": {},
-          "facts": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD"
-            },
-            "bank": {
-              "type": "text"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "owner_draw",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "financialAccountFact": "bank"
-            }
-          ],
-          "repeatable": true
-        }
-      }
-    },
-    {
-      "key": "definition-year-end-member-b",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Year-end: share of profit and draws into capital",
-          "trigger": {
-            "type": "recorded"
-          },
-          "terms": {
-            "weight": {
-              "type": "integer",
-              "unit": "basis_points",
-              "default": "5000"
-            },
-            "whole": {
-              "type": "integer",
-              "unit": "basis_points",
-              "default": "10000"
-            }
-          },
-          "facts": {
-            "profit": {
-              "type": "integer",
-              "unit": "USD"
-            },
-            "draws": {
-              "type": "integer",
-              "unit": "USD"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "allocate_profit",
-              "ledger": "money",
-              "amount": "calc:share:amount",
-              "accountingKey": "contribute-member-b"
-            },
-            {
-              "pattern": "close_draws",
-              "ledger": "money",
-              "amount": "fact:draws",
-              "accountingKey": "draw-member-b"
-            }
-          ],
-          "repeatable": true,
-          "calculations": [
-            {
-              "key": "share",
-              "type": "rate",
-              "quantity": "term:weight",
-              "rate": "fact:profit",
-              "unitsPerPrice": "term:whole"
-            }
-          ]
+          }
         }
       }
     },
@@ -506,11 +213,11 @@
       "command": "templates.create",
       "input": {
         "definition": {
-          "name": "Operating agreement",
+          "model": "priced-rights-v1",
+          "name": "Two-member operating agreement",
           "parties": [
             "member-a",
-            "member-b",
-            "customer"
+            "member-b"
           ],
           "ledgers": {
             "money": {
@@ -530,94 +237,261 @@
           },
           "activities": [
             {
-              "key": "accept",
+              "key": "member-a",
               "activityDocumentId": {
-                "$ref": "definition-accept.documentId"
+                "$ref": "member-right.documentId"
               },
               "partyRole": "member-a",
-              "ledgers": {}
+              "ledgers": {
+                "money": "money",
+                "shares": "shares"
+              }
+            },
+            {
+              "key": "draw-a",
+              "activityDocumentId": {
+                "$ref": "draw-right.documentId"
+              },
+              "partyRole": "member-a",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "member-b",
+              "activityDocumentId": {
+                "$ref": "member-right.documentId"
+              },
+              "partyRole": "member-b",
+              "ledgers": {
+                "money": "money",
+                "shares": "shares"
+              }
+            },
+            {
+              "key": "draw-b",
+              "activityDocumentId": {
+                "$ref": "draw-right.documentId"
+              },
+              "partyRole": "member-b",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ],
+          "consequences": [
+            {
+              "key": "subscribe-a",
+              "sourceRights": [
+                "member-a"
+              ],
+              "trigger": {
+                "type": "exercise",
+                "activityKey": "member-a"
+              },
+              "rule": {
+                "type": "issue_units",
+                "unitsLedger": "shares",
+                "quantity": "term:units",
+                "restricted": false,
+                "consideration": {
+                  "type": "money",
+                  "amount": "term:amount",
+                  "currencyTerm": "currency",
+                  "recognition": "unconditional_obligation"
+                }
+              },
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
+            },
+            {
+              "key": "allocate-a",
+              "sourceRights": [
+                "member-a"
+              ],
+              "trigger": {
+                "type": "period_close",
+                "schedule": {
+                  "startTerm": "start",
+                  "endTerm": "end",
+                  "everyMonths": 12,
+                  "timing": "end",
+                  "offsetDays": 0
+                }
+              },
+              "rule": {
+                "type": "profit_allocation",
+                "result": "profit",
+                "monetaryLedger": "money",
+                "ownershipLedger": "shares",
+                "amount": "fact:allocated",
+                "completeThroughFact": "completeThrough"
+              },
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
+            },
+            {
+              "key": "close-a",
+              "sourceRights": [
+                "member-a"
+              ],
+              "trigger": {
+                "type": "period_close",
+                "schedule": {
+                  "startTerm": "start",
+                  "endTerm": "end",
+                  "everyMonths": 12,
+                  "timing": "end",
+                  "offsetDays": 0
+                }
+              },
+              "rule": {
+                "type": "close_draws",
+                "monetaryLedger": "money",
+                "completeThroughFact": "completeThrough"
+              },
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
+            },
+            {
+              "key": "draw-a",
+              "sourceRights": [
+                "draw-a"
+              ],
+              "trigger": {
+                "type": "exercise",
+                "activityKey": "draw-a"
+              },
+              "rule": {
+                "type": "owner_draw",
+                "amount": "fact:amount"
+              },
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
+            },
+            {
+              "key": "subscribe-b",
+              "sourceRights": [
+                "member-b"
+              ],
+              "trigger": {
+                "type": "exercise",
+                "activityKey": "member-b"
+              },
+              "rule": {
+                "type": "issue_units",
+                "unitsLedger": "shares",
+                "quantity": "term:units",
+                "restricted": false,
+                "consideration": {
+                  "type": "money",
+                  "amount": "term:amount",
+                  "currencyTerm": "currency",
+                  "recognition": "unconditional_obligation"
+                }
+              },
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
+            },
+            {
+              "key": "allocate-b",
+              "sourceRights": [
+                "member-b"
+              ],
+              "trigger": {
+                "type": "period_close",
+                "schedule": {
+                  "startTerm": "start",
+                  "endTerm": "end",
+                  "everyMonths": 12,
+                  "timing": "end",
+                  "offsetDays": 0
+                }
+              },
+              "rule": {
+                "type": "profit_allocation",
+                "result": "profit",
+                "monetaryLedger": "money",
+                "ownershipLedger": "shares",
+                "amount": "fact:allocated",
+                "completeThroughFact": "completeThrough"
+              },
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
+            },
+            {
+              "key": "close-b",
+              "sourceRights": [
+                "member-b"
+              ],
+              "trigger": {
+                "type": "period_close",
+                "schedule": {
+                  "startTerm": "start",
+                  "endTerm": "end",
+                  "everyMonths": 12,
+                  "timing": "end",
+                  "offsetDays": 0
+                }
+              },
+              "rule": {
+                "type": "close_draws",
+                "monetaryLedger": "money",
+                "completeThroughFact": "completeThrough"
+              },
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
+            },
+            {
+              "key": "draw-b",
+              "sourceRights": [
+                "draw-b"
+              ],
+              "trigger": {
+                "type": "exercise",
+                "activityKey": "draw-b"
+              },
+              "rule": {
+                "type": "owner_draw",
+                "amount": "fact:amount"
+              },
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
             },
             {
               "key": "authorize",
-              "activityDocumentId": {
-                "$ref": "definition-authorize.documentId"
+              "sourceRights": [
+                "member-a"
+              ],
+              "trigger": {
+                "type": "transition",
+                "action": "accept"
               },
-              "partyRole": "member-a",
-              "ledgers": {
-                "shares": "shares"
-              }
-            },
-            {
-              "key": "earn",
-              "activityDocumentId": {
-                "$ref": "definition-earn.documentId"
+              "rule": {
+                "type": "authorize_units",
+                "unitsLedger": "shares",
+                "quantity": "term:authorized"
               },
-              "partyRole": "customer",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "contribute-member-a",
-              "activityDocumentId": {
-                "$ref": "definition-contribute-member-a.documentId"
-              },
-              "partyRole": "member-a",
-              "ledgers": {
-                "money": "money",
-                "shares": "shares"
-              }
-            },
-            {
-              "key": "draw-member-a",
-              "activityDocumentId": {
-                "$ref": "definition-draw-member-a.documentId"
-              },
-              "partyRole": "member-a",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "year-end-member-a",
-              "activityDocumentId": {
-                "$ref": "definition-year-end-member-a.documentId"
-              },
-              "partyRole": "member-a",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "contribute-member-b",
-              "activityDocumentId": {
-                "$ref": "definition-contribute-member-b.documentId"
-              },
-              "partyRole": "member-b",
-              "ledgers": {
-                "money": "money",
-                "shares": "shares"
-              }
-            },
-            {
-              "key": "draw-member-b",
-              "activityDocumentId": {
-                "$ref": "definition-draw-member-b.documentId"
-              },
-              "partyRole": "member-b",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "year-end-member-b",
-              "activityDocumentId": {
-                "$ref": "definition-year-end-member-b.documentId"
-              },
-              "partyRole": "member-b",
-              "ledgers": {
-                "money": "money"
-              }
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
             }
           ]
         }
@@ -632,8 +506,7 @@
         },
         "parties": {
           "member-a": "member-a",
-          "member-b": "member-b",
-          "customer": "customer"
+          "member-b": "member-b"
         },
         "ledgerBindings": {
           "money": "led_00000000000000000000000840"
@@ -647,16 +520,17 @@
     },
     {
       "key": "accept",
-      "command": "contracts.record",
+      "command": "contracts.accept",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "accept",
-        "occurrenceKey": "accept",
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
+        },
+        "expectedStatus": "draft",
         "sourceFactId": "accept",
         "effectiveAt": "2025-01-01T00:00:00Z",
-        "facts": {},
         "evidence": {
           "acceptance": [
             {
@@ -666,52 +540,12 @@
               }
             }
           ],
-          "service": [
-            {
-              "kind": "other",
-              "ref": "synthetic:accepted-service:accept"
-            }
-          ],
-          "payment": [
-            {
-              "kind": "other",
-              "ref": "synthetic:bank-receipt:accept"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "authorize",
-      "command": "contracts.record",
-      "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "authorize",
-        "occurrenceKey": "authorize",
-        "sourceFactId": "authorize",
-        "effectiveAt": "2025-01-01T00:00:00Z",
-        "facts": {},
-        "evidence": {
-          "acceptance": [
+          "economic": [
             {
               "kind": "signed_doc",
               "ref": {
                 "$ref": "source.documentId"
               }
-            }
-          ],
-          "service": [
-            {
-              "kind": "other",
-              "ref": "synthetic:accepted-service:authorize"
-            }
-          ],
-          "payment": [
-            {
-              "kind": "other",
-              "ref": "synthetic:bank-receipt:authorize"
             }
           ]
         }
@@ -724,15 +558,23 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "contribute-member-a",
+        "activityKey": "member-a",
+        "phase": "exercise",
+        "obligationKey": "contribute-member-a",
         "occurrenceKey": "contribute-member-a",
         "sourceFactId": "contribute-member-a",
         "effectiveAt": "2025-01-01T00:00:00Z",
-        "facts": {
-          "bank": "operating"
-        },
+        "facts": {},
         "evidence": {
           "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "economic": [
             {
               "kind": "signed_doc",
               "ref": {
@@ -746,13 +588,55 @@
               "ref": "synthetic:accepted-service:contribute-member-a"
             }
           ],
-          "payment": [
+          "billing": [
             {
               "kind": "other",
-              "ref": "synthetic:bank-receipt:contribute-member-a"
+              "ref": "synthetic:invoice:contribute-member-a"
             }
           ]
-        }
+        },
+        "consequenceKey": "subscribe-a"
+      }
+    },
+    {
+      "key": "subscription-a",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        },
+        "as_of": "2025-01-02"
+      }
+    },
+    {
+      "key": "contribute-member-a-cash",
+      "command": "payments.record",
+      "input": {
+        "financialAccountId": "operating",
+        "direction": "in",
+        "partyId": "member-a",
+        "amount": "2500000",
+        "currency": "USD",
+        "sourceFactId": "contribute-member-a-cash",
+        "effectiveAt": "2025-01-01T00:00:00Z",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "synthetic:bank-receipt:contribute-member-a"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "subscription-a.claims.0.claimId"
+            },
+            "component": {
+              "$ref": "subscription-a.claims.0.component"
+            },
+            "amount": "2500000"
+          }
+        ]
       }
     },
     {
@@ -762,15 +646,23 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "contribute-member-b",
+        "activityKey": "member-b",
+        "phase": "exercise",
+        "obligationKey": "contribute-member-b",
         "occurrenceKey": "contribute-member-b",
         "sourceFactId": "contribute-member-b",
         "effectiveAt": "2025-01-01T00:00:00Z",
-        "facts": {
-          "bank": "operating"
-        },
+        "facts": {},
         "evidence": {
           "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "economic": [
             {
               "kind": "signed_doc",
               "ref": {
@@ -784,31 +676,198 @@
               "ref": "synthetic:accepted-service:contribute-member-b"
             }
           ],
-          "payment": [
+          "billing": [
             {
               "kind": "other",
-              "ref": "synthetic:bank-receipt:contribute-member-b"
+              "ref": "synthetic:invoice:contribute-member-b"
+            }
+          ]
+        },
+        "consequenceKey": "subscribe-b"
+      }
+    },
+    {
+      "key": "subscription-b",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        },
+        "as_of": "2025-01-02"
+      }
+    },
+    {
+      "key": "contribute-member-b-cash",
+      "command": "payments.record",
+      "input": {
+        "financialAccountId": "operating",
+        "direction": "in",
+        "partyId": "member-b",
+        "amount": "2500000",
+        "currency": "USD",
+        "sourceFactId": "contribute-member-b-cash",
+        "effectiveAt": "2025-01-01T00:00:00Z",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "synthetic:bank-receipt:contribute-member-b"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "subscription-b.claims.1.claimId"
+            },
+            "component": {
+              "$ref": "subscription-b.claims.1.component"
+            },
+            "amount": "2500000"
+          }
+        ]
+      }
+    },
+    {
+      "key": "service-right",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "model": "priced-rights-v1",
+          "name": "Customer work",
+          "terms": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "4000000"
+            },
+            "currency": {
+              "type": "text",
+              "default": "USD"
+            }
+          },
+          "facts": {},
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "price": {
+            "treatment": "priced",
+            "currencyTerm": "currency",
+            "calculation": {
+              "type": "fixed",
+              "amount": "term:amount"
+            }
+          },
+          "economics": {
+            "kind": "service",
+            "direction": "provide",
+            "billing": {
+              "timing": "arrears"
+            },
+            "recognition": {
+              "timing": "delivery"
+            },
+            "classification": {
+              "monetaryLedger": "money",
+              "revenueCategory": "consulting"
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "customer-contract",
+      "command": "contracts.create",
+      "input": {
+        "definition": {
+          "model": "priced-rights-v1",
+          "name": "Customer work agreement",
+          "parties": [
+            "customer"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "activities": [
+            {
+              "key": "work",
+              "activityDocumentId": {
+                "$ref": "service-right.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ],
+          "consequences": []
+        },
+        "parties": {
+          "customer": "customer"
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        }
+      }
+    },
+    {
+      "key": "customer-accept",
+      "command": "contracts.accept",
+      "input": {
+        "contractId": {
+          "$ref": "customer-contract.id"
+        },
+        "expectedDocumentId": {
+          "$ref": "customer-contract.documentId"
+        },
+        "expectedStatus": "draft",
+        "sourceFactId": "customer:work:accepted",
+        "effectiveAt": "2025-01-01T00:00:00Z",
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:earn"
             }
           ]
         }
       }
     },
     {
-      "key": "earn",
+      "key": "earn-delivery",
       "command": "contracts.record",
       "input": {
         "contractId": {
-          "$ref": "contract.id"
+          "$ref": "customer-contract.id"
         },
-        "activityKey": "earn",
-        "occurrenceKey": "earn",
+        "activityKey": "work",
+        "phase": "delivery",
+        "obligationKey": "earn",
+        "occurrenceKey": "earn-delivery",
         "sourceFactId": "earn",
         "effectiveAt": "2025-06-30T00:00:00Z",
-        "facts": {
-          "bank": "operating"
-        },
+        "facts": {},
         "evidence": {
           "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "economic": [
             {
               "kind": "signed_doc",
               "ref": {
@@ -819,16 +878,149 @@
           "service": [
             {
               "kind": "other",
-              "ref": "synthetic:accepted-service:earn"
+              "ref": "synthetic:accepted-service:earn-delivery"
             }
           ],
-          "payment": [
+          "billing": [
             {
               "kind": "other",
-              "ref": "synthetic:bank-receipt:earn"
+              "ref": "synthetic:invoice:earn-delivery"
             }
           ]
         }
+      }
+    },
+    {
+      "key": "earn-recognition",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "customer-contract.id"
+        },
+        "activityKey": "work",
+        "phase": "recognition",
+        "obligationKey": "earn",
+        "occurrenceKey": "earn-recognition",
+        "sourceFactId": "earn:recognition",
+        "effectiveAt": "2025-06-30T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "economic": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:earn-recognition"
+            }
+          ],
+          "billing": [
+            {
+              "kind": "other",
+              "ref": "synthetic:invoice:earn-recognition"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "earn-billing",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "customer-contract.id"
+        },
+        "activityKey": "work",
+        "phase": "billing",
+        "obligationKey": "earn",
+        "occurrenceKey": "earn-billing",
+        "sourceFactId": "earn:billing",
+        "effectiveAt": "2025-06-30T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "economic": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:earn-billing"
+            }
+          ],
+          "billing": [
+            {
+              "kind": "other",
+              "ref": "synthetic:invoice:earn-billing"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "work-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "customer-contract.id"
+        },
+        "as_of": "2025-07-01"
+      }
+    },
+    {
+      "key": "earn-cash",
+      "command": "payments.record",
+      "input": {
+        "financialAccountId": "operating",
+        "direction": "in",
+        "partyId": "customer",
+        "amount": "4000000",
+        "currency": "USD",
+        "sourceFactId": "earn-cash",
+        "effectiveAt": "2025-06-30T00:00:00Z",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "synthetic:bank-receipt:earn"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "work-claim.claims.0.claimId"
+            },
+            "component": {
+              "$ref": "work-claim.claims.0.component"
+            },
+            "amount": "4000000"
+          }
+        ]
       }
     },
     {
@@ -838,16 +1030,25 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "draw-member-a",
+        "activityKey": "draw-a",
+        "phase": "exercise",
+        "obligationKey": "draw-member-a",
         "occurrenceKey": "draw-member-a",
         "sourceFactId": "draw-member-a",
         "effectiveAt": "2025-09-30T00:00:00Z",
         "facts": {
-          "amount": "500000",
-          "bank": "operating"
+          "amount": "500000"
         },
         "evidence": {
           "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "economic": [
             {
               "kind": "signed_doc",
               "ref": {
@@ -861,13 +1062,55 @@
               "ref": "synthetic:accepted-service:draw-member-a"
             }
           ],
-          "payment": [
+          "billing": [
             {
               "kind": "other",
-              "ref": "synthetic:bank-receipt:draw-member-a"
+              "ref": "synthetic:invoice:draw-member-a"
             }
           ]
-        }
+        },
+        "consequenceKey": "draw-a"
+      }
+    },
+    {
+      "key": "draw-claim-a",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        },
+        "as_of": "2025-10-01"
+      }
+    },
+    {
+      "key": "draw-member-a-cash",
+      "command": "payments.record",
+      "input": {
+        "financialAccountId": "operating",
+        "direction": "out",
+        "partyId": "member-a",
+        "amount": "500000",
+        "currency": "USD",
+        "sourceFactId": "draw-member-a-cash",
+        "effectiveAt": "2025-09-30T00:00:00Z",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "synthetic:bank-receipt:draw-member-a"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "draw-claim-a.claims.2.claimId"
+            },
+            "component": {
+              "$ref": "draw-claim-a.claims.2.component"
+            },
+            "amount": "500000"
+          }
+        ]
       }
     },
     {
@@ -877,16 +1120,25 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "draw-member-b",
+        "activityKey": "draw-b",
+        "phase": "exercise",
+        "obligationKey": "draw-member-b",
         "occurrenceKey": "draw-member-b",
         "sourceFactId": "draw-member-b",
         "effectiveAt": "2025-09-30T00:00:00Z",
         "facts": {
-          "amount": "500000",
-          "bank": "operating"
+          "amount": "500000"
         },
         "evidence": {
           "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "economic": [
             {
               "kind": "signed_doc",
               "ref": {
@@ -900,29 +1152,74 @@
               "ref": "synthetic:accepted-service:draw-member-b"
             }
           ],
-          "payment": [
+          "billing": [
             {
               "kind": "other",
-              "ref": "synthetic:bank-receipt:draw-member-b"
+              "ref": "synthetic:invoice:draw-member-b"
             }
           ]
-        }
+        },
+        "consequenceKey": "draw-b"
       }
     },
     {
-      "key": "year-end-member-a",
+      "key": "draw-claim-b",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        },
+        "as_of": "2025-10-01"
+      }
+    },
+    {
+      "key": "draw-member-b-cash",
+      "command": "payments.record",
+      "input": {
+        "financialAccountId": "operating",
+        "direction": "out",
+        "partyId": "member-b",
+        "amount": "500000",
+        "currency": "USD",
+        "sourceFactId": "draw-member-b-cash",
+        "effectiveAt": "2025-09-30T00:00:00Z",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "synthetic:bank-receipt:draw-member-b"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "draw-claim-b.claims.3.claimId"
+            },
+            "component": {
+              "$ref": "draw-claim-b.claims.3.component"
+            },
+            "amount": "500000"
+          }
+        ]
+      }
+    },
+    {
+      "key": "year-end-member-a:allocate",
       "command": "contracts.record",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "year-end-member-a",
-        "occurrenceKey": "year-end-member-a",
-        "sourceFactId": "year-end-member-a",
-        "effectiveAt": "2025-12-31T23:00:00Z",
+        "activityKey": "member-a",
+        "phase": "period_close",
+        "obligationKey": "year-end-member-a:allocate",
+        "occurrenceKey": "year-end-member-a:allocate",
+        "sourceFactId": "year-end-member-a:allocate",
+        "effectiveAt": "2025-12-31T23:59:59.999Z",
         "facts": {
           "profit": "4000000",
-          "draws": "500000"
+          "allocated": "2000000",
+          "completeThrough": "2026-01-01T00:00:00Z"
         },
         "evidence": {
           "acceptance": [
@@ -933,38 +1230,7 @@
               }
             }
           ],
-          "service": [
-            {
-              "kind": "other",
-              "ref": "synthetic:accepted-service:year-end-member-a"
-            }
-          ],
-          "payment": [
-            {
-              "kind": "other",
-              "ref": "synthetic:bank-receipt:year-end-member-a"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "year-end-member-b",
-      "command": "contracts.record",
-      "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "year-end-member-b",
-        "occurrenceKey": "year-end-member-b",
-        "sourceFactId": "year-end-member-b",
-        "effectiveAt": "2025-12-31T23:00:00Z",
-        "facts": {
-          "profit": "4000000",
-          "draws": "500000"
-        },
-        "evidence": {
-          "acceptance": [
+          "economic": [
             {
               "kind": "signed_doc",
               "ref": {
@@ -975,15 +1241,185 @@
           "service": [
             {
               "kind": "other",
-              "ref": "synthetic:accepted-service:year-end-member-b"
+              "ref": "synthetic:accepted-service:year-end-member-a:allocate"
             }
           ],
-          "payment": [
+          "billing": [
             {
               "kind": "other",
-              "ref": "synthetic:bank-receipt:year-end-member-b"
+              "ref": "synthetic:invoice:year-end-member-a:allocate"
             }
           ]
+        },
+        "consequenceKey": "allocate-a",
+        "period": {
+          "from": "2025-01-01T00:00:00Z",
+          "through": "2026-01-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "key": "year-end-member-a:close",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "member-a",
+        "phase": "period_close",
+        "obligationKey": "year-end-member-a:close",
+        "occurrenceKey": "year-end-member-a:close",
+        "sourceFactId": "year-end-member-a:close",
+        "effectiveAt": "2026-01-01T00:00:00Z",
+        "facts": {
+          "profit": "4000000",
+          "allocated": "2000000",
+          "completeThrough": "2026-01-01T00:00:00Z"
+        },
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "economic": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:year-end-member-a:close"
+            }
+          ],
+          "billing": [
+            {
+              "kind": "other",
+              "ref": "synthetic:invoice:year-end-member-a:close"
+            }
+          ]
+        },
+        "consequenceKey": "close-a",
+        "period": {
+          "from": "2025-01-01T00:00:00Z",
+          "through": "2026-01-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "key": "year-end-member-b:allocate",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "member-b",
+        "phase": "period_close",
+        "obligationKey": "year-end-member-b:allocate",
+        "occurrenceKey": "year-end-member-b:allocate",
+        "sourceFactId": "year-end-member-b:allocate",
+        "effectiveAt": "2025-12-31T23:59:59.999Z",
+        "facts": {
+          "profit": "4000000",
+          "allocated": "2000000",
+          "completeThrough": "2026-01-01T00:00:00Z"
+        },
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "economic": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:year-end-member-b:allocate"
+            }
+          ],
+          "billing": [
+            {
+              "kind": "other",
+              "ref": "synthetic:invoice:year-end-member-b:allocate"
+            }
+          ]
+        },
+        "consequenceKey": "allocate-b",
+        "period": {
+          "from": "2025-01-01T00:00:00Z",
+          "through": "2026-01-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "key": "year-end-member-b:close",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "member-b",
+        "phase": "period_close",
+        "obligationKey": "year-end-member-b:close",
+        "occurrenceKey": "year-end-member-b:close",
+        "sourceFactId": "year-end-member-b:close",
+        "effectiveAt": "2026-01-01T00:00:00Z",
+        "facts": {
+          "profit": "4000000",
+          "allocated": "2000000",
+          "completeThrough": "2026-01-01T00:00:00Z"
+        },
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "economic": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:year-end-member-b:close"
+            }
+          ],
+          "billing": [
+            {
+              "kind": "other",
+              "ref": "synthetic:invoice:year-end-member-b:close"
+            }
+          ]
+        },
+        "consequenceKey": "close-b",
+        "period": {
+          "from": "2025-01-01T00:00:00Z",
+          "through": "2026-01-01T00:00:00Z"
         }
       }
     },

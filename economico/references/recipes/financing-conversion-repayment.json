@@ -1,0 +1,591 @@
+{
+  "name": "Financing conversion and partial repayment",
+  "description": "Fund a USD 100 financing commitment, convert USD 40 to evidenced equity without invented units, and repay the remaining USD 60. Replace all synthetic evidence with actual terms and bank records.",
+  "setupAt": "2026-06-01T00:00:00Z",
+  "recordedAt": "2026-06-06T00:00:00Z",
+  "steps": [
+    {
+      "key": "authorization",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "U3ludGhldGljIGZpeHR1cmU6IEFkYSBjb21taXRzIHVuY29uZGl0aW9uYWxseSB0byBVU0QgMTAwIGNvbnZlcnRpYmxlIGZpbmFuY2luZyBvbiBKdW5lIDEsIDIwMjYuIFRoZSBzaWduZWQgaW5zdHJ1bWVudCBlc3RhYmxpc2hlcyB0aGUgZnVuZGluZyBvYmxpZ2F0aW9uIGFuZCBmaW5hbmNpbmcgbGlhYmlsaXR5LiBObyB1bml0cyBhcmUgaXNzdWVkLiBCYW5rIGZ1bmRpbmcgZm9sbG93cyBKdW5lIDIu",
+        "externalId": "example:authorization"
+      }
+    },
+    {
+      "key": "bank-source",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "U3ludGhldGljIGZpeHR1cmU6IGNvbXBhbnkgY2hlY2tpbmcgcmVjZWl2ZWQgVVNEIDEwMCBmcm9tIEFkYSBvbiBKdW5lIDIsIDIwMjYsIHNvdXJjZSBiYW5rOmRlcG9zaXQ6MS4=",
+        "externalId": "example:bank-source"
+      }
+    },
+    {
+      "key": "investor",
+      "command": "parties.create",
+      "input": {
+        "partyId": "investor_ada",
+        "name": "Ada",
+        "categories": [
+          "investor"
+        ]
+      }
+    },
+    {
+      "key": "bank",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "bank_main",
+        "name": "Company checking",
+        "kind": "checking",
+        "currency": "USD"
+      }
+    },
+    {
+      "key": "right",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "model": "priced-rights-v1",
+          "name": "Convertible financing right",
+          "terms": {
+            "currency": {
+              "type": "text",
+              "default": "USD"
+            },
+            "amount": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "10000"
+            }
+          },
+          "facts": {},
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "price": {
+            "treatment": "priced",
+            "calculation": {
+              "type": "fixed",
+              "amount": "term:amount"
+            },
+            "currencyTerm": "currency"
+          },
+          "economics": {
+            "kind": "financing",
+            "direction": "provide",
+            "classification": {
+              "monetaryLedger": "money"
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "contract",
+      "command": "contracts.create",
+      "input": {
+        "definition": {
+          "model": "priced-rights-v1",
+          "name": "Convertible financing agreement",
+          "parties": [
+            "investor"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "activities": [
+            {
+              "key": "financing",
+              "activityDocumentId": {
+                "$ref": "right.documentId"
+              },
+              "partyRole": "investor",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ],
+          "consequences": [
+            {
+              "key": "commit",
+              "sourceRights": [
+                "financing"
+              ],
+              "trigger": {
+                "type": "exercise",
+                "activityKey": "financing"
+              },
+              "rule": {
+                "type": "financing_commitment",
+                "consideration": {
+                  "type": "money",
+                  "amount": "term:amount",
+                  "currencyTerm": "currency",
+                  "recognition": "unconditional_obligation"
+                }
+              },
+              "evidence": [
+                "economic"
+              ]
+            }
+          ]
+        },
+        "parties": {
+          "investor": "investor_ada"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "authorization.documentId"
+          }
+        ],
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        }
+      }
+    },
+    {
+      "key": "accept",
+      "command": "contracts.accept",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
+        },
+        "expectedStatus": "draft",
+        "effectiveAt": "2026-06-01T00:00:00Z",
+        "sourceFactId": "investor:agreement:1",
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "authorization.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "commitment",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "financing",
+        "phase": "exercise",
+        "effectiveAt": "2026-06-01T00:00:00Z",
+        "sourceFactId": "investor:commitment:1",
+        "obligationKey": "financing-1",
+        "occurrenceKey": "financing-1",
+        "evidence": {
+          "economic": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "authorization.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
+      },
+      "expect": {
+        "model": "priced-rights-v1",
+        "claims": [
+          {
+            "kind": "financing",
+            "original": "10000",
+            "outstanding": "10000",
+            "direction": "receivable"
+          },
+          {
+            "kind": "financing",
+            "direction": "payable",
+            "original": "10000",
+            "outstanding": "10000",
+            "component": {
+              "accountCode": 2240
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "payment",
+      "command": "payments.record",
+      "input": {
+        "financialAccountId": "bank_main",
+        "partyId": "investor_ada",
+        "direction": "in",
+        "amount": "10000",
+        "currency": "USD",
+        "effectiveAt": "2026-06-02T00:00:00Z",
+        "sourceFactId": "bank:deposit:1",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": {
+              "$ref": "bank-source.documentId"
+            }
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "claim.claims.0.claimId"
+            },
+            "component": {
+              "$ref": "claim.claims.0.component"
+            },
+            "amount": "10000"
+          }
+        ]
+      },
+      "at": "2026-06-02T00:00:00Z"
+    },
+    {
+      "key": "settled",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
+      },
+      "expect": {
+        "claims": [
+          {
+            "kind": "financing",
+            "original": "10000",
+            "outstanding": "0",
+            "direction": "receivable"
+          },
+          {
+            "kind": "financing",
+            "direction": "payable",
+            "original": "10000",
+            "outstanding": "10000",
+            "component": {
+              "accountCode": 2240
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "books",
+      "report": true,
+      "input": {
+        "kind": "balance_sheet",
+        "currency": "USD",
+        "as_of": "2026-06-03"
+      },
+      "expect": {
+        "assets": {
+          "total": "10000"
+        },
+        "liabilities": {
+          "total": "10000"
+        },
+        "equity": {
+          "total": "0"
+        }
+      }
+    },
+    {
+      "key": "conversion-source",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "externalId": "example:conversion",
+        "contentBase64": "U3ludGhldGljIGZpeHR1cmU6IE9uIEp1bmUgNCwgMjAyNiwgQWRhIGFuZCB0aGUgY29tcGFueSBhZ3JlZSB0byBjb252ZXJ0IFVTRCA0MCBvZiB0aGUgZnVuZGVkIFVTRCAxMDAgaW5zdHJ1bWVudCB0byBhZGRpdGlvbmFsIHBhaWQtaW4gY2FwaXRhbCBhY2NvdW50IDMxMTAsIHdpdGhvdXQgc3RhdGluZyBvciBpbnZlbnRpbmcgYSB1bml0IHF1YW50aXR5LCBhbmQgcmVwYXkgdGhlIFVTRCA2MCByZW1haW5kZXIuIEJhbmsgcGFpZCBBZGEgVVNEIDYwIG9uIEp1bmUgNSwgc291cmNlIGJhbms6cmVwYXltZW50OjEu"
+      }
+    },
+    {
+      "key": "conversion-right",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "model": "priced-rights-v1",
+          "name": "Capital by financing conversion",
+          "terms": {
+            "currency": {
+              "type": "text",
+              "default": "USD"
+            }
+          },
+          "facts": {
+            "claim": {
+              "type": "claim"
+            },
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "price": {
+            "treatment": "included",
+            "evidence": [
+              {
+                "kind": "signed_doc",
+                "ref": {
+                  "$ref": "conversion-source.documentId"
+                }
+              }
+            ]
+          },
+          "economics": {
+            "kind": "ownership",
+            "direction": "provide"
+          }
+        }
+      }
+    },
+    {
+      "key": "conversion-contract",
+      "command": "contracts.create",
+      "input": {
+        "definition": {
+          "model": "priced-rights-v1",
+          "name": "Equity conversion agreement",
+          "parties": [
+            "holder"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "activities": [
+            {
+              "key": "capital",
+              "activityDocumentId": {
+                "$ref": "conversion-right.documentId"
+              },
+              "partyRole": "holder",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ],
+          "consequences": [
+            {
+              "key": "convert",
+              "sourceRights": [
+                "capital"
+              ],
+              "trigger": {
+                "type": "exercise",
+                "activityKey": "capital"
+              },
+              "rule": {
+                "type": "convert_claim",
+                "claimFact": "claim",
+                "amount": "fact:amount",
+                "currencyTerm": "currency",
+                "monetaryLedger": "money",
+                "equityAccount": 3110
+              },
+              "evidence": [
+                "economic"
+              ]
+            }
+          ]
+        },
+        "parties": {
+          "holder": "investor_ada"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "conversion-source.documentId"
+          }
+        ],
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        }
+      }
+    },
+    {
+      "key": "conversion-accept",
+      "command": "contracts.accept",
+      "input": {
+        "contractId": {
+          "$ref": "conversion-contract.id"
+        },
+        "expectedDocumentId": {
+          "$ref": "conversion-contract.documentId"
+        },
+        "expectedStatus": "draft",
+        "effectiveAt": "2026-06-04T00:00:00Z",
+        "sourceFactId": "financing:conversion:agreement",
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "conversion-source.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "convert",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "conversion-contract.id"
+        },
+        "activityKey": "capital",
+        "phase": "exercise",
+        "obligationKey": "conversion",
+        "occurrenceKey": "conversion",
+        "sourceFactId": "financing:conversion:1",
+        "effectiveAt": "2026-06-04T00:00:00Z",
+        "facts": {
+          "claim": {
+            "claimId": {
+              "$ref": "claim.claims.1.claimId"
+            },
+            "component": {
+              "$ref": "claim.claims.1.component"
+            }
+          },
+          "amount": "4000"
+        },
+        "evidence": {
+          "economic": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "conversion-source.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "outstanding",
+      "report": true,
+      "input": {
+        "kind": "cap_table"
+      },
+      "expect": {
+        "convertibles": [
+          {
+            "contractId": {
+              "$ref": "contract.id"
+            },
+            "outstanding": "6000"
+          }
+        ]
+      }
+    },
+    {
+      "key": "repayment",
+      "command": "payments.record",
+      "input": {
+        "financialAccountId": "bank_main",
+        "partyId": "investor_ada",
+        "direction": "out",
+        "amount": "6000",
+        "currency": "USD",
+        "effectiveAt": "2026-06-05T00:00:00Z",
+        "sourceFactId": "bank:repayment:1",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": {
+              "$ref": "conversion-source.documentId"
+            }
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "claim.claims.1.claimId"
+            },
+            "component": {
+              "$ref": "claim.claims.1.component"
+            },
+            "amount": "6000"
+          }
+        ]
+      },
+      "at": "2026-06-05T00:00:00Z"
+    },
+    {
+      "key": "no-financing",
+      "report": true,
+      "input": {
+        "kind": "cap_table"
+      },
+      "expect": {
+        "convertibles": []
+      }
+    },
+    {
+      "key": "final-books",
+      "report": true,
+      "input": {
+        "kind": "balance_sheet",
+        "currency": "USD",
+        "as_of": "2026-06-06"
+      },
+      "expect": {
+        "assets": {
+          "total": "4000"
+        },
+        "liabilities": {
+          "total": "0"
+        },
+        "equity": {
+          "total": "4000"
+        }
+      }
+    }
+  ]
+}

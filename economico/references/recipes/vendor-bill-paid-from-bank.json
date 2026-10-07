@@ -1,9 +1,18 @@
 {
   "name": "Vendor invoice on terms, paid later from the bank",
-  "description": "A hosting provider's monthly invoice (from the founder's email) is recorded against a vendor contract whose terms come from the provider's published terms and pricing page. The bill accrues 5210 Hosting as cost of revenue into 2110 payables with its due date; the bank payment settles that claim.",
+  "description": "One vendor service right with its evidenced charge, independently recorded delivery, recognition and billing. The payment account determines funding. No payment or lifecycle activity is defined.",
   "setupAt": "2026-06-01T00:00:00Z",
   "recordedAt": "2026-08-01T00:00:00Z",
   "steps": [
+    {
+      "key": "acceptance-source",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "U3ludGhldGljIGFjY2VwdGFuY2UgZXZpZGVuY2UgZm9yIHRoaXMgZXhlY3V0YWJsZSBmaXh0dXJlOiB0aGUgY29tcGFueSBhY2NlcHRlZCB0aGUgdmVuZG9yIHNlcnZpY2UgYWdyZWVtZW50IG9uIDIwMjYtMDYtMDFUMDA6MDA6MDBaLiBUaGUgc3Vic2VxdWVudCBpbnZvaWNlL3JlY2VpcHQgZXN0YWJsaXNoZXMgdGhlIHNwZWNpZmljIHNlcnZpY2UgY2hhcmdlOyBiYW5rL2NhcmQgZXZpZGVuY2UgZXN0YWJsaXNoZXMgcGF5bWVudCBzZXBhcmF0ZWx5Lg==",
+        "externalId": "vendor-bill-paid-from-bank:acceptance:2026-06-01"
+      }
+    },
     {
       "key": "vendor-terms",
       "command": "documents.receive",
@@ -45,40 +54,24 @@
       }
     },
     {
-      "key": "def-accept",
+      "key": "service-right",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Accept vendor terms of service",
-          "trigger": {
-            "type": "transition",
-            "from": [
-              "draft"
-            ],
-            "to": "active"
-          }
-        }
-      }
-    },
-    {
-      "key": "def-bill",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Vendor invoice for production hosting",
-          "trigger": {
-            "type": "recorded"
-          },
-          "repeatable": true,
-          "facts": {
-            "amount": {
+          "model": "priced-rights-v1",
+          "name": "Production hosting",
+          "terms": {
+            "price": {
               "type": "integer",
-              "unit": "USD"
+              "unit": "USD",
+              "default": "68000"
             },
-            "due": {
-              "type": "date"
+            "currency": {
+              "type": "text",
+              "default": "USD"
             }
           },
+          "facts": {},
           "ledgers": {
             "money": {
               "classification": "gaap",
@@ -88,60 +81,29 @@
               "accountTemplate": "gaap_startup"
             }
           },
-          "effects": [
-            {
-              "pattern": "accrue_expense",
-              "ledger": "money",
-              "amount": "fact:amount",
+          "price": {
+            "treatment": "priced",
+            "calculation": {
+              "type": "fixed",
+              "amount": "term:price"
+            },
+            "currencyTerm": "currency"
+          },
+          "economics": {
+            "kind": "service",
+            "direction": "receive",
+            "billing": {
+              "timing": "arrears"
+            },
+            "recognition": {
+              "timing": "delivery"
+            },
+            "classification": {
+              "monetaryLedger": "money",
               "expenseAccount": 5210,
-              "expenseFunction": "cost_of_revenue",
-              "dueDate": "fact:due"
+              "expenseFunction": "cost_of_revenue"
             }
-          ]
-        }
-      }
-    },
-    {
-      "key": "def-pay",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Pay vendor invoice from the bank",
-          "trigger": {
-            "type": "recorded"
-          },
-          "repeatable": true,
-          "facts": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD"
-            },
-            "bank": {
-              "type": "text"
-            },
-            "billed": {
-              "type": "text"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "pay",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "accountingKey": "bill",
-              "financialAccountFact": "bank",
-              "claimFact": "billed"
-            }
-          ]
+          }
         }
       }
     },
@@ -150,7 +112,8 @@
       "command": "templates.create",
       "input": {
         "definition": {
-          "name": "Render hosting (vendor terms)",
+          "model": "priced-rights-v1",
+          "name": "Production hosting agreement",
           "parties": [
             "vendor"
           ],
@@ -165,27 +128,9 @@
           },
           "activities": [
             {
-              "key": "accept",
+              "key": "service",
               "activityDocumentId": {
-                "$ref": "def-accept.documentId"
-              },
-              "partyRole": "vendor",
-              "ledgers": {}
-            },
-            {
-              "key": "bill",
-              "activityDocumentId": {
-                "$ref": "def-bill.documentId"
-              },
-              "partyRole": "vendor",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "pay",
-              "activityDocumentId": {
-                "$ref": "def-pay.documentId"
+                "$ref": "service-right.documentId"
               },
               "partyRole": "vendor",
               "ledgers": {
@@ -211,30 +156,88 @@
         },
         "sourceDocumentIds": [
           {
-            "$ref": "vendor-terms.documentId"
+            "$ref": "invoice.documentId"
+          },
+          {
+            "$ref": "acceptance-source.documentId"
           }
         ]
       }
     },
     {
       "key": "accept",
-      "command": "contracts.record",
+      "command": "contracts.accept",
       "at": "2026-06-01T00:00:00Z",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "accept",
-        "occurrenceKey": "accept",
-        "sourceFactId": "render:account:signup",
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
+        },
+        "expectedStatus": "draft",
         "effectiveAt": "2026-06-01T00:00:00Z",
-        "facts": {},
+        "sourceFactId": "render:account:signup",
         "evidence": {
           "acceptance": [
             {
-              "kind": "signed_doc",
+              "kind": "other",
               "ref": {
-                "$ref": "vendor-terms.documentId"
+                "$ref": "acceptance-source.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "delivery",
+      "command": "contracts.record",
+      "at": "2026-07-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "service",
+        "obligationKey": "INV-2026-06-0042",
+        "effectiveAt": "2026-07-01T00:00:00Z",
+        "facts": {},
+        "phase": "delivery",
+        "occurrenceKey": "INV-2026-06-0042:delivery",
+        "sourceFactId": "render:invoice:INV-2026-06-0042:delivery",
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "invoice.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "recognition",
+      "command": "contracts.record",
+      "at": "2026-07-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "service",
+        "obligationKey": "INV-2026-06-0042",
+        "effectiveAt": "2026-07-01T00:00:00Z",
+        "facts": {},
+        "phase": "recognition",
+        "occurrenceKey": "INV-2026-06-0042:recognition",
+        "sourceFactId": "render:invoice:INV-2026-06-0042:recognition",
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "invoice.documentId"
               }
             }
           ]
@@ -249,16 +252,15 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "bill",
-        "occurrenceKey": "INV-2026-06-0042",
-        "sourceFactId": "render:invoice:INV-2026-06-0042",
+        "activityKey": "service",
+        "obligationKey": "INV-2026-06-0042",
         "effectiveAt": "2026-07-01T00:00:00Z",
-        "facts": {
-          "amount": "68000",
-          "due": "2026-07-31"
-        },
+        "facts": {},
+        "phase": "billing",
+        "occurrenceKey": "INV-2026-06-0042:bill",
+        "sourceFactId": "render:invoice:INV-2026-06-0042:bill",
         "evidence": {
-          "service": [
+          "billing": [
             {
               "kind": "other",
               "ref": {
@@ -266,10 +268,28 @@
               }
             }
           ]
+        },
+        "dueDate": "2026-07-31"
+      }
+    },
+    {
+      "key": "open-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
         }
       },
-      "sourceDocumentId": {
-        "$ref": "invoice.documentId"
+      "expect": {
+        "model": "priced-rights-v1",
+        "claims": [
+          {
+            "kind": "commercial",
+            "original": "68000",
+            "outstanding": "68000"
+          }
+        ]
       }
     },
     {
@@ -283,29 +303,33 @@
     },
     {
       "key": "pay-june",
-      "command": "contracts.record",
+      "command": "payments.record",
       "at": "2026-07-20T00:00:00Z",
       "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "pay",
-        "occurrenceKey": "render:ach:2026-07-20",
-        "sourceFactId": "render:ach:2026-07-20",
+        "financialAccountId": "bank_main",
+        "direction": "out",
+        "amount": "68000",
+        "currency": "USD",
+        "partyId": "ven_render",
         "effectiveAt": "2026-07-20T00:00:00Z",
-        "facts": {
-          "amount": "68000",
-          "bank": "bank_main",
-          "billed": "INV-2026-06-0042"
-        },
-        "evidence": {
-          "payment": [
-            {
-              "kind": "other",
-              "ref": "bank:statement:2026-07:line-12"
-            }
-          ]
-        }
+        "sourceFactId": "render:ach:2026-07-20",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "bank:statement:2026-07:line-12"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "open-claim.claims.0.claimId"
+            },
+            "component": {
+              "$ref": "open-claim.claims.0.component"
+            },
+            "amount": "68000"
+          }
+        ]
       }
     },
     {
@@ -323,6 +347,26 @@
         "liabilities": {
           "total": "0"
         }
+      }
+    },
+    {
+      "key": "economic-claims",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
+      },
+      "expect": {
+        "model": "priced-rights-v1",
+        "claims": [
+          {
+            "kind": "commercial",
+            "original": "68000",
+            "outstanding": "0"
+          }
+        ]
       }
     }
   ]

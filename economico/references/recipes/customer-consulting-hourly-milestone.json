@@ -1,0 +1,508 @@
+{
+  "name": "Hourly and milestone consulting",
+  "description": "Two real consulting rights: measured hours at $200/hour and a $1,000 implementation milestone. Accepted work, recognition, billing and bank receipts are separate phases. The original 12.5 hours plus milestone still invoice, earn and collect $3,500.",
+  "setupAt": "2026-01-01T00:00:00Z",
+  "recordedAt": "2027-01-02T00:00:00Z",
+  "steps": [
+    {
+      "key": "source",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "SG91cmx5IGNvbnN1bHRpbmcKU3ludGhldGljIGFjY2VwdGFuY2Ugc2NlbmFyaW8uIEFuIGFwcHJvdmVkIDEyLjUtaG91ciB0aW1lc2hlZXQgYXQgJDIwMC9ob3VyIHByb2R1Y2VzICQyLDUwMCBvZiBlYXJuZWQgYnV0IHVuYmlsbGVkIHJldmVudWUuIFNlcGFyYXRlIGJpbGxpbmcgYW5kIHBheW1lbnQgZXZlbnRzIHByZXNlcnZlIHNlcnZpY2UsIGR1ZSBhbmQgY2FzaCB0aW1pbmcuIE1lYXN1cmVtZW50IHJlbWFpbnMgMTIsNTAwLDAwMCBtaWNyb2hvdXJzIGluIGl0cyBuYXRpdmUgbGVkZ2VyLg==",
+        "externalId": "consulting-hourly-milestone"
+      }
+    },
+    {
+      "key": "party-customer",
+      "command": "parties.create",
+      "input": {
+        "partyId": "customer",
+        "name": "Customer",
+        "categories": [
+          "customer"
+        ]
+      }
+    },
+    {
+      "key": "bank",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "bank",
+        "name": "Fixture bank",
+        "currency": "USD"
+      }
+    },
+    {
+      "key": "hours-right",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "model": "priced-rights-v1",
+          "name": "Hourly consulting",
+          "terms": {
+            "rate": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "20000"
+            },
+            "unit": {
+              "type": "integer",
+              "unit": "hour",
+              "default": "1000000"
+            },
+            "currency": {
+              "type": "text",
+              "default": "USD"
+            }
+          },
+          "facts": {
+            "hours": {
+              "type": "integer",
+              "unit": "hour"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "price": {
+            "treatment": "priced",
+            "calculation": {
+              "type": "rate",
+              "quantity": "fact:hours",
+              "rate": "term:rate",
+              "unitsPerPrice": "term:unit"
+            },
+            "currencyTerm": "currency"
+          },
+          "economics": {
+            "kind": "service",
+            "direction": "provide",
+            "billing": {
+              "timing": "arrears"
+            },
+            "recognition": {
+              "timing": "usage"
+            },
+            "classification": {
+              "monetaryLedger": "money",
+              "revenueCategory": "consulting"
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "milestone-right",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "model": "priced-rights-v1",
+          "name": "Fixed implementation milestone",
+          "terms": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "100000"
+            },
+            "currency": {
+              "type": "text",
+              "default": "USD"
+            }
+          },
+          "facts": {},
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "price": {
+            "treatment": "priced",
+            "calculation": {
+              "type": "fixed",
+              "amount": "term:amount"
+            },
+            "currencyTerm": "currency"
+          },
+          "economics": {
+            "kind": "service",
+            "direction": "provide",
+            "billing": {
+              "timing": "arrears"
+            },
+            "recognition": {
+              "timing": "delivery"
+            },
+            "classification": {
+              "monetaryLedger": "money",
+              "revenueCategory": "consulting"
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "template",
+      "command": "templates.create",
+      "input": {
+        "definition": {
+          "name": "Hourly and milestone consulting",
+          "parties": [
+            "customer"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "activities": [
+            {
+              "key": "hours",
+              "activityDocumentId": {
+                "$ref": "hours-right.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money"
+              }
+            },
+            {
+              "key": "milestone",
+              "activityDocumentId": {
+                "$ref": "milestone-right.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ],
+          "model": "priced-rights-v1"
+        }
+      }
+    },
+    {
+      "key": "contract",
+      "command": "contracts.create",
+      "input": {
+        "templateDocumentId": {
+          "$ref": "template.documentId"
+        },
+        "parties": {
+          "customer": "customer"
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "source.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "contract-state",
+      "read": "subjects",
+      "input": {
+        "action": "get",
+        "type": "contract",
+        "id": {
+          "$ref": "contract.id"
+        }
+      },
+      "expect": {
+        "status": "draft"
+      }
+    },
+    {
+      "key": "accept",
+      "command": "contracts.accept",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "sourceFactId": "accept",
+        "effectiveAt": "2026-01-01T00:00:00Z",
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ]
+        },
+        "expectedStatus": "draft",
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
+        }
+      }
+    },
+    {
+      "key": "work",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "hours",
+        "occurrenceKey": "work",
+        "sourceFactId": "work",
+        "effectiveAt": "2026-09-30T11:00:00Z",
+        "facts": {
+          "hours": "12500000"
+        },
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:work"
+            }
+          ]
+        },
+        "obligationKey": "september-hours",
+        "phase": "usage"
+      }
+    },
+    {
+      "key": "bill-recognized",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "hours",
+        "occurrenceKey": "bill-recognized",
+        "sourceFactId": "bill-recognized",
+        "effectiveAt": "2026-09-30T12:00:00Z",
+        "facts": {
+          "hours": "12500000"
+        },
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:bill"
+            }
+          ]
+        },
+        "obligationKey": "september-hours",
+        "phase": "recognition"
+      }
+    },
+    {
+      "key": "bill",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "hours",
+        "occurrenceKey": "bill",
+        "sourceFactId": "bill",
+        "effectiveAt": "2026-09-30T12:00:00Z",
+        "facts": {
+          "hours": "12500000"
+        },
+        "evidence": {
+          "billing": [
+            {
+              "kind": "other",
+              "ref": "synthetic:invoice:bill"
+            }
+          ]
+        },
+        "obligationKey": "september-hours",
+        "phase": "billing"
+      }
+    },
+    {
+      "key": "receipt-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
+      }
+    },
+    {
+      "key": "receipt",
+      "command": "payments.record",
+      "input": {
+        "financialAccountId": "bank",
+        "direction": "in",
+        "amount": "250000",
+        "currency": "USD",
+        "partyId": "customer",
+        "effectiveAt": "2026-10-01T12:00:00Z",
+        "sourceFactId": "receipt",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "synthetic:bank-receipt:receipt"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "receipt-claim.claims.0.claimId"
+            },
+            "component": {
+              "$ref": "receipt-claim.claims.0.component"
+            },
+            "amount": "250000"
+          }
+        ]
+      }
+    },
+    {
+      "key": "milestone-delivered",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "milestone",
+        "occurrenceKey": "milestone-delivered",
+        "sourceFactId": "milestone-accepted",
+        "effectiveAt": "2026-10-15T12:00:00Z",
+        "facts": {},
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:milestone-bill"
+            }
+          ]
+        },
+        "obligationKey": "implementation",
+        "phase": "delivery"
+      }
+    },
+    {
+      "key": "milestone-bill-recognized",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "milestone",
+        "occurrenceKey": "milestone-bill-recognized",
+        "sourceFactId": "milestone-bill-recognized",
+        "effectiveAt": "2026-10-15T12:00:00Z",
+        "facts": {},
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "synthetic:accepted-service:milestone-bill"
+            }
+          ]
+        },
+        "obligationKey": "implementation",
+        "phase": "recognition"
+      }
+    },
+    {
+      "key": "milestone-bill",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "milestone",
+        "occurrenceKey": "milestone-bill",
+        "sourceFactId": "milestone-bill",
+        "effectiveAt": "2026-10-15T12:00:00Z",
+        "facts": {},
+        "evidence": {
+          "billing": [
+            {
+              "kind": "other",
+              "ref": "synthetic:invoice:milestone-bill"
+            }
+          ]
+        },
+        "obligationKey": "implementation",
+        "phase": "billing"
+      }
+    },
+    {
+      "key": "milestone-receipt-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
+      }
+    },
+    {
+      "key": "milestone-receipt",
+      "command": "payments.record",
+      "input": {
+        "financialAccountId": "bank",
+        "direction": "in",
+        "amount": "100000",
+        "currency": "USD",
+        "partyId": "customer",
+        "effectiveAt": "2026-10-16T12:00:00Z",
+        "sourceFactId": "milestone-receipt",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "synthetic:bank-receipt:milestone-receipt"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "milestone-receipt-claim.claims.1.claimId"
+            },
+            "component": {
+              "$ref": "milestone-receipt-claim.claims.1.component"
+            },
+            "amount": "100000"
+          }
+        ]
+      }
+    },
+    {
+      "key": "billing",
+      "report": true,
+      "input": {
+        "kind": "revenue_summary",
+        "period_start": "2026-09-01",
+        "period_end": "2026-10-17"
+      },
+      "expect": {
+        "by_currency": [
+          {
+            "currency": "USD",
+            "invoiced": "350000",
+            "paid": "350000",
+            "outstanding": "0",
+            "recognized_revenue": "350000"
+          }
+        ]
+      }
+    }
+  ]
+}

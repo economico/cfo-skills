@@ -1,15 +1,15 @@
 {
-  "name": "SAFE held as financing until conversion",
-  "description": "An evidenced $100,000 SAFE purchase creates a financing liability, with separate bank funding of its claim. No equity, units or commercial invoice is invented. Use the actual signed instrument and bank evidence in place of this synthetic example.",
-  "setupAt": "2025-01-01T00:00:00Z",
-  "recordedAt": "2026-01-02T00:00:00Z",
+  "name": "Owner cash contribution without new units",
+  "description": "An evidenced capital commitment and a separate bank deposit, without an invoice or invented shares. Replace synthetic evidence with the actual source documents.",
+  "setupAt": "2026-06-01T00:00:00Z",
+  "recordedAt": "2026-06-03T00:00:00Z",
   "steps": [
     {
       "key": "authorization",
       "command": "documents.receive",
       "input": {
         "kind": "source_document",
-        "contentBase64": "U3ludGhldGljIFNBRkUgZml4dHVyZTogSW52ZXN0b3IgcHVyY2hhc2VzIFVTRCAxMDAsMDAwIG9mIGNvbnZlcnRpYmxlIGZpbmFuY2luZyBvbiBNYXJjaCAxLCAyMDI1LiBFdmlkZW5jZWQgcHVyY2hhc2UgY29uZGl0aW9ucyBhcmUgc2F0aXNmaWVkLiBUaGlzIGZpeHR1cmUgdHJlYXRzIHRoZSBhbW91bnQgYXMgZmluYW5jaW5nIGxpYWJpbGl0eSBwZW5kaW5nIHNlcGFyYXRlbHkgZXZpZGVuY2VkIGNvbnZlcnNpb247IG5vIHVuaXRzIGFyZSBpc3N1ZWQu",
+        "contentBase64": "U3ludGhldGljIGZpeHR1cmU6IEFkYSBhdXRob3JpemVzIGFuIHVuY29uZGl0aW9uYWwgVVNEIDEwMCBvd25lciBjYXBpdGFsIGNvbnRyaWJ1dGlvbiBvbiBKdW5lIDEsIDIwMjYuIEl0IGlzc3VlcyBubyBuZXcgc2hhcmVzIG9yIHVuaXRzLg==",
         "externalId": "example:authorization"
       }
     },
@@ -18,18 +18,18 @@
       "command": "documents.receive",
       "input": {
         "kind": "source_document",
-        "contentBase64": "U3ludGhldGljIGJhbmsgZml4dHVyZTogVVNEIDEwMCwwMDAgcmVjZWl2ZWQgZnJvbSBJbnZlc3RvciBvbiBNYXJjaCAxLCAyMDI1IGludG8gT3BlcmF0aW5nIGFjY291bnQsIGJhbms6ZGVwb3NpdDoxLg==",
+        "contentBase64": "U3ludGhldGljIGZpeHR1cmU6IGNvbXBhbnkgY2hlY2tpbmcgcmVjZWl2ZWQgVVNEIDEwMCBmcm9tIEFkYSBvbiBKdW5lIDIsIDIwMjYsIHNvdXJjZSBiYW5rOmRlcG9zaXQ6MS4=",
         "externalId": "example:bank-source"
       }
     },
     {
-      "key": "investor",
+      "key": "owner",
       "command": "parties.create",
       "input": {
-        "partyId": "investor",
-        "name": "Investor",
+        "partyId": "owner_ada",
+        "name": "Ada",
         "categories": [
-          "investor"
+          "founder"
         ]
       }
     },
@@ -37,7 +37,7 @@
       "key": "bank",
       "command": "accounts.register",
       "input": {
-        "financialAccountId": "operating",
+        "financialAccountId": "bank_main",
         "name": "Company checking",
         "kind": "checking",
         "currency": "USD"
@@ -49,7 +49,7 @@
       "input": {
         "definition": {
           "model": "priced-rights-v1",
-          "name": "Convertible financing right",
+          "name": "Owner capital contribution",
           "terms": {
             "currency": {
               "type": "text",
@@ -58,7 +58,7 @@
             "amount": {
               "type": "integer",
               "unit": "USD",
-              "default": "10000000"
+              "default": "10000"
             }
           },
           "facts": {},
@@ -80,10 +80,11 @@
             "currencyTerm": "currency"
           },
           "economics": {
-            "kind": "financing",
+            "kind": "ownership",
             "direction": "provide",
             "classification": {
-              "monetaryLedger": "money"
+              "monetaryLedger": "money",
+              "capitalAccount": 3120
             }
           }
         }
@@ -95,9 +96,9 @@
       "input": {
         "definition": {
           "model": "priced-rights-v1",
-          "name": "Convertible financing agreement",
+          "name": "Owner contribution agreement",
           "parties": [
-            "investor"
+            "owner"
           ],
           "ledgers": {
             "money": {
@@ -110,11 +111,11 @@
           },
           "activities": [
             {
-              "key": "financing",
+              "key": "capital",
               "activityDocumentId": {
                 "$ref": "right.documentId"
               },
-              "partyRole": "investor",
+              "partyRole": "owner",
               "ledgers": {
                 "money": "money"
               }
@@ -122,21 +123,21 @@
           ],
           "consequences": [
             {
-              "key": "commit",
+              "key": "contribute",
               "sourceRights": [
-                "financing"
+                "capital"
               ],
               "trigger": {
                 "type": "exercise",
-                "activityKey": "financing"
+                "activityKey": "capital"
               },
               "rule": {
-                "type": "financing_commitment",
+                "type": "capital_contribution",
                 "consideration": {
                   "type": "money",
                   "amount": "term:amount",
                   "currencyTerm": "currency",
-                  "recognition": "condition_satisfied"
+                  "recognition": "unconditional_obligation"
                 }
               },
               "evidence": [
@@ -146,7 +147,7 @@
           ]
         },
         "parties": {
-          "investor": "investor"
+          "owner": "owner_ada"
         },
         "sourceDocumentIds": [
           {
@@ -169,8 +170,8 @@
           "$ref": "contract.documentId"
         },
         "expectedStatus": "draft",
-        "effectiveAt": "2025-03-01T00:00:00Z",
-        "sourceFactId": "investor:agreement:1",
+        "effectiveAt": "2026-06-01T00:00:00Z",
+        "sourceFactId": "owner:agreement:1",
         "evidence": {
           "acceptance": [
             {
@@ -184,18 +185,18 @@
       }
     },
     {
-      "key": "commitment",
+      "key": "contribution",
       "command": "contracts.record",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "financing",
+        "activityKey": "capital",
         "phase": "exercise",
-        "effectiveAt": "2025-03-01T00:00:00Z",
-        "sourceFactId": "investor:commitment:1",
-        "obligationKey": "financing-1",
-        "occurrenceKey": "financing-1",
+        "effectiveAt": "2026-06-01T00:00:00Z",
+        "sourceFactId": "owner:commitment:1",
+        "obligationKey": "contribution-1",
+        "occurrenceKey": "contribution-1",
         "evidence": {
           "economic": [
             {
@@ -221,19 +222,9 @@
         "model": "priced-rights-v1",
         "claims": [
           {
-            "kind": "financing",
-            "original": "10000000",
-            "outstanding": "10000000",
-            "direction": "receivable"
-          },
-          {
-            "kind": "financing",
-            "direction": "payable",
-            "original": "10000000",
-            "outstanding": "10000000",
-            "component": {
-              "accountCode": 2240
-            }
+            "kind": "investment",
+            "original": "10000",
+            "outstanding": "10000"
           }
         ]
       }
@@ -242,12 +233,12 @@
       "key": "payment",
       "command": "payments.record",
       "input": {
-        "financialAccountId": "operating",
-        "partyId": "investor",
+        "financialAccountId": "bank_main",
+        "partyId": "owner_ada",
         "direction": "in",
-        "amount": "10000000",
+        "amount": "10000",
         "currency": "USD",
-        "effectiveAt": "2025-03-01T00:00:00Z",
+        "effectiveAt": "2026-06-02T00:00:00Z",
         "sourceFactId": "bank:deposit:1",
         "evidence": [
           {
@@ -265,44 +256,49 @@
             "component": {
               "$ref": "claim.claims.0.component"
             },
-            "amount": "10000000"
+            "amount": "10000"
           }
         ]
       },
-      "at": "2025-03-01T00:00:00Z"
+      "at": "2026-06-02T00:00:00Z"
     },
     {
-      "key": "safe-is-not-equity",
+      "key": "settled",
       "report": true,
       "input": {
-        "kind": "balance_sheet",
-        "currency": "USD"
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
       },
       "expect": {
-        "liabilities": {
-          "total": "10000000",
-          "lines": [
-            {
-              "account_code": 2240,
-              "balance": "10000000"
-            }
-          ]
-        },
-        "equity": {
-          "total": "0"
-        }
+        "claims": [
+          {
+            "kind": "investment",
+            "original": "10000",
+            "outstanding": "0"
+          }
+        ]
       }
     },
     {
-      "key": "not-commercial-revenue",
+      "key": "books",
       "report": true,
       "input": {
-        "kind": "revenue_summary",
-        "period_start": "2025-01-01",
-        "period_end": "2026-01-02"
+        "kind": "balance_sheet",
+        "currency": "USD",
+        "as_of": "2026-06-03"
       },
       "expect": {
-        "by_currency": []
+        "assets": {
+          "total": "10000"
+        },
+        "liabilities": {
+          "total": "0"
+        },
+        "equity": {
+          "total": "10000"
+        }
       }
     }
   ]

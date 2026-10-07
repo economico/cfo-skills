@@ -1,6 +1,6 @@
 {
-  "name": "Founder paid a vendor bill personally, company reimburses",
-  "description": "One vendor service right with its evidenced charge, independently recorded delivery, recognition and billing. The payment account determines funding. A separate company-bank payment reimburses the attributable owner claim without another expense or a founder-expenses contract.",
+  "name": "Founder payment matched after recording",
+  "description": "Record an owner-funded payment before its bill is entered, preserve the returned owner claim, later match without another payment, and reimburse separately.",
   "setupAt": "2026-03-01T00:00:00Z",
   "recordedAt": "2026-05-01T00:00:00Z",
   "steps": [
@@ -258,41 +258,45 @@
       }
     },
     {
-      "key": "paid-receipt",
-      "command": "receipts.record",
+      "key": "advance",
+      "command": "payments.record",
       "at": "2026-03-04T00:00:00Z",
       "input": {
-        "billing": {
-          "contractId": {
-            "$ref": "contract.id"
-          },
-          "activityKey": "service",
-          "obligationKey": "184233",
-          "effectiveAt": "2026-03-04T00:00:00Z",
-          "facts": {},
-          "phase": "billing",
-          "occurrenceKey": "184233:bill",
-          "sourceFactId": "namecheap:order:184233:bill",
-          "evidence": {
-            "billing": [
-              {
-                "kind": "other",
-                "ref": {
-                  "$ref": "receipt.documentId"
-                }
-              }
-            ]
+        "financialAccountId": "card_ada_mc_1881",
+        "direction": "out",
+        "amount": "1816",
+        "currency": "USD",
+        "partyId": "ven_namecheap",
+        "effectiveAt": "2026-03-04T00:00:00Z",
+        "sourceFactId": "namecheap:order:184233:payment",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": {
+              "$ref": "receipt.documentId"
+            }
           }
+        ],
+        "allocations": []
+      }
+    },
+    {
+      "key": "bill",
+      "command": "contracts.record",
+      "at": "2026-03-04T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
         },
-        "payment": {
-          "financialAccountId": "card_ada_mc_1881",
-          "direction": "out",
-          "amount": "1816",
-          "currency": "USD",
-          "partyId": "ven_namecheap",
-          "effectiveAt": "2026-03-04T00:00:00Z",
-          "sourceFactId": "namecheap:order:184233:payment",
-          "evidence": [
+        "activityKey": "service",
+        "obligationKey": "184233",
+        "effectiveAt": "2026-03-04T00:00:00Z",
+        "facts": {},
+        "phase": "billing",
+        "occurrenceKey": "184233:bill",
+        "sourceFactId": "namecheap:order:184233:bill",
+        "evidence": {
+          "billing": [
             {
               "kind": "other",
               "ref": {
@@ -301,6 +305,55 @@
             }
           ]
         }
+      }
+    },
+    {
+      "key": "bill-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
+      },
+      "expect": {
+        "claims": [
+          {
+            "kind": "commercial",
+            "outstanding": "1816"
+          }
+        ]
+      }
+    },
+    {
+      "key": "match",
+      "command": "payments.allocate",
+      "at": "2026-03-04T00:00:00Z",
+      "input": {
+        "paymentId": {
+          "$ref": "advance.paymentId"
+        },
+        "sourceFactId": "namecheap:order:184233:match",
+        "effectiveAt": "2026-03-04T00:00:00Z",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": {
+              "$ref": "receipt.documentId"
+            }
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "bill-claim.claims.0.claimId"
+            },
+            "component": {
+              "$ref": "bill-claim.claims.0.component"
+            },
+            "amount": "1816"
+          }
+        ]
       }
     },
     {
@@ -338,10 +391,10 @@
         "allocations": [
           {
             "claimId": {
-              "$ref": "paid-receipt.payment.fundingClaims.0.claimId"
+              "$ref": "advance.fundingClaims.0.claimId"
             },
             "component": {
-              "$ref": "paid-receipt.payment.fundingClaims.0.component"
+              "$ref": "advance.fundingClaims.0.component"
             },
             "amount": "1816"
           }
@@ -377,10 +430,6 @@
           {
             "kind": "commercial",
             "original": "1816",
-            "outstanding": "0"
-          },
-          {
-            "kind": "owner",
             "outstanding": "0"
           }
         ]
