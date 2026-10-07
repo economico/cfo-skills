@@ -1,6 +1,6 @@
 {
   "name": "Customer on a monthly subscription plan, billed in advance",
-  "description": "A reusable 'Pro monthly' plan template ($49/month, billed on the 1st, earned over the month) is the price book entry; each customer contract binds it with its own start and end dates. Acceptance activates the contract, the scheduled bill claims $49 into deferred revenue, the Stripe payment is recorded as the receipt, and the completed month recognizes subscription revenue (4110). MRR comes from recurringValue, not from cash. Cancellation after the paid month terminates the contract; July's MRR stays in the history and August's is zero.",
+  "description": "One reusable Pro access right costs USD 49 per month, billed in advance and earned over the month. Contract acceptance, July billing, service evidence, recognition and the independent bank receipt remain separate. Explicit recurring reporting derives MRR from the same agreed price, not cash. Termination after July leaves July MRR unchanged and August MRR zero.",
   "setupAt": "2026-07-01T00:00:00Z",
   "recordedAt": "2026-09-01T00:00:00Z",
   "steps": [
@@ -35,31 +35,12 @@
       }
     },
     {
-      "key": "def-accept",
+      "key": "access-right",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Accept signed order form",
-          "trigger": {
-            "type": "transition",
-            "from": [
-              "draft"
-            ],
-            "to": "active"
-          }
-        }
-      }
-    },
-    {
-      "key": "def-bill",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Bill a month of Pro in advance",
-          "trigger": {
-            "type": "scheduled"
-          },
-          "repeatable": true,
+          "model": "priced-rights-v1",
+          "name": "Pro platform access",
           "terms": {
             "price": {
               "type": "integer",
@@ -71,8 +52,13 @@
             },
             "end": {
               "type": "date"
+            },
+            "currency": {
+              "type": "text",
+              "default": "USD"
             }
           },
+          "facts": {},
           "ledgers": {
             "money": {
               "classification": "gaap",
@@ -82,141 +68,48 @@
               "accountTemplate": "gaap_startup"
             }
           },
-          "effects": [
-            {
-              "pattern": "bill",
-              "ledger": "money",
+          "price": {
+            "treatment": "priced",
+            "calculation": {
+              "type": "fixed",
               "amount": "term:price"
-            }
-          ],
-          "schedule": {
-            "startTerm": "start",
-            "endTerm": "end",
-            "everyMonths": 1,
-            "timing": "start"
-          }
-        }
-      }
-    },
-    {
-      "key": "def-service",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Completed month of Pro service",
-          "trigger": {
-            "type": "scheduled"
-          },
-          "repeatable": true,
-          "product": "pro",
-          "externalReferences": {
-            "stripe_product": "prod_pro",
-            "stripe_price": "price_pro_monthly"
-          },
-          "terms": {
-            "price": {
-              "type": "integer",
-              "unit": "USD",
-              "default": "4900"
             },
-            "start": {
-              "type": "date"
-            },
-            "end": {
-              "type": "date"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "recognize",
-              "ledger": "money",
-              "amount": "term:price",
-              "accountingKey": "bill",
-              "category": "subscription"
-            }
-          ],
-          "schedule": {
-            "startTerm": "start",
-            "endTerm": "end",
-            "everyMonths": 1,
-            "timing": "end",
-            "serviceEvidence": "elapsed_time"
+            "currencyTerm": "currency"
           },
           "recurringValue": {
-            "amount": "term:price",
             "interval": "monthly",
-            "ledger": "money",
             "startTerm": "start",
             "endTerm": "end"
-          }
-        }
-      }
-    },
-    {
-      "key": "def-receipt",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Customer payment received",
-          "trigger": {
-            "type": "recorded"
           },
-          "repeatable": true,
-          "facts": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD"
+          "economics": {
+            "kind": "service",
+            "direction": "provide",
+            "billing": {
+              "timing": "advance",
+              "schedule": {
+                "startTerm": "start",
+                "endTerm": "end",
+                "everyMonths": 1,
+                "timing": "start",
+                "offsetDays": 0
+              }
             },
-            "bank": {
-              "type": "text"
+            "recognition": {
+              "timing": "ratable",
+              "schedule": {
+                "startTerm": "start",
+                "endTerm": "end",
+                "everyMonths": 1,
+                "timing": "end",
+                "offsetDays": 0,
+                "serviceEvidence": "elapsed_time"
+              }
             },
-            "billed": {
-              "type": "text"
+            "classification": {
+              "monetaryLedger": "money",
+              "revenueCategory": "subscription",
+              "product": "pro"
             }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "collect",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "accountingKey": "bill",
-              "financialAccountFact": "bank",
-              "claimFact": "billed"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "def-cancel",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Cancellation effective at the end of a paid month",
-          "trigger": {
-            "type": "transition",
-            "from": [
-              "active"
-            ],
-            "to": "terminated"
           }
         }
       }
@@ -242,52 +135,17 @@
           },
           "activities": [
             {
-              "key": "accept",
+              "key": "access",
               "activityDocumentId": {
-                "$ref": "def-accept.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {}
-            },
-            {
-              "key": "bill",
-              "activityDocumentId": {
-                "$ref": "def-bill.documentId"
+                "$ref": "access-right.documentId"
               },
               "partyRole": "customer",
               "ledgers": {
                 "money": "money"
               }
-            },
-            {
-              "key": "service",
-              "activityDocumentId": {
-                "$ref": "def-service.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "receipt",
-              "activityDocumentId": {
-                "$ref": "def-receipt.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "cancel",
-              "activityDocumentId": {
-                "$ref": "def-cancel.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {}
             }
-          ]
+          ],
+          "model": "priced-rights-v1"
         }
       }
     },
@@ -302,11 +160,7 @@
           "customer": "cus_acme"
         },
         "terms": {
-          "bill": {
-            "start": "2026-07-01",
-            "end": "2027-07-01"
-          },
-          "service": {
+          "access": {
             "start": "2026-07-01",
             "end": "2027-07-01"
           }
@@ -337,17 +191,14 @@
     },
     {
       "key": "accept",
-      "command": "contracts.record",
+      "command": "contracts.accept",
       "at": "2026-07-01T00:00:00Z",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "accept",
-        "occurrenceKey": "accept",
         "sourceFactId": "stripe:checkout:cs_acme_pro",
         "effectiveAt": "2026-07-01T00:00:00Z",
-        "facts": {},
         "evidence": {
           "acceptance": [
             {
@@ -357,7 +208,11 @@
               }
             }
           ]
-        }
+        },
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
+        },
+        "expectedStatus": "draft"
       }
     },
     {
@@ -368,39 +223,65 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "bill",
+        "activityKey": "access",
         "occurrenceKey": "schedule:2026-07-01:2026-08-01",
         "sourceFactId": "stripe:invoice:in_acme_2026_07",
         "effectiveAt": "2026-07-01T00:00:00Z",
         "facts": {},
-        "evidence": {}
+        "evidence": {
+          "billing": [
+            {
+              "kind": "stripe_object",
+              "ref": "stripe:invoice:in_acme_2026_07"
+            }
+          ]
+        },
+        "phase": "billing",
+        "period": {
+          "from": "2026-07-01T00:00:00Z",
+          "through": "2026-08-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "key": "july-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
       }
     },
     {
       "key": "paid-july",
-      "command": "contracts.record",
+      "command": "payments.record",
       "at": "2026-07-02T00:00:00Z",
       "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "receipt",
-        "occurrenceKey": "stripe:charge:ch_acme_2026_07",
-        "sourceFactId": "stripe:charge:ch_acme_2026_07",
+        "financialAccountId": "bank_main",
+        "direction": "in",
+        "amount": "4900",
+        "currency": "USD",
+        "partyId": "cus_acme",
         "effectiveAt": "2026-07-02T00:00:00Z",
-        "facts": {
-          "amount": "4900",
-          "bank": "bank_main",
-          "billed": "schedule:2026-07-01:2026-08-01"
-        },
-        "evidence": {
-          "payment": [
-            {
-              "kind": "stripe_object",
-              "ref": "stripe:charge:ch_acme_2026_07"
-            }
-          ]
-        }
+        "sourceFactId": "stripe:charge:ch_acme_2026_07",
+        "evidence": [
+          {
+            "kind": "stripe_object",
+            "ref": "stripe:charge:ch_acme_2026_07"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "july-claim.claims.0.claimId"
+            },
+            "component": {
+              "$ref": "july-claim.claims.0.component"
+            },
+            "amount": "4900"
+          }
+        ]
       }
     },
     {
@@ -411,7 +292,7 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "service",
+        "activityKey": "access",
         "occurrenceKey": "schedule:2026-07-01:2026-08-01",
         "sourceFactId": "acme:service:2026-07",
         "effectiveAt": "2026-07-31T23:59:59.999Z",
@@ -423,6 +304,11 @@
               "ref": "elapsed:2026-07-01:2026-08-01"
             }
           ]
+        },
+        "phase": "recognition",
+        "period": {
+          "from": "2026-07-01T00:00:00Z",
+          "through": "2026-08-01T00:00:00Z"
         }
       }
     },
@@ -470,17 +356,14 @@
     },
     {
       "key": "cancel",
-      "command": "contracts.record",
+      "command": "contracts.terminate",
       "at": "2026-08-01T00:00:00Z",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "cancel",
-        "occurrenceKey": "cancel",
         "sourceFactId": "stripe:subscription:sub_acme:canceled",
         "effectiveAt": "2026-08-01T00:00:00Z",
-        "facts": {},
         "evidence": {
           "acceptance": [
             {
@@ -488,7 +371,11 @@
               "ref": "sub_acme:canceled"
             }
           ]
-        }
+        },
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
+        },
+        "expectedStatus": "active"
       }
     },
     {

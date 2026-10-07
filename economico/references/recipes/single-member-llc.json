@@ -1,0 +1,326 @@
+{
+  "name": "Single-member LLC: the founder's units issued for no capital",
+  "description": "A Stripe Atlas style operating agreement issues the sole member 10,000,000 membership units for a $0.00 capital contribution; the founder's intellectual property is assigned under a separate CIIAA, which is not a capital contribution. The membership right is explicitly priced at $0 and its issue_units consequence declares the matching $0 money consideration, so the evidenced exercise issues the units with no investment claim, receivable or capital posting. The cap table shows the member with 100% and members' capital shows the member at $0. Later cash contributions are their own evidenced capital_contribution exercises with a nonzero price. Replace the synthetic operating agreement with the signed document and use the unit count it states.",
+  "recordedAt": "2025-01-02T00:00:00Z",
+  "setupAt": "2025-01-01T00:00:00Z",
+  "steps": [
+    {
+      "key": "source",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "T3BlcmF0aW5nIGFncmVlbWVudCAocmVwbGFjZSB3aXRoIHRoZSBzaWduZWQgZG9jdW1lbnQpLg==",
+        "externalId": "operating-agreement"
+      }
+    },
+    {
+      "key": "legal-form",
+      "command": "business.change_legal_form",
+      "input": {
+        "legalEntityType": "llc",
+        "jurisdiction": "US-DE",
+        "reason": "Formed as a Delaware LLC"
+      },
+      "sourceDocumentId": {
+        "$ref": "source.documentId"
+      }
+    },
+    {
+      "key": "party-founder",
+      "command": "parties.create",
+      "input": {
+        "partyId": "founder",
+        "name": "Founder",
+        "categories": [
+          "founder"
+        ]
+      }
+    },
+    {
+      "key": "member-right",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "model": "priced-rights-v1",
+          "name": "Sole membership issued for no capital contribution",
+          "terms": {
+            "currency": {
+              "type": "text",
+              "default": "USD"
+            },
+            "contribution": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "0"
+            },
+            "units": {
+              "type": "integer",
+              "unit": "membership",
+              "default": "10000000"
+            },
+            "authorized": {
+              "type": "integer",
+              "unit": "membership",
+              "default": "10000000"
+            }
+          },
+          "facts": {},
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            },
+            "units": {
+              "classification": "ownership",
+              "unitKind": "share",
+              "unitCode": "membership",
+              "decimals": 0,
+              "accountTemplate": "issued_instrument"
+            }
+          },
+          "price": {
+            "treatment": "priced",
+            "currencyTerm": "currency",
+            "calculation": {
+              "type": "fixed",
+              "amount": "term:contribution"
+            }
+          },
+          "economics": {
+            "kind": "ownership",
+            "direction": "provide",
+            "classification": {
+              "monetaryLedger": "money",
+              "capitalAccount": 3100
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "contract",
+      "command": "contracts.create",
+      "input": {
+        "definition": {
+          "model": "priced-rights-v1",
+          "name": "Operating agreement",
+          "parties": [
+            "member"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            },
+            "units": {
+              "classification": "ownership",
+              "unitKind": "share",
+              "unitCode": "membership",
+              "decimals": 0,
+              "accountTemplate": "issued_instrument"
+            }
+          },
+          "activities": [
+            {
+              "key": "membership",
+              "activityDocumentId": {
+                "$ref": "member-right.documentId"
+              },
+              "partyRole": "member",
+              "ledgers": {
+                "money": "money",
+                "units": "units"
+              }
+            }
+          ],
+          "consequences": [
+            {
+              "key": "authorize",
+              "sourceRights": [
+                "membership"
+              ],
+              "trigger": {
+                "type": "transition",
+                "action": "accept"
+              },
+              "rule": {
+                "type": "authorize_units",
+                "unitsLedger": "units",
+                "quantity": "term:authorized"
+              },
+              "evidence": [
+                "acceptance"
+              ]
+            },
+            {
+              "key": "issue",
+              "sourceRights": [
+                "membership"
+              ],
+              "trigger": {
+                "type": "exercise",
+                "activityKey": "membership"
+              },
+              "rule": {
+                "type": "issue_units",
+                "unitsLedger": "units",
+                "quantity": "term:units",
+                "restricted": false,
+                "consideration": {
+                  "type": "money",
+                  "amount": "term:contribution",
+                  "currencyTerm": "currency",
+                  "recognition": "unconditional_obligation"
+                }
+              },
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
+            }
+          ]
+        },
+        "parties": {
+          "member": "founder"
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "source.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "accept",
+      "command": "contracts.accept",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
+        },
+        "expectedStatus": "draft",
+        "sourceFactId": "accept",
+        "effectiveAt": "2025-01-01T00:00:00Z",
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "issue",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "membership",
+        "phase": "exercise",
+        "consequenceKey": "issue",
+        "obligationKey": "founder-units",
+        "occurrenceKey": "founder-units",
+        "sourceFactId": "founder-units",
+        "effectiveAt": "2025-01-01T00:00:00Z",
+        "facts": {},
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ],
+          "economic": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ]
+        }
+      },
+      "expect": {
+        "claimIds": [],
+        "evaluation": {
+          "amount": "0",
+          "consideration": "0",
+          "treatment": "priced"
+        }
+      }
+    },
+    {
+      "key": "no-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
+      },
+      "expect": {
+        "claims": []
+      }
+    },
+    {
+      "key": "cap-table",
+      "report": true,
+      "input": {
+        "kind": "cap_table"
+      },
+      "expect": {
+        "instruments": [
+          {
+            "unitCode": "membership",
+            "authorized": "10000000",
+            "outstanding": "10000000",
+            "holders": [
+              {
+                "partyId": "founder",
+                "quantity": "10000000",
+                "vested": "10000000",
+                "ownershipBasisPoints": "10000"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "members-capital",
+      "report": true,
+      "input": {
+        "kind": "capital_accounts"
+      },
+      "expect": {
+        "legalEntityType": "llc",
+        "owners": [
+          {
+            "partyId": "founder",
+            "contributed": "0",
+            "balance": "0"
+          }
+        ],
+        "totalEquity": "0"
+      }
+    }
+  ]
+}

@@ -1,116 +1,90 @@
 # Vendor contracts
 
-Every vendor the company pays gets the same spine as a customer: a party, a contract that says
-what was agreed, and recordings for each bill, receipt and payment. The contract is what makes a
-receipt books-grade: it fixes the account and expense function once, so every later receipt from
-that vendor lands in the same place, and it keeps the vendor's terms and pricing as evidence.
+Model what the company receives under each vendor agreement. A hosting service, API allowance
+or domain registration is a right; an invoice, bank payment or personal-card charge is not a
+separate right. Payment method must not change the vendor's agreement or price.
 
-## Build the spine once per vendor
+## Establish the agreement
 
-1. **Party**: `parties.create` with `categories: ["vendor"]`, id `ven_<domain slug>`, and `iri`
-   set to the vendor's website.
-2. **Terms**: `documents.receive` the vendor's terms of service and pricing page as text (or the
-   signed order form for an enterprise contract), `externalId` `<vendor>:terms:<date>`. The
-   receipt email's footer usually links both. Spend research effort in proportion to the spend:
-   a $12/month tool needs its receipt and its terms URL, not an afternoon.
-3. **Activities and template**: one template per vendor with `accept` plus the activities its
-   receipts need, each with its account and function fixed in the effect:
-   `"expenseAccount": 5210, "expenseFunction": "cost_of_revenue"`. Pick them with
-   [accounts](accounts.md). A vendor whose invoice has lines for different purposes (production
-   and staging, API usage and seats) gets one activity per purpose.
-4. **Contract**: `contracts.create` with `parties: { "vendor": "<partyId>" }`, the ledger
-   binding and the terms document; then record `accept` with acceptance evidence (the terms
-   document, or `{ "kind": "other", "ref": "<terms URL>" }` for click-through terms) dated when
-   the company signed up.
+Create/reuse the vendor party and preserve source terms, order forms and receipts with
+`documents.receive`. Use one contract per real agreement, not automatically one per vendor or
+one per receipt. Reuse a template when the same rights and timing recur. Distinct agreements
+with the same vendor remain separate; several rights can have the same expense classification.
 
-## Pick the recipe by how the vendor is paid
+Define activities with `model: "priced-rights-v1"`, their contractual names, terms/facts and
+explicit price treatment. Bind them in a template with the same model. A received service uses
+`economics.kind: "service"`, `direction: "receive"`, independent `billing` and `recognition`,
+and the expense account/function in `classification`. Choose those with [accounts](accounts.md).
+Create the contract with its actual start date, vendor party and source documents, then use
+`contracts.accept` with the current document ID, expected draft status and acceptance evidence.
+Do not create an `accept` activity or add the founder as a vendor party to encode who paid.
 
-| Situation | Effects | Recipe |
-|---|---|---|
-| Invoice on terms, paid later | `accrue_expense` with `dueDate`, then `pay` against the bill's key | [vendor-bill-paid-from-bank](recipes/vendor-bill-paid-from-bank.json) |
-| Auto-debited or paid at purchase from the bank | `accrue_expense` and `pay` in one activity | [vendor-receipt-paid-from-bank](recipes/vendor-receipt-paid-from-bank.json) |
-| Charged to the company card | `card_expense`; the card statement later `pay_card` | [vendor-receipt-company-card](recipes/vendor-receipt-company-card.json) |
-| Paid on the founder's personal card | The vendor's bill (`accrue_expense`), then the founder's payment of it (`pay_related` with `toPartyRole: "founder"`); later `reimburse_related` or `contribute_related` on the founder's own contract | [founder-paid-expense](recipes/founder-paid-expense.json) |
-| Annual plan paid upfront | `prepay_expense` into 1150 with a `pay` from the bank, then a monthly `expense` activity whose `accountingKey` names the prepay activity (without it every month is refused: nothing funded to release) | [vendor-annual-prepay](recipes/vendor-annual-prepay.json) |
-| Vendor credit on an open bill | `credit_expense` against the bill's claim | — |
-| Startup credits (cloud promotional credit) | A promotional allowance consumed before the bill | `catalog describe templates.create` |
+## Record the economics, then the funding
 
-A founder-paid bill is still the vendor's bill: the contract is with the vendor (parties
-`vendor` and `founder`), every activity's `partyRole` is `vendor`, so lists, the vendor's page
-and its profit and loss name the vendor. Record two occurrences per receipt: the bill, then the
-founder's payment (`pay_related`, `claimFact` naming the bill), which moves what is owed from the
-vendor to the founder (2135, keyed to the `toPartyRole` party). Never make the founder the
-activity's party: every screen would then call the founder the counterparty.
+Copy the supplied invoice ID exactly into billing's `sourceFactId`, and the supplied payment
+ID exactly into the payment's `sourceFactId`. Do not rename them to match a recipe's conventions.
+Identify the right and the obligation or service period. Record delivery/usage from source
+facts; record recognition when the service is consumed and billing when invoiced. A bill can
+precede or follow recognition. An annual payment does not prove twelve months of service:
+retain prepaid value and recognize the evidenced portions under the right's ratable schedule.
 
-Register each personal card the receipts show as the founder's own account, once:
-`accounts.register` with `kind: "card"`, `ownerPartyId` the founder, `providerPartyId` the
-card issuer's registered party, `last4`, `network`, and a clear name
-(`"Pelle's Visa ending 8570"`). It is not a company card (2190) and not cash: it
-sits on 2135, keyed to its owner. Name it on every `pay_related` (`financialAccountFact`), which
-refuses a card owned by anyone but the party it is owed to.
+A paid receipt can use `receipts.record` for one new billing phase and its full same-time
+payment. Otherwise record billing, read `activity_claims`, then use `payments.record` with the
+returned claim identity. See [payments](payments.md) for account ownership, reimbursements,
+unapplied funds, transfers, provider fees and corrections.
 
-## Payment providers and fees
+| Evidence-backed situation | Executable example |
+|---|---|
+| Hosting bill, paid later by bank | [vendor bill](recipes/vendor-bill-paid-from-bank.json) |
+| Delivered API service, receipt already paid by bank | [bank receipt](recipes/vendor-receipt-paid-from-bank.json) |
+| Delivered service charged to company card, issuer paid later | [company-card receipt](recipes/vendor-receipt-company-card.json) |
+| Vendor service paid personally, owner reimbursed later | [founder payment](recipes/founder-paid-expense.json) |
 
-A bank, processor or card issuer is a vendor. Create its party, then model its signed pricing
-as an ordinary vendor template and contract. Give the template one repeatable fee activity per
-rail. Each activity has a `feeAmount` integer fact, an `accrue_expense` effect whose amount is
-`fact:feeAmount`, and an expense account: `5230` for processing or `5910` for bank charges.
-Its bound terms carry `rail`, `direction` (`in` or `out`), `asset`, `fixedMinor`, `bps`, and
-optional `minMinor` and `maxMinor`. The fixed, minimum and maximum amounts are minor units;
-`bps` is basis points. Use the agreement's actual values and source document. Accept the
-contract, then set the payment account's `providerContractId` with `accounts.update` (or
-register the account with it already set). The contract must bind the same `providerPartyId`.
-When `contracts.record` names a payment method, Economico posts its configured provider
-fee alongside the payment. Do not record that fee again on the provider contract. Record
-a separate provider fee occurrence only for an additional charge not included in the
-payment's posted fee, using its own source evidence.
+These examples freeze one known charge from their synthetic source. Do not infer a perpetual
+price from a one-off receipt. Bind the real agreement's rate/tier/fixed terms, or preserve an
+unknown price and request the missing evidence. The same service template can be paid through
+any supported account without adding payment activities.
 
-Before the first founder-paid receipt, ask the founder once, and write the answer into
-`business-model.md` under decisions: are founder-paid costs **owed back** to them
-(`reimburse_related` when the company repays) or **their capital contribution**
-(`contribute_related`, no cash)? Either can be recorded later; the question is which is true.
-Record either on the founder's own contract (its party is the founder), never on a vendor's:
-it is bounded by everything the business owes the founder, so one repayment can cover many
-vendors' bills, and the capital it creates is the founder's.
+Register personal accounts with `ownerPartyId`; register company cards with their issuer's
+`providerPartyId`. A founder payment initially creates an owner claim. Reimbursement settles
+that claim with company cash and no expense. Conversion to capital requires separate evidence
+and an ownership right, never a silent choice or founder-expenses contract.
 
-## Recording each receipt
+## Tax and missing evidence
 
-```json
-{
-  "name": "contracts.record",
-  "idempotency_key": "email:render:INV-2026-06-0042",
-  "effective_at": "2026-07-01T00:00:00Z",
-  "source_document_id": "<receipt document id>",
-  "input": {
-    "contractId": "<vendor contract id>",
-    "activityKey": "bill",
-    "occurrenceKey": "INV-2026-06-0042",
-    "sourceFactId": "render:invoice:INV-2026-06-0042",
-    "effectiveAt": "2026-07-01T00:00:00Z",
-    "facts": { "amount": "68000", "due": "2026-07-31" },
-    "evidence": { "service": [{ "kind": "other", "ref": "<receipt document id>" }] }
-  }
-}
-```
+Use the applicable registered tax code in the right's classification. Supported billing freezes
+output, recoverable input, reverse-charge or imported-service tax outcomes; payment settles the
+gross claim. For priced service rights, declare `classification.taxTreatment` as `inclusive`
+when the evidence states a tax-inclusive total, or `exclusive` for a before-tax price. With a
+`non_recoverable` code, this makes tax part of the service cost, including prepayments and
+accruals; recoverable input tax stays separate. Recognition uses the first evidenced tax basis,
+so a later changed rate requires correction rather than silently changing the cost. Explicit
+treatment currently excludes recurring-value metrics, capacity and exercise consequences;
+inclusive treatment requires supplier-charged tax. A minimum may sit on an `exclusive` right:
+its net shortfall is taxed as its own line item, and tax you cannot reclaim (a
+`non_recoverable` code) is added to the shortfall's cost instead. State it on an inclusive
+right and authoring refuses it. Do not add hand-written
+tax posting activities. A taxed cancellation refund must name the original bill through the
+consequence's `taxClaimFact` (a typed claim fact containing claim ID and component). State the
+unearned service consideration, net of recoverable tax or including non-recoverable tax; the
+kernel derives the tax adjustment from that bill and creates a separate refund claim. Keep
+the original payment and settle the refund independently. Earned service, tax-only bills and
+minimum-closed periods need a different explicit correction; do not approximate those refunds.
 
-The occurrence key is the vendor's invoice or receipt number; the `sourceFactId` is
-`<vendor>:<kind>:<number>`. The effective date is the invoice date (or the charge date on a
-receipt). A receipt that also records payment needs `payment` evidence too.
+If the receipt does not establish who paid, preserve it and the payable rather than guessing an
+account. If evidence does not establish consumption, do not recognize the expense just because
+money moved. Verify claims, expense and account/owner balances after recording.
 
-## Tax on vendor bills
+The [annual prepayment recipe](recipes/vendor-annual-prepay.json) uses one insurance
+coverage right, separate billing and bank payment, and explicit equal monthly recognition.
 
-Recoverable GST, HST or VAT on a bill is `accrue_input_tax` with the registration's input tax
-code, on the same claim as the bill. Tax the company cannot recover (most US sales tax on
-purchases, provincial PST) is part of the cost: include it in the expense amount, or use
-`accrue_nonrecoverable_tax`. A foreign service with reverse charge is `self_assess_tax`. If the
-company has no tax registration, tax on purchases is part of the cost.
 
-## Pitfalls
+## Correct a recorded service
 
-- Do not create a vendor contract per receipt. One vendor, one contract (or one per distinct
-  agreement), many recordings.
-- Do not record a card-charged receipt as a bill to pay: nothing is owed to the vendor, and
-  paying it again from the bank double-counts cash.
-- A receipt with no company card match, no bank match and no founder answer is a gap: store the
-  document and list it in the brief rather than guessing the payment method.
-- Receipts arrive in date order per vendor; recordings on one contract must too.
+For an independent service obligation, use `contracts.reverse_economics` with the original
+occurrence ID and correction evidence, then record the corrected phases with new source facts.
+This reverses the whole obligation at the correction date; earlier reports retain the original
+activity. Undo dependent payment allocations or payments first, using the payment correction
+commands and their evidence requirements. Check that the original claim is cancelled and that
+replacement billing, recognition and quantities reconcile. Do not use this service path for
+linked lifecycle, capacity, minimum or ownership consequences, or for prior-period restatement.

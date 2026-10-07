@@ -1,6 +1,6 @@
 {
   "name": "Customer on a per-seat monthly plan, with a mid-term seat expansion",
-  "description": "A reusable 'Team' plan prices seats at $15 per seat per month, billed on the 1st and earned over the month. Both the bill and the service activity compute the month's price with a rate calculation, seats x $15, from a `seats` term the contract sets (10). July bills and earns $150 (4110 subscription revenue) and MRR is $150. A signed seat change adds 4 seats from August 1: contracts.amend sets `seats` to 14 on both activities, effective 2026-08-01, so July's bill, revenue and MRR stay as they were while August bills and earns $210 and MRR rises to $210 (ARR $2,520). No new contract and no second plan: the amendment is a new dated version of the same contract.",
+  "description": "One reusable Team access right prices seats at $15 monthly. July bills and earns $150 for 10 seats. A signed August 1 amendment changes that same right to 14 seats, preserving July while August bills, revenue and MRR are $210. Bank collections remain separate.",
   "setupAt": "2026-07-01T00:00:00Z",
   "recordedAt": "2026-09-01T00:00:00Z",
   "steps": [
@@ -35,31 +35,12 @@
       }
     },
     {
-      "key": "def-accept",
+      "key": "access-right",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Accept signed order form",
-          "trigger": {
-            "type": "transition",
-            "from": [
-              "draft"
-            ],
-            "to": "active"
-          }
-        }
-      }
-    },
-    {
-      "key": "def-bill",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Bill a month of seats in advance",
-          "trigger": {
-            "type": "scheduled"
-          },
-          "repeatable": true,
+          "model": "priced-rights-v1",
+          "name": "Team seat access",
           "terms": {
             "seats": {
               "type": "integer",
@@ -80,8 +61,13 @@
             },
             "end": {
               "type": "date"
+            },
+            "currency": {
+              "type": "text",
+              "default": "USD"
             }
           },
+          "facts": {},
           "ledgers": {
             "money": {
               "classification": "gaap",
@@ -91,149 +77,51 @@
               "accountTemplate": "gaap_startup"
             }
           },
-          "calculations": [
-            {
-              "key": "monthly",
+          "price": {
+            "treatment": "priced",
+            "calculation": {
               "type": "rate",
               "quantity": "term:seats",
               "rate": "term:price",
               "unitsPerPrice": "term:oneSeat"
-            }
-          ],
-          "effects": [
-            {
-              "pattern": "bill",
-              "ledger": "money",
-              "amount": "calc:monthly:amount"
-            }
-          ],
-          "schedule": {
-            "startTerm": "start",
-            "endTerm": "end",
-            "everyMonths": 1,
-            "timing": "start"
-          }
-        }
-      }
-    },
-    {
-      "key": "def-service",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Completed month of seat access",
-          "trigger": {
-            "type": "scheduled"
-          },
-          "repeatable": true,
-          "product": "team-seat",
-          "terms": {
-            "seats": {
-              "type": "integer",
-              "unit": "seat"
             },
-            "price": {
-              "type": "integer",
-              "unit": "USD",
-              "default": "1500"
-            },
-            "oneSeat": {
-              "type": "integer",
-              "unit": "seat",
-              "default": "1"
-            },
-            "start": {
-              "type": "date"
-            },
-            "end": {
-              "type": "date"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "calculations": [
-            {
-              "key": "monthly",
-              "type": "rate",
-              "quantity": "term:seats",
-              "rate": "term:price",
-              "unitsPerPrice": "term:oneSeat"
-            }
-          ],
-          "effects": [
-            {
-              "pattern": "recognize",
-              "ledger": "money",
-              "amount": "calc:monthly:amount",
-              "accountingKey": "bill",
-              "category": "subscription"
-            }
-          ],
-          "schedule": {
-            "startTerm": "start",
-            "endTerm": "end",
-            "everyMonths": 1,
-            "timing": "end",
-            "serviceEvidence": "elapsed_time"
+            "currencyTerm": "currency"
           },
           "recurringValue": {
-            "amount": "calc:monthly:amount",
             "interval": "monthly",
-            "ledger": "money",
             "startTerm": "start",
             "endTerm": "end"
+          },
+          "economics": {
+            "kind": "service",
+            "direction": "provide",
+            "billing": {
+              "timing": "advance",
+              "schedule": {
+                "startTerm": "start",
+                "endTerm": "end",
+                "everyMonths": 1,
+                "timing": "start",
+                "offsetDays": 0
+              }
+            },
+            "recognition": {
+              "timing": "ratable",
+              "schedule": {
+                "startTerm": "start",
+                "endTerm": "end",
+                "everyMonths": 1,
+                "timing": "end",
+                "offsetDays": 0,
+                "serviceEvidence": "elapsed_time"
+              }
+            },
+            "classification": {
+              "monetaryLedger": "money",
+              "revenueCategory": "subscription",
+              "product": "team-seat"
+            }
           }
-        }
-      }
-    },
-    {
-      "key": "def-receipt",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Customer payment received",
-          "trigger": {
-            "type": "recorded"
-          },
-          "repeatable": true,
-          "facts": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD"
-            },
-            "bank": {
-              "type": "text"
-            },
-            "billed": {
-              "type": "text"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "collect",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "accountingKey": "bill",
-              "financialAccountFact": "bank",
-              "claimFact": "billed"
-            }
-          ]
         }
       }
     },
@@ -258,44 +146,17 @@
           },
           "activities": [
             {
-              "key": "accept",
+              "key": "access",
               "activityDocumentId": {
-                "$ref": "def-accept.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {}
-            },
-            {
-              "key": "bill",
-              "activityDocumentId": {
-                "$ref": "def-bill.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "service",
-              "activityDocumentId": {
-                "$ref": "def-service.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "receipt",
-              "activityDocumentId": {
-                "$ref": "def-receipt.documentId"
+                "$ref": "access-right.documentId"
               },
               "partyRole": "customer",
               "ledgers": {
                 "money": "money"
               }
             }
-          ]
+          ],
+          "model": "priced-rights-v1"
         }
       }
     },
@@ -310,12 +171,7 @@
           "customer": "cus_harborlight"
         },
         "terms": {
-          "bill": {
-            "seats": "10",
-            "start": "2026-07-01",
-            "end": "2027-07-01"
-          },
-          "service": {
+          "access": {
             "seats": "10",
             "start": "2026-07-01",
             "end": "2027-07-01"
@@ -347,17 +203,14 @@
     },
     {
       "key": "accept",
-      "command": "contracts.record",
+      "command": "contracts.accept",
       "at": "2026-07-01T00:00:00Z",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "accept",
-        "occurrenceKey": "accept",
         "sourceFactId": "harborlight:order-form:accepted",
         "effectiveAt": "2026-07-01T00:00:00Z",
-        "facts": {},
         "evidence": {
           "acceptance": [
             {
@@ -367,6 +220,10 @@
               }
             }
           ]
+        },
+        "expectedStatus": "draft",
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
         }
       }
     },
@@ -378,39 +235,65 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "bill",
         "occurrenceKey": "schedule:2026-07-01:2026-08-01",
         "sourceFactId": "stripe:invoice:in_harborlight_2026_07",
         "effectiveAt": "2026-07-01T00:00:00Z",
         "facts": {},
-        "evidence": {}
+        "evidence": {
+          "billing": [
+            {
+              "kind": "other",
+              "ref": "stripe:invoice:in_harborlight_2026_07"
+            }
+          ]
+        },
+        "activityKey": "access",
+        "phase": "billing",
+        "period": {
+          "from": "2026-07-01T00:00:00Z",
+          "through": "2026-08-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "key": "paid-july-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
       }
     },
     {
       "key": "paid-july",
-      "command": "contracts.record",
+      "command": "payments.record",
       "at": "2026-07-03T00:00:00Z",
       "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "receipt",
-        "occurrenceKey": "stripe:charge:ch_harborlight_2026_07",
-        "sourceFactId": "stripe:charge:ch_harborlight_2026_07",
+        "financialAccountId": "bank_main",
+        "direction": "in",
+        "amount": "15000",
+        "currency": "USD",
+        "partyId": "cus_harborlight",
         "effectiveAt": "2026-07-03T00:00:00Z",
-        "facts": {
-          "amount": "15000",
-          "bank": "bank_main",
-          "billed": "schedule:2026-07-01:2026-08-01"
-        },
-        "evidence": {
-          "payment": [
-            {
-              "kind": "stripe_object",
-              "ref": "ch_harborlight_2026_07"
-            }
-          ]
-        }
+        "sourceFactId": "stripe:charge:ch_harborlight_2026_07",
+        "evidence": [
+          {
+            "kind": "stripe_object",
+            "ref": "ch_harborlight_2026_07"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "paid-july-claim.claims.0.claimId"
+            },
+            "component": {
+              "$ref": "paid-july-claim.claims.0.component"
+            },
+            "amount": "15000"
+          }
+        ]
       }
     },
     {
@@ -435,10 +318,7 @@
         },
         "effectiveAt": "2026-08-01T00:00:00Z",
         "terms": {
-          "bill": {
-            "seats": "14"
-          },
-          "service": {
+          "access": {
             "seats": "14"
           }
         },
@@ -465,7 +345,6 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "service",
         "occurrenceKey": "schedule:2026-07-01:2026-08-01",
         "sourceFactId": "harborlight:service:2026-07",
         "effectiveAt": "2026-07-31T23:59:59.999Z",
@@ -477,6 +356,12 @@
               "ref": "elapsed:2026-07-01:2026-08-01"
             }
           ]
+        },
+        "activityKey": "access",
+        "phase": "recognition",
+        "period": {
+          "from": "2026-07-01T00:00:00Z",
+          "through": "2026-08-01T00:00:00Z"
         }
       }
     },
@@ -488,39 +373,65 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "bill",
         "occurrenceKey": "schedule:2026-08-01:2026-09-01",
         "sourceFactId": "stripe:invoice:in_harborlight_2026_08",
         "effectiveAt": "2026-08-01T00:00:00Z",
         "facts": {},
-        "evidence": {}
+        "evidence": {
+          "billing": [
+            {
+              "kind": "other",
+              "ref": "stripe:invoice:in_harborlight_2026_08"
+            }
+          ]
+        },
+        "activityKey": "access",
+        "phase": "billing",
+        "period": {
+          "from": "2026-08-01T00:00:00Z",
+          "through": "2026-09-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "key": "paid-august-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
       }
     },
     {
       "key": "paid-august",
-      "command": "contracts.record",
+      "command": "payments.record",
       "at": "2026-08-03T00:00:00Z",
       "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "receipt",
-        "occurrenceKey": "stripe:charge:ch_harborlight_2026_08",
-        "sourceFactId": "stripe:charge:ch_harborlight_2026_08",
+        "financialAccountId": "bank_main",
+        "direction": "in",
+        "amount": "21000",
+        "currency": "USD",
+        "partyId": "cus_harborlight",
         "effectiveAt": "2026-08-03T00:00:00Z",
-        "facts": {
-          "amount": "21000",
-          "bank": "bank_main",
-          "billed": "schedule:2026-08-01:2026-09-01"
-        },
-        "evidence": {
-          "payment": [
-            {
-              "kind": "stripe_object",
-              "ref": "ch_harborlight_2026_08"
-            }
-          ]
-        }
+        "sourceFactId": "stripe:charge:ch_harborlight_2026_08",
+        "evidence": [
+          {
+            "kind": "stripe_object",
+            "ref": "ch_harborlight_2026_08"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "paid-august-claim.claims.1.claimId"
+            },
+            "component": {
+              "$ref": "paid-august-claim.claims.1.component"
+            },
+            "amount": "21000"
+          }
+        ]
       }
     },
     {
@@ -531,7 +442,6 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "service",
         "occurrenceKey": "schedule:2026-08-01:2026-09-01",
         "sourceFactId": "harborlight:service:2026-08",
         "effectiveAt": "2026-08-31T23:59:59.999Z",
@@ -543,6 +453,12 @@
               "ref": "elapsed:2026-08-01:2026-09-01"
             }
           ]
+        },
+        "activityKey": "access",
+        "phase": "recognition",
+        "period": {
+          "from": "2026-08-01T00:00:00Z",
+          "through": "2026-09-01T00:00:00Z"
         }
       }
     },
@@ -558,13 +474,11 @@
       "expect": {
         "claims": [
           {
-            "occurrenceKey": "schedule:2026-07-01:2026-08-01",
-            "billed": "15000",
+            "original": "15000",
             "outstanding": "0"
           },
           {
-            "occurrenceKey": "schedule:2026-08-01:2026-09-01",
-            "billed": "21000",
+            "original": "21000",
             "outstanding": "0"
           }
         ]

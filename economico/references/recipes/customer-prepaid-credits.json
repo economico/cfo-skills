@@ -1,6 +1,6 @@
 {
   "name": "Customer buys a prepaid credit pack that usage draws down",
-  "description": "A customer pays $500 at purchase for 5,000 API credits valid for 12 months (a paid allowance lot, 10 cents a credit). The whole $500 is deferred revenue (2150) on the day it is paid; each metered draw recognizes its value as usage revenue (4120). After 1,200 credits in March and 800 in April, $200 is earned, $300 is still owed as unused credits, 3,000 credits remain, and MRR stays 0: credits are not a subscription.",
+  "description": "A $500 order grants 5,000 API credits valid for 12 months. Billing creates one claim; independent payment settles it. Evidenced draws of 1,200 and 800 credits consume the original lot and release $200 of its billed value as usage revenue. The remaining 3,000 credits carry $300 of deferred value. MRR stays zero. Native expiry does not invent monetary breakage or a refund.",
   "setupAt": "2026-03-01T00:00:00Z",
   "recordedAt": "2026-05-01T00:00:00Z",
   "steps": [
@@ -35,53 +35,12 @@
       }
     },
     {
-      "key": "def-accept",
+      "key": "def-pack",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Accept credit pack order",
-          "trigger": {
-            "type": "transition",
-            "from": [
-              "draft"
-            ],
-            "to": "active"
-          }
-        }
-      }
-    },
-    {
-      "key": "def-purchase",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Credit pack purchased and paid",
-          "trigger": {
-            "type": "recorded"
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            },
-            "credits": {
-              "classification": "operational",
-              "unitKind": "usage",
-              "unitCode": "credit",
-              "decimals": 0,
-              "accountTemplate": "capacity"
-            },
-            "credit-value": {
-              "classification": "contractual",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "capacity"
-            }
-          },
+          "model": "priced-rights-v1",
+          "name": "Prepaid API credits",
           "terms": {
             "quantity": {
               "type": "integer",
@@ -96,50 +55,21 @@
             "expires": {
               "type": "instant",
               "default": "2027-03-01T00:00:00Z"
+            },
+            "currency": {
+              "type": "text",
+              "default": "USD"
             }
           },
           "facts": {
-            "bank": {
-              "type": "text"
+            "quantity": {
+              "type": "integer",
+              "unit": "credit"
+            },
+            "grant": {
+              "type": "occurrence"
             }
           },
-          "effects": [
-            {
-              "pattern": "grant",
-              "ledger": "credits",
-              "amount": "term:quantity"
-            },
-            {
-              "pattern": "grant",
-              "ledger": "credit-value",
-              "amount": "term:value"
-            },
-            {
-              "pattern": "bill",
-              "ledger": "money",
-              "amount": "term:value"
-            },
-            {
-              "pattern": "collect",
-              "ledger": "money",
-              "amount": "term:value",
-              "financialAccountFact": "bank"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "def-usage",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "API calls drawn from the credit pack",
-          "trigger": {
-            "type": "recorded"
-          },
-          "repeatable": true,
-          "product": "api-credits",
           "ledgers": {
             "money": {
               "classification": "gaap",
@@ -154,60 +84,31 @@
               "unitCode": "credit",
               "decimals": 0,
               "accountTemplate": "capacity"
-            },
-            "credit-value": {
-              "classification": "contractual",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "capacity"
             }
           },
-          "terms": {
-            "rate": {
-              "type": "integer",
-              "unit": "USD",
-              "default": "10"
+          "price": {
+            "treatment": "priced",
+            "calculation": {
+              "type": "fixed",
+              "amount": "term:value"
             },
-            "unit": {
-              "type": "integer",
-              "unit": "credit",
-              "default": "1"
-            }
+            "currencyTerm": "currency"
           },
-          "facts": {
-            "quantity": {
-              "type": "integer",
-              "unit": "credit"
-            }
-          },
-          "calculations": [
-            {
-              "key": "draw",
-              "type": "allowance",
-              "quantity": "fact:quantity",
-              "link": "pack"
-            }
-          ],
-          "effects": [
-            {
-              "pattern": "consume",
-              "ledger": "credits",
-              "amount": "calc:draw:covered"
+          "economics": {
+            "kind": "capacity",
+            "direction": "provide",
+            "billing": {
+              "timing": "upfront"
             },
-            {
-              "pattern": "consume",
-              "ledger": "credit-value",
-              "amount": "calc:draw:value"
+            "recognition": {
+              "timing": "usage"
             },
-            {
-              "pattern": "recognize",
-              "ledger": "money",
-              "amount": "calc:draw:value",
-              "accountingKey": "purchase",
-              "category": "usage"
+            "classification": {
+              "monetaryLedger": "money",
+              "revenueCategory": "usage",
+              "product": "api-credits"
             }
-          ]
+          }
         }
       }
     },
@@ -216,8 +117,8 @@
       "command": "templates.create",
       "input": {
         "definition": {
+          "model": "priced-rights-v1",
           "name": "Builder credit pack",
-          "plan": "on_sale",
           "parties": [
             "customer"
           ],
@@ -235,62 +136,59 @@
               "unitCode": "credit",
               "decimals": 0,
               "accountTemplate": "capacity"
-            },
-            "credit-value": {
-              "classification": "contractual",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "capacity"
             }
           },
           "activities": [
             {
-              "key": "accept",
+              "key": "pack",
               "activityDocumentId": {
-                "$ref": "def-accept.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {}
-            },
-            {
-              "key": "purchase",
-              "activityDocumentId": {
-                "$ref": "def-purchase.documentId"
+                "$ref": "def-pack.documentId"
               },
               "partyRole": "customer",
               "ledgers": {
                 "money": "money",
-                "credits": "credits",
-                "credit-value": "credit-value"
-              }
-            },
-            {
-              "key": "usage",
-              "activityDocumentId": {
-                "$ref": "def-usage.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {
-                "money": "money",
-                "credits": "credits",
-                "credit-value": "credit-value"
+                "credits": "credits"
               }
             }
           ],
-          "allowances": [
+          "consequences": [
             {
-              "key": "pack",
-              "kind": "paid",
-              "grantActivity": "purchase",
-              "consumeActivities": [
-                "usage"
+              "key": "grant",
+              "sourceRights": [
+                "pack"
               ],
-              "capacityLedger": "credits",
-              "quantityTerm": "quantity",
-              "valueLedger": "credit-value",
-              "valueTerm": "value",
-              "expiresAtTerm": "expires"
+              "trigger": {
+                "type": "exercise",
+                "activityKey": "pack"
+              },
+              "rule": {
+                "type": "grant_capacity",
+                "capacityLedger": "credits",
+                "quantity": "term:quantity",
+                "expiresAtTerm": "expires"
+              },
+              "evidence": [
+                "service"
+              ]
+            },
+            {
+              "key": "consume",
+              "sourceRights": [
+                "pack"
+              ],
+              "trigger": {
+                "type": "exercise",
+                "activityKey": "pack"
+              },
+              "rule": {
+                "type": "consume_capacity",
+                "capacityLedger": "credits",
+                "quantity": "fact:quantity",
+                "grantOccurrenceFact": "grant"
+              },
+              "evidence": [
+                "service"
+              ]
             }
           ]
         }
@@ -318,17 +216,17 @@
     },
     {
       "key": "accept",
-      "command": "contracts.record",
-      "at": "2026-03-01T00:00:00Z",
+      "command": "contracts.accept",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "accept",
-        "occurrenceKey": "accept",
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
+        },
+        "expectedStatus": "draft",
         "sourceFactId": "parcelwise:credit-pack:2026-03:accepted",
         "effectiveAt": "2026-03-01T00:00:00Z",
-        "facts": {},
         "evidence": {
           "acceptance": [
             {
@@ -342,25 +240,102 @@
       }
     },
     {
-      "key": "purchase",
+      "key": "bill",
       "command": "contracts.record",
-      "at": "2026-03-01T00:00:00Z",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "purchase",
-        "occurrenceKey": "credit-pack:2026-03",
-        "sourceFactId": "stripe:ch_parcelwise_2026_03_01",
+        "activityKey": "pack",
+        "obligationKey": "credit-pack:2026-03",
         "effectiveAt": "2026-03-01T00:00:00Z",
-        "facts": {
-          "bank": "bank_main"
-        },
+        "facts": {},
+        "phase": "billing",
+        "occurrenceKey": "credit-pack:2026-03:bill",
+        "sourceFactId": "parcelwise:credit-pack:2026-03:bill",
         "evidence": {
-          "payment": [
+          "billing": [
             {
-              "kind": "other",
-              "ref": "stripe:payout:2026-03-03:line-1"
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "order.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        },
+        "as_of": "2026-03-02"
+      },
+      "expect": {
+        "claims": [
+          {
+            "original": "50000",
+            "outstanding": "50000"
+          }
+        ]
+      }
+    },
+    {
+      "key": "purchase",
+      "command": "payments.record",
+      "input": {
+        "financialAccountId": "bank_main",
+        "direction": "in",
+        "amount": "50000",
+        "currency": "USD",
+        "partyId": "cus_parcelwise",
+        "effectiveAt": "2026-03-01T00:00:00Z",
+        "sourceFactId": "stripe:ch_parcelwise_2026_03_01",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "stripe:payout:2026-03-03:line-1"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "claim.claims.0.claimId"
+            },
+            "amount": "50000",
+            "component": {
+              "$ref": "claim.claims.0.component"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "grant",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "pack",
+        "obligationKey": "credit-pack:2026-03",
+        "effectiveAt": "2026-03-01T00:00:00Z",
+        "facts": {},
+        "phase": "exercise",
+        "consequenceKey": "grant",
+        "occurrenceKey": "credit-pack:2026-03:grant",
+        "sourceFactId": "parcelwise:credit-pack:2026-03:entitlement",
+        "evidence": {
+          "service": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "order.documentId"
+              }
             }
           ]
         }
@@ -374,12 +349,17 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "usage",
+        "activityKey": "pack",
         "occurrenceKey": "usage:2026-03",
         "sourceFactId": "metering:parcelwise:2026-03",
         "effectiveAt": "2026-03-31T23:59:59.999Z",
         "facts": {
-          "quantity": "1200"
+          "quantity": "1200",
+          "grant": {
+            "occurrenceId": {
+              "$ref": "grant.occurrenceId"
+            }
+          }
         },
         "evidence": {
           "service": [
@@ -388,7 +368,10 @@
               "ref": "metering:parcelwise:2026-03"
             }
           ]
-        }
+        },
+        "phase": "exercise",
+        "consequenceKey": "consume",
+        "obligationKey": "usage:2026-03"
       }
     },
     {
@@ -399,12 +382,17 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "usage",
+        "activityKey": "pack",
         "occurrenceKey": "usage:2026-04",
         "sourceFactId": "metering:parcelwise:2026-04",
         "effectiveAt": "2026-04-30T23:59:59.999Z",
         "facts": {
-          "quantity": "800"
+          "quantity": "800",
+          "grant": {
+            "occurrenceId": {
+              "$ref": "grant.occurrenceId"
+            }
+          }
         },
         "evidence": {
           "service": [
@@ -413,7 +401,10 @@
               "ref": "metering:parcelwise:2026-04"
             }
           ]
-        }
+        },
+        "phase": "exercise",
+        "consequenceKey": "consume",
+        "obligationKey": "usage:2026-04"
       }
     },
     {
@@ -437,7 +428,7 @@
               "unitCode": "USD",
               "granted": "50000",
               "released": "20000",
-              "remaining": "30000"
+              "remainingAllocation": "30000"
             }
           }
         ]

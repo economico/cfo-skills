@@ -1,6 +1,6 @@
 {
-  "name": "Founder paid a vendor bill personally, company reimburses",
-  "description": "One vendor service right with its evidenced charge, independently recorded delivery, recognition and billing. The payment account determines funding. A separate company-bank payment reimburses the attributable owner claim without another expense or a founder-expenses contract.",
+  "name": "Founder receives a vendor refund after reimbursement",
+  "description": "Synthetic prepaid service: founder pays USD 18.16, company reimburses her, vendor cancels the undelivered service and refunds her card. The refund creates an attributable receivable from the founder; her later bank transfer clears it. Replace all synthetic evidence with actual records.",
   "setupAt": "2026-03-01T00:00:00Z",
   "recordedAt": "2026-05-01T00:00:00Z",
   "steps": [
@@ -9,7 +9,7 @@
       "command": "documents.receive",
       "input": {
         "kind": "source_document",
-        "contentBase64": "U3ludGhldGljIGFjY2VwdGFuY2UgZXZpZGVuY2UgZm9yIHRoaXMgZXhlY3V0YWJsZSBmaXh0dXJlOiB0aGUgY29tcGFueSBhY2NlcHRlZCB0aGUgdmVuZG9yIHNlcnZpY2UgYWdyZWVtZW50IG9uIDIwMjYtMDMtMDRUMDA6MDA6MDBaLiBUaGUgc3Vic2VxdWVudCBpbnZvaWNlL3JlY2VpcHQgZXN0YWJsaXNoZXMgdGhlIHNwZWNpZmljIHNlcnZpY2UgY2hhcmdlOyBiYW5rL2NhcmQgZXZpZGVuY2UgZXN0YWJsaXNoZXMgcGF5bWVudCBzZXBhcmF0ZWx5Lg==",
+        "contentBase64": "YWNjZXB0YW5jZS1zb3VyY2UKU3ludGhldGljIGV2aWRlbmNlOiBVU0QgMTguMTYgcHJlcGFpZCB0b29sIGFjY2VzcywgcGFpZCBieSBBZGEgTWFyY2ggNDsgY29tcGFueSByZWltYnVyc2VzIE1hcmNoIDIwOyB2ZW5kb3IgY2FuY2VscyBhbGwgdW5kZWxpdmVyZWQgYWNjZXNzIGFuZCByZWZ1bmRzIGhlciBjYXJkIE1hcmNoIDIxOyBBZGEgcmV0dXJucyBVU0QgMTguMTYgdG8gY29tcGFueSBNYXJjaCAyMi4=",
         "externalId": "founder-paid-expense:acceptance:2026-03-04"
       }
     },
@@ -18,8 +18,8 @@
       "command": "documents.receive",
       "input": {
         "kind": "source_document",
-        "contentBase64": "RnJvbTogc3VwcG9ydEBuYW1lY2hlYXAuY29tClN1YmplY3Q6IE9yZGVyIFN1bW1hcnkgIzE4NDIzMwphY21lLmRldiBkb21haW4gcmVnaXN0cmF0aW9uLCAxIHllYXI6ICQxOC4xNiBjaGFyZ2VkIHRvIE1hc3RlcmNhcmQgZW5kaW5nIDE4ODEu",
-        "externalId": "email:namecheap:184233"
+        "contentBase64": "cmVjZWlwdApTeW50aGV0aWMgZXZpZGVuY2U6IFVTRCAxOC4xNiBwcmVwYWlkIHRvb2wgYWNjZXNzLCBwYWlkIGJ5IEFkYSBNYXJjaCA0OyBjb21wYW55IHJlaW1idXJzZXMgTWFyY2ggMjA7IHZlbmRvciBjYW5jZWxzIGFsbCB1bmRlbGl2ZXJlZCBhY2Nlc3MgYW5kIHJlZnVuZHMgaGVyIGNhcmQgTWFyY2ggMjE7IEFkYSByZXR1cm5zIFVTRCAxOC4xNiB0byBjb21wYW55IE1hcmNoIDIyLg==",
+        "externalId": "email:toolco:184233"
       }
     },
     {
@@ -37,9 +37,9 @@
       "key": "vendor",
       "command": "parties.create",
       "input": {
-        "partyId": "ven_namecheap",
-        "name": "Namecheap",
-        "iri": "https://www.namecheap.com",
+        "partyId": "ven_toolco",
+        "name": "Toolco",
+        "iri": "https://toolco.example",
         "categories": [
           "vendor"
         ]
@@ -72,7 +72,7 @@
       "input": {
         "definition": {
           "model": "priced-rights-v1",
-          "name": "Domain registration",
+          "name": "Prepaid tool access",
           "terms": {
             "price": {
               "type": "integer",
@@ -84,7 +84,12 @@
               "default": "USD"
             }
           },
-          "facts": {},
+          "facts": {
+            "refund": {
+              "type": "integer",
+              "unit": "USD"
+            }
+          },
           "ledgers": {
             "money": {
               "classification": "gaap",
@@ -106,7 +111,7 @@
             "kind": "service",
             "direction": "receive",
             "billing": {
-              "timing": "arrears"
+              "timing": "advance"
             },
             "recognition": {
               "timing": "delivery"
@@ -126,7 +131,7 @@
       "input": {
         "definition": {
           "model": "priced-rights-v1",
-          "name": "Domain registration agreement",
+          "name": "Prepaid tool access agreement",
           "parties": [
             "vendor"
           ],
@@ -150,6 +155,27 @@
                 "money": "money"
               }
             }
+          ],
+          "consequences": [
+            {
+              "key": "refund",
+              "sourceRights": [
+                "service"
+              ],
+              "trigger": {
+                "type": "transition",
+                "action": "cancel"
+              },
+              "rule": {
+                "type": "refund_unearned",
+                "monetaryLedger": "money",
+                "amount": "fact:refund"
+              },
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
+            }
           ]
         }
       }
@@ -162,7 +188,7 @@
           "$ref": "vendor-template.documentId"
         },
         "parties": {
-          "vendor": "ven_namecheap"
+          "vendor": "ven_toolco"
         },
         "ledgerBindings": {
           "money": "led_00000000000000000000000840"
@@ -190,67 +216,13 @@
         },
         "expectedStatus": "draft",
         "effectiveAt": "2026-03-04T00:00:00Z",
-        "sourceFactId": "namecheap:account:terms",
+        "sourceFactId": "toolco:account:terms",
         "evidence": {
           "acceptance": [
             {
               "kind": "other",
               "ref": {
                 "$ref": "acceptance-source.documentId"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "delivery",
-      "command": "contracts.record",
-      "at": "2026-03-04T00:00:00Z",
-      "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "service",
-        "obligationKey": "184233",
-        "effectiveAt": "2026-03-04T00:00:00Z",
-        "facts": {},
-        "phase": "delivery",
-        "occurrenceKey": "184233:delivery",
-        "sourceFactId": "namecheap:order:184233:delivery",
-        "evidence": {
-          "service": [
-            {
-              "kind": "other",
-              "ref": {
-                "$ref": "receipt.documentId"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "key": "recognition",
-      "command": "contracts.record",
-      "at": "2026-03-04T00:00:00Z",
-      "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "service",
-        "obligationKey": "184233",
-        "effectiveAt": "2026-03-04T00:00:00Z",
-        "facts": {},
-        "phase": "recognition",
-        "occurrenceKey": "184233:recognition",
-        "sourceFactId": "namecheap:order:184233:recognition",
-        "evidence": {
-          "service": [
-            {
-              "kind": "other",
-              "ref": {
-                "$ref": "receipt.documentId"
               }
             }
           ]
@@ -272,7 +244,7 @@
           "facts": {},
           "phase": "billing",
           "occurrenceKey": "184233:bill",
-          "sourceFactId": "namecheap:order:184233:bill",
+          "sourceFactId": "toolco:order:184233:bill",
           "evidence": {
             "billing": [
               {
@@ -289,9 +261,9 @@
           "direction": "out",
           "amount": "1816",
           "currency": "USD",
-          "partyId": "ven_namecheap",
+          "partyId": "ven_toolco",
           "effectiveAt": "2026-03-04T00:00:00Z",
-          "sourceFactId": "namecheap:order:184233:payment",
+          "sourceFactId": "toolco:order:184233:payment",
           "evidence": [
             {
               "kind": "other",
@@ -300,20 +272,6 @@
               }
             }
           ]
-        }
-      }
-    },
-    {
-      "key": "owed-to-founder",
-      "report": true,
-      "input": {
-        "kind": "balance_sheet",
-        "currency": "USD",
-        "as_of": "2026-03-05"
-      },
-      "expect": {
-        "liabilities": {
-          "total": "1816"
         }
       }
     },
@@ -349,41 +307,139 @@
       }
     },
     {
-      "key": "settled",
-      "report": true,
+      "key": "cancel",
+      "command": "contracts.cancel",
+      "at": "2026-03-21T00:00:00Z",
       "input": {
-        "kind": "balance_sheet",
-        "currency": "USD",
-        "as_of": "2026-03-21"
-      },
-      "expect": {
-        "liabilities": {
-          "total": "0"
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
+        },
+        "expectedStatus": "active",
+        "effectiveAt": "2026-03-21T00:00:00Z",
+        "sourceFactId": "vendor:cancellation:1",
+        "facts": {
+          "refund": "1816"
+        },
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "receipt.documentId"
+              }
+            }
+          ],
+          "economic": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "receipt.documentId"
+              }
+            }
+          ]
         }
       }
     },
     {
-      "key": "economic-claims",
+      "key": "refund-claim",
       "report": true,
       "input": {
         "kind": "activity_claims",
         "contract_id": {
           "$ref": "contract.id"
         }
-      },
-      "expect": {
-        "model": "priced-rights-v1",
-        "claims": [
+      }
+    },
+    {
+      "key": "refund",
+      "command": "payments.record",
+      "at": "2026-03-21T00:00:00Z",
+      "input": {
+        "financialAccountId": "card_ada_mc_1881",
+        "direction": "in",
+        "amount": "1816",
+        "currency": "USD",
+        "partyId": "ven_toolco",
+        "effectiveAt": "2026-03-21T00:00:00Z",
+        "sourceFactId": "vendor:card-refund:1",
+        "evidence": [
           {
-            "kind": "commercial",
-            "original": "1816",
-            "outstanding": "0"
-          },
+            "kind": "other",
+            "ref": {
+              "$ref": "receipt.documentId"
+            }
+          }
+        ],
+        "refundsFundingClaim": {
+          "$ref": "paid-receipt.payment.fundingClaims.0"
+        },
+        "allocations": [
           {
-            "kind": "owner",
-            "outstanding": "0"
+            "claimId": {
+              "$ref": "refund-claim.claims.2.claimId"
+            },
+            "component": {
+              "$ref": "refund-claim.claims.2.component"
+            },
+            "amount": "1816"
           }
         ]
+      }
+    },
+    {
+      "key": "recover",
+      "command": "payments.record",
+      "at": "2026-03-22T00:00:00Z",
+      "input": {
+        "financialAccountId": "bank_main",
+        "direction": "in",
+        "amount": "1816",
+        "currency": "USD",
+        "partyId": "founder_ada",
+        "effectiveAt": "2026-03-22T00:00:00Z",
+        "sourceFactId": "bank:founder-return:1",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": {
+              "$ref": "receipt.documentId"
+            }
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "refund.recoverableClaim.claimId"
+            },
+            "component": {
+              "$ref": "refund.recoverableClaim.component"
+            },
+            "amount": "1816"
+          }
+        ]
+      }
+    },
+    {
+      "key": "final",
+      "report": true,
+      "input": {
+        "kind": "balance_sheet",
+        "currency": "USD",
+        "as_of": "2026-03-23"
+      },
+      "expect": {
+        "assets": {
+          "total": "0"
+        },
+        "liabilities": {
+          "total": "0"
+        },
+        "equity": {
+          "total": "0"
+        }
       }
     }
   ]

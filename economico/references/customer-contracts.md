@@ -1,113 +1,117 @@
 # Customer contracts
 
-A customer relationship is a contract bound to a plan's template, with the customer as the
-`customer` party. It records what was agreed; recordings on it are the invoices, usage and
-payments that happened under it.
+A customer contract describes the rights the customer receives under one agreement. Its price,
+billing and recognition do not depend on which account collects the money. Follow
+[modeling products](modeling-products.md) for the rights and template, and
+[payments](payments.md) for collection and refunds.
 
-## Create one
+## Establish and accept
 
-1. **Party**: `parties.create` with `categories: ["customer"]`. Use a stable id from the source
-   (`cus_…` from Stripe, or `cus_<slug>`). Add a billing contact with `parties.add_contact` if
-   the founder invoices by email.
-2. **Source**: `documents.receive` the signed order form, the accepted checkout (the Stripe
-   checkout session or subscription as text), or the published terms the customer clicked
-   through. See [evidence](evidence.md).
-3. **Contract**: `contracts.create` with the plan's `templateDocumentId`, `parties: { "customer":
-   "<partyId>" }`, per-activity `terms` for this customer (start and end dates, any negotiated
-   price), `ledgerBindings: { "money": "<primaryLedgerId>" }`, and `sourceDocumentIds`. Date
-   the envelope's `effective_at` at the start, never today: the contract cannot record anything
-   before it. If you created one at the wrong date, `contracts.discard` the draft and create it
-   again ([how Economico works](how-economico-works.md#recording-rules-that-matter)).
-4. **Acceptance**: `contracts.record` the `accept` activity with
-   `evidence.acceptance: [{ "kind": "signed_doc", "ref": "<document id>" }]` and
-   `effectiveAt` = the date the customer accepted. The contract becomes `active`.
-5. **Read it back**: `subjects {action: "get", type: "contract", id}` shows `status`, the
-   resolved terms and the ledgers it opened; `reports run activity_plan` shows what the timer
-   will record.
+Create/reuse the customer party and preserve the signed order form or evidenced checkout and
+accepted terms. Bind the template to that customer with their actual terms and ledger IDs.
+Several agreements with the same customer are valid. Date `contracts.create` at the agreement's
+start, not at today's backfill date. A wrongly dated unused draft can be discarded and recreated;
+accepted history is preserved.
 
-The [monthly subscription recipe](recipes/customer-monthly-subscription.json) is this sequence
-end to end.
+Use `contracts.accept` with `contractId`, current `expectedDocumentId`, expected draft status,
+acceptance instant, stable source identity and acceptance evidence. Do not record an acceptance
+activity. Inspect the resulting contract's parties, rights, terms and status.
 
-## Agreement paper
+## Record independently timed facts
 
-For a SaaS, API or AI product with no agreement yet, suggest the Common Paper Cloud Service
-Agreement (`https://commonpaper.com/standards/cloud-service-agreement/`) with an order form per
-customer: it is a free, standard, lawyer-drafted agreement, and its order form carries exactly
-the terms a template needs (subscription period, fees, payment terms, usage limits). For
-consulting, a services MSA plus a statement of work per engagement. For self-serve checkout, the
-product's own terms of service plus the checkout record are the agreement.
+A provided service right uses `economics.direction: "provide"`. For one obligation or period:
 
-Economico stores the agreement and records its terms; it does not draft or sign. Never state
-that a customer agreed to something no document shows.
+- Record `billing` when the charge is invoiced. Include the evidenced `dueDate` when known.
+  Advance billing creates a receivable and deferred value, not earned revenue.
+- Record `delivery` or `usage` from fulfillment evidence. Record `recognition` from that
+  entitlement or evidenced ratable coverage. Recognition before billing accrues unbilled value;
+  later billing clears it. Payment timing does not change revenue timing.
+- Read `activity_claims` and collect through `payments.record`, using the exact claim ID and
+  component. Partial collections leave an outstanding amount. Unknown matches remain explicit
+  unapplied company-bank/wallet funds and can be allocated later.
 
-## Recording under it
+Use the same right and obligation/period identity across the phases, with distinct source and
+occurrence keys. Backfill actual dates and prove each result; do not assume the historical timer
+or `activity_plan` has generated the new model's phases. Read actual occurrences and statements.
 
-| Event | Activity | Facts | Evidence |
-|---|---|---|---|
-| A billing period starts | the scheduled `bill` (recorded by the timer) | — | — |
-| A month of service completes | the scheduled `service` (recorded by the timer) | — | service, declared as `elapsed_time` |
-| The customer pays | `receipt` | `amount`, `bank`, `billed` (the invoice's occurrence key) | payment: the Stripe charge (`stripe_object`) or the bank line |
-| Usage for a period is measured | `usage` | the quantity | service: the usage rollup that produced the number |
-| Usage is invoiced | `usage-bill` | `amount`, quantity, `due` | — |
+For receipts, `receipts.record` may atomically create a new billing claim and fully settle it at
+that same instant. It does not prove delivery or accelerate recognition. Processor services
+belong to their own agreement; use supported provider processing orchestration once, never a
+second fee activity on the customer's contract.
 
-A scheduled bill's occurrence key is `schedule:<period start>:<period end>`; a payment names it
-in `billed`. Each recording returns an immutable `activity_statement` document: the invoice or
-receipt, readable with `documents {action: "get"}` and shown as a labeled document in the
-workspace.
+## Refund terms before acceptance
 
-## Recording history
+When the supplied agreement promises an unearned-service refund, declare that consequence
+in the template **before creating and accepting the contract**. Acceptance freezes the terms;
+`contracts.cancel` does not infer a refund from a source document or a free-text explanation.
+For an evidenced, untaxed unearned amount, the template consequence has this shape (use the
+actual right key and monetary alias):
 
-Backfilling past months is one timeline per contract, recorded oldest first. Put every event on
-it at its own date, then record them in that order:
+```json
+{
+  "key": "unearned-refund",
+  "trigger": { "type": "transition", "action": "cancel" },
+  "sourceRights": ["access"],
+  "evidence": ["acceptance"],
+  "rule": { "type": "refund_unearned", "amount": "fact:unearned_refund", "monetaryLedger": "money" }
+}
+```
 
-- each period's `bill`, occurrence key `schedule:<start>:<end>`, at the period start;
-- each `receipt`, at its payment date, `billed` naming the key of the bill it paid;
-- each period's `usage` and `usage-bill`;
-- each completed period's `service`, same occurrence key as its bill, at the instant
-  `activity_plan` gives for it (just before the period end), with the `elapsed_time` service
-  evidence the plan shows.
+Declare `unearned_refund` as an integer monetary fact on that right. At cancellation, supply
+its evidenced amount in that right's facts and the required acceptance evidence. Inspect the
+resulting refund claim before allocating the separate outgoing payment to it. For taxed refunds
+use the bill-linked refund rules in [vendor contracts](vendor-contracts.md); do not substitute
+a bare untaxed amount. Missing terms on an already accepted agreement are a real modeling gap,
+not grounds to invent a journal or declare an unapplied payment settled.
 
-A payment that comes late lands after the next period's bill, and that is right: the order is
-the dates, not the periods. Three rules make it matter:
+## Changes, cancellation and proof
 
-- **Recorded activities go forward.** A `receipt` or `usage` dated before the contract's latest
-  recorded activity is refused. Recording every bill first, or finishing one period's payment
-  before a later-dated one, leaves the earlier payments unrecordable.
-- **A scheduled period needs its bill first.** A `service` before its `bill` is refused
-  (`recognize exceeds its available balance`), and so is a `receipt` naming a bill that is not
-  recorded yet.
-- **The timer runs daily.** It records any scheduled period you leave, but not until its next
-  run, so a completed period you do not record stays in deferred revenue for the rest of the
-  session. Backfill a contract in one pass, right after accepting it: if the timer runs in
-  between and records later periods, the payments dated before them are refused. Report that as
-  a gap; do not work around it.
+Use `contracts.amend` for evidenced prospective service-term changes, such as price or seat
+quantity. Supply the current document ID, effective instant, changed right terms and acceptance
+evidence. Scheduled changes must land at exact billing and service boundaries; existing
+obligations, calendars, currency and consequence-bearing rights require explicit adjustment
+semantics. The new dated version preserves the same right identity and earlier prices. A changed
+right needs the agreement’s actual new definition and evidence, not a price-only amendment.
+The [seat expansion recipe](recipes/customer-per-seat-subscription.json) proves July service
+recorded after an August amendment still uses July’s price. A period is priced by the version in
+force when it began, so July billed in arrears on August 1 keeps July’s price even when the
+amendment takes effect on August 1.
 
-Check it with `reports run activity_plan` for the contract from its start through today: no
-period due before today may be left unrecorded, whatever its status. `fixed` is one you skipped;
-`blocked` and `contingent` give a `reason` (a missing bill, missing evidence) to fix. Deferred
-revenue (2150) should hold only what is billed and not yet earned: the current month of each
-monthly plan and the unearned rest of each annual one.
+`contracts.cancel` or `contracts.terminate` records the evidenced lifecycle decision and any
+supported consequences. Outstanding receivables remain collectable. An evidenced refund
+obligation is separate from its later outgoing payment. Do not infer either the refund amount
+or its payment from cancellation alone.
 
-Customers who pay an invoice rather than a card need a due date on the claim, or `aging` lists
-the invoice under "unknown due date": give the billing effect `"dueDate": "fact:due"` (a `due`
-date fact on a recorded bill) or `"dueDate": "term:due"` (a `due` date term on a scheduled one,
-set per contract in `contracts.create` terms).
+For a factual service correction, use `contracts.reverse_economics` with the original
+occurrence and correction evidence, then record replacement phases with fresh source identities.
+Preserve the source's effective date; a date alone does not authorize inventing an intraday time.
+When a time is required but absent, use the start of that date and state the convention. Keep an
+explicitly supplied instant unchanged. Read the [service correction boundaries](vendor-contracts.md)
+before reversing dependent or already settled obligations.
 
-## Changes over time
+Show the founder the accepted agreement, commercial claim balances/aging, recognized revenue,
+deferred/unbilled balances and actual collections. Keep unsupported corrections, historical
+claim adapters and currency-succession cases visible; do not invent an invoice or payment to
+make a balance disappear. The [monthly subscription recipe](recipes/customer-monthly-subscription.json) is validated
+with one access right, separate collection and ratable recognition. The [annual plan](recipes/customer-annual-prepaid.json) uses equal monthly recognition
+from its yearly price. Other older customer recipes remain historical fixtures until their replacements are validated.
 
-- **Price change, upgrade, added seats**: `contracts.amend` with the new terms from an effective
-  date, `expectedDocumentId` (the contract's current document) and acceptance evidence. Earlier
-  periods keep their terms and their MRR.
-- **Cancellation**: record the template's `active → terminated` transition at the effective
-  date. Keep history; do not archive the party.
-- **Wrong recording**: record again with `correctsOccurrenceId` on the latest occurrence; the
-  original stays in the history.
-- **Refund of unearned value**: a declared `refund_deferred` or `refund_payable` activity, not a
-  negative invoice.
 
-## Pitfalls
+For a fixed recurring service, declare `recurringValue` with the monthly/yearly interval and
+start/end date term names. The report uses the same contractual price as billing, including
+static seat quantities. Do not declare observed usage as fixed MRR or invent an amount for an
+unknown price. Prove month-end MRR/ARR as well as revenue and collection; cancellation changes
+later run rate while preserving earlier snapshots.
 
-- A draft contract refuses money: accept first.
-- `billed` must carry the invoice's occurrence key, not its occurrence id.
-- A customer on a negotiated price is the same template with a term override, not a new plan.
-- Do not create one contract per invoice. One agreement, many recordings.
+For equal calendar-period recognition, set `economics.recognition.allocation: "equal_periods"`
+on ratable recognition. Its service periods must exactly partition each billing period.
+Omitting this declaration allocates by elapsed time; use the agreement’s stated basis.
+
+Term changes are also refused for rights with existing unscheduled obligations; preserve their
+original terms until an explicit adjustment path can carry each unfinished obligation safely.
+
+The [consulting recipe](recipes/customer-consulting-hourly-milestone.json) keeps measured hours
+and the fixed milestone as two rights. Recognize accepted work, bill the same obligation and
+collect its identified claim independently. `revenue_summary` reconciles billed amounts,
+attributed collections and earned revenue; unmatched independent receipts are excluded until
+assigned to customer claims. Matching preserves the original cash date.

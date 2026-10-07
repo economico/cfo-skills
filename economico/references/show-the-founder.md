@@ -31,13 +31,13 @@ the background reads the session afterwards, and the views are what they read. A
 | Record | The price book as recorded | `subjects {action: "list", type: "template", plan: "on_sale"}` | One row per plan: plan, charge, price, when it bills |
 | Record | Who the business trades with | `parties {action: "list"}` | One row per party: name, customer or vendor, contact |
 | Record | The contracts as they land | `subjects {action: "list", type: "contract"}` | One row per contract: party, customer or vendor, template, status, since |
-| Record | One contract that needed a judgment | `subjects {action: "get", type: "contract", id}` | The contract's terms, its activities and what each one posts, in a few lines |
+| Record | One contract that needed a judgment | `subjects {action: "get", type: "contract", id}` | The contract’s rights, agreed price and separate billing/recognition timing |
 | Prove | How the business makes and spends money | `reports run income_statement` with `from` and `until` | The flow in one line, then the table (below) |
 | Prove | Where the money is | `reports run balance_sheet` with `as_of` | Assets, liabilities and equity with their main lines, and the check that they balance |
 | Prove | Who owns the company | `reports run cap_table`, and `capital_accounts` for an LLC, partnership or project | One row per holder: name, instrument, units, ownership percentage, vested; then each owner's capital balance |
 | Prove | Who owes whom | `reports run aging` with `direction` `receivable`, then `payable` | One row per open invoice or bill: counterparty, amount, due date, bucket |
-| Prove | Recurring revenue | `reports run saas_metrics` with `year` and `month` | MRR, ARR and ACV, then gross margin, burn and runway, each with its basis; an undefined metric says why |
-| Prove | What bills next | `reports run activity_plan` with `contract_id`, `from` and `through`, for the contracts the founder asks about | One row per upcoming activity: due date, activity, period, what it posts or what it waits for |
+| Prove | Recurring agreement value | Evidenced fixed prices in the brief; supported actual reports | Label agreement-derived estimates separately from ledger report values; disclose unsupported new-model metrics |
+| Prove | What remains uncertain | Source evidence and the brief’s gaps | Missing prices, unsupported consequences or forecast coverage; never infer a schedule ran |
 
 Show the propose view in the review message; it is what the founder reviews. When the founder
 told you to proceed without review, show it at the top of the final message instead. Show the record
@@ -78,8 +78,9 @@ each owner's capital balance from `capital_accounts`.
 | Ben Ito | restricted common | 3,000,000 | 33.3% | 0 |
 | Hartwell Ventures | SAFE, $250,000 | — | — | converts at the next priced round |
 
-**Aging.** Only open items. A receipt paid at purchase or on a card never appears; say so if the
-founder expects to see one.
+**Aging.** Only open 1120/2110 items. A paid vendor claim is zero. Owner/issuer claims on
+2135/2190 are shown separately from `activity_claims` and party/native balances; aging does
+not include them. Preserve claim kinds instead of calling every obligation an invoice.
 
 **Contracts.** Keep the Economico service agreement off the list or mark it as Economico's own;
 it is not part of the model you built.

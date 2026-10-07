@@ -1,6 +1,6 @@
 {
   "name": "Customer on an annual plan paid upfront",
-  "description": "$4,800 billed and collected once for a year of service. The whole year sits in deferred revenue (2150) and is recognized $400 per completed month; MRR is $400 from the start even though cash arrived in one payment.",
+  "description": "One annual Team access right costs $4,800, billed and collected separately. Equal calendar-period recognition earns $400 monthly, and fixed run rate is $400 from acceptance.",
   "setupAt": "2026-01-01T00:00:00Z",
   "recordedAt": "2026-04-01T00:00:00Z",
   "steps": [
@@ -35,31 +35,12 @@
       }
     },
     {
-      "key": "def-accept",
+      "key": "service-right",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Accept signed order form",
-          "trigger": {
-            "type": "transition",
-            "from": [
-              "draft"
-            ],
-            "to": "active"
-          }
-        }
-      }
-    },
-    {
-      "key": "def-bill",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Invoice the year upfront",
-          "trigger": {
-            "type": "scheduled"
-          },
-          "repeatable": true,
+          "model": "priced-rights-v1",
+          "name": "Team platform access",
           "terms": {
             "price": {
               "type": "integer",
@@ -71,6 +52,10 @@
             },
             "end": {
               "type": "date"
+            },
+            "currency": {
+              "type": "text",
+              "default": "USD"
             }
           },
           "facts": {},
@@ -83,122 +68,50 @@
               "accountTemplate": "gaap_startup"
             }
           },
-          "effects": [
-            {
-              "pattern": "bill",
-              "ledger": "money",
+          "price": {
+            "treatment": "priced",
+            "calculation": {
+              "type": "fixed",
               "amount": "term:price"
-            }
-          ],
-          "schedule": {
-            "startTerm": "start",
-            "endTerm": "end",
-            "everyMonths": 12,
-            "timing": "start"
-          }
-        }
-      }
-    },
-    {
-      "key": "def-service",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Completed month of Team service",
-          "trigger": {
-            "type": "scheduled"
-          },
-          "repeatable": true,
-          "product": "team",
-          "terms": {
-            "monthly": {
-              "type": "integer",
-              "unit": "USD",
-              "default": "40000"
             },
-            "start": {
-              "type": "date"
-            },
-            "end": {
-              "type": "date"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "recognize",
-              "ledger": "money",
-              "amount": "term:monthly",
-              "accountingKey": "bill",
-              "category": "subscription"
-            }
-          ],
-          "schedule": {
-            "startTerm": "start",
-            "endTerm": "end",
-            "everyMonths": 1,
-            "timing": "end",
-            "serviceEvidence": "elapsed_time"
+            "currencyTerm": "currency"
           },
           "recurringValue": {
-            "amount": "term:monthly",
-            "interval": "monthly",
-            "ledger": "money",
+            "interval": "yearly",
             "startTerm": "start",
             "endTerm": "end"
+          },
+          "economics": {
+            "kind": "service",
+            "direction": "provide",
+            "billing": {
+              "timing": "advance",
+              "schedule": {
+                "startTerm": "start",
+                "endTerm": "end",
+                "everyMonths": 12,
+                "timing": "start",
+                "offsetDays": 0
+              }
+            },
+            "recognition": {
+              "timing": "ratable",
+              "schedule": {
+                "startTerm": "start",
+                "endTerm": "end",
+                "everyMonths": 1,
+                "timing": "end",
+                "offsetDays": 0,
+                "serviceEvidence": "elapsed_time"
+              },
+              "allocation": "equal_periods"
+            },
+            "classification": {
+              "monetaryLedger": "money",
+              "revenueCategory": "subscription",
+              "product": "pro"
+            }
           }
-        }
-      }
-    },
-    {
-      "key": "def-receipt",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Customer payment received",
-          "trigger": {
-            "type": "recorded"
-          },
-          "repeatable": true,
-          "facts": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD"
-            },
-            "bank": {
-              "type": "text"
-            },
-            "billed": {
-              "type": "text"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "collect",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "accountingKey": "bill",
-              "financialAccountFact": "bank",
-              "claimFact": "billed"
-            }
-          ]
         }
       }
     },
@@ -223,44 +136,17 @@
           },
           "activities": [
             {
-              "key": "accept",
+              "key": "access",
               "activityDocumentId": {
-                "$ref": "def-accept.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {}
-            },
-            {
-              "key": "bill",
-              "activityDocumentId": {
-                "$ref": "def-bill.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "service",
-              "activityDocumentId": {
-                "$ref": "def-service.documentId"
-              },
-              "partyRole": "customer",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "receipt",
-              "activityDocumentId": {
-                "$ref": "def-receipt.documentId"
+                "$ref": "service-right.documentId"
               },
               "partyRole": "customer",
               "ledgers": {
                 "money": "money"
               }
             }
-          ]
+          ],
+          "model": "priced-rights-v1"
         }
       }
     },
@@ -275,11 +161,7 @@
           "customer": "cus_globex"
         },
         "terms": {
-          "bill": {
-            "start": "2026-01-01",
-            "end": "2027-01-01"
-          },
-          "service": {
+          "access": {
             "start": "2026-01-01",
             "end": "2027-01-01"
           }
@@ -296,17 +178,14 @@
     },
     {
       "key": "accept",
-      "command": "contracts.record",
+      "command": "contracts.accept",
       "at": "2026-01-01T00:00:00Z",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "accept",
-        "occurrenceKey": "accept",
         "sourceFactId": "globex:order-form:2026:signed",
         "effectiveAt": "2026-01-01T00:00:00Z",
-        "facts": {},
         "evidence": {
           "acceptance": [
             {
@@ -316,6 +195,10 @@
               }
             }
           ]
+        },
+        "expectedStatus": "draft",
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
         }
       }
     },
@@ -327,39 +210,65 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "bill",
         "occurrenceKey": "schedule:2026-01-01:2027-01-01",
         "sourceFactId": "globex:invoice:2026-001",
         "effectiveAt": "2026-01-01T00:00:00Z",
         "facts": {},
-        "evidence": {}
+        "evidence": {
+          "billing": [
+            {
+              "kind": "other",
+              "ref": "globex:invoice:2026-001"
+            }
+          ]
+        },
+        "activityKey": "access",
+        "phase": "billing",
+        "period": {
+          "from": "2026-01-01T00:00:00Z",
+          "through": "2027-01-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "key": "annual-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
       }
     },
     {
       "key": "paid",
-      "command": "contracts.record",
+      "command": "payments.record",
       "at": "2026-01-12T00:00:00Z",
       "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "receipt",
-        "occurrenceKey": "globex:wire:2026-01-12",
-        "sourceFactId": "globex:wire:2026-01-12",
+        "financialAccountId": "bank_main",
+        "direction": "in",
+        "amount": "480000",
+        "currency": "USD",
+        "partyId": "cus_globex",
         "effectiveAt": "2026-01-12T00:00:00Z",
-        "facts": {
-          "amount": "480000",
-          "bank": "bank_main",
-          "billed": "schedule:2026-01-01:2027-01-01"
-        },
-        "evidence": {
-          "payment": [
-            {
-              "kind": "other",
-              "ref": "bank:statement:2026-01:line-4"
-            }
-          ]
-        }
+        "sourceFactId": "globex:wire:2026-01-12",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "bank:statement:2026-01:line-4"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "annual-claim.claims.0.claimId"
+            },
+            "component": {
+              "$ref": "annual-claim.claims.0.component"
+            },
+            "amount": "480000"
+          }
+        ]
       }
     },
     {
@@ -370,7 +279,6 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "service",
         "occurrenceKey": "schedule:2026-01-01:2026-02-01",
         "sourceFactId": "globex:service:2026-01",
         "effectiveAt": "2026-01-31T23:59:59.999Z",
@@ -382,6 +290,12 @@
               "ref": "elapsed:2026-01-01:2026-02-01"
             }
           ]
+        },
+        "activityKey": "access",
+        "phase": "recognition",
+        "period": {
+          "from": "2026-01-01T00:00:00Z",
+          "through": "2026-02-01T00:00:00Z"
         }
       }
     },
@@ -393,7 +307,6 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "service",
         "occurrenceKey": "schedule:2026-02-01:2026-03-01",
         "sourceFactId": "globex:service:2026-02",
         "effectiveAt": "2026-02-28T23:59:59.999Z",
@@ -405,6 +318,12 @@
               "ref": "elapsed:2026-02-01:2026-03-01"
             }
           ]
+        },
+        "activityKey": "access",
+        "phase": "recognition",
+        "period": {
+          "from": "2026-02-01T00:00:00Z",
+          "through": "2026-03-01T00:00:00Z"
         }
       }
     },

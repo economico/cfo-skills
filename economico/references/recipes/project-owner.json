@@ -1,6 +1,6 @@
 {
   "name": "Project owned by one person or company",
-  "description": "The owner invests $5,000 and advances $10,000 repayable; a $400 expense paid personally is left in as investment; $4,000 of the advance is repaid and the owner draws $1,000. Owner's capital $4,400; due to owner $6,000; cash $10,000. At year end, year-end closes the draws into the owner's capital and allocates the year's $400 loss to it (allocate_loss), so undistributed earnings are zero.",
+  "description": "An owner invests $5,000, lends $10,000 repayable, pays a synthetic $400 vendor expense personally and contributes that owner claim to capital. Separate bank payments repay $4,000 of the advance and settle a $1,000 approved draw. Year-end loss allocation and draw closing leave $4,000 capital, $6,000 due to the owner and $10,000 cash. No shares or convertible instrument are invented. Replace synthetic agreement, vendor receipt and payment evidence with the actual sources.",
   "recordedAt": "2026-01-02T00:00:00Z",
   "setupAt": "2025-01-01T00:00:00Z",
   "steps": [
@@ -45,152 +45,79 @@
       }
     },
     {
-      "key": "definition-accept",
+      "key": "owner-right",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Accept documented terms",
-          "trigger": {
-            "type": "transition",
-            "from": [
-              "draft"
-            ],
-            "to": "active"
+          "model": "priced-rights-v1",
+          "name": "Owner capital and allocation rights",
+          "terms": {
+            "currency": {
+              "type": "text",
+              "default": "USD"
+            },
+            "start": {
+              "type": "date",
+              "default": "2025-01-01"
+            },
+            "end": {
+              "type": "date",
+              "default": "2026-01-01"
+            }
+          },
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            },
+            "claim": {
+              "type": "claim"
+            },
+            "completeThrough": {
+              "type": "instant"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "price": {
+            "treatment": "priced",
+            "currencyTerm": "currency",
+            "calculation": {
+              "type": "fixed",
+              "amount": "fact:amount"
+            }
+          },
+          "economics": {
+            "kind": "ownership",
+            "direction": "provide",
+            "classification": {
+              "monetaryLedger": "money",
+              "capitalAccount": 3120
+            }
           }
         }
       }
     },
     {
-      "key": "definition-invest",
+      "key": "advance-right",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Owner's investment",
-          "trigger": {
-            "type": "recorded"
-          },
-          "terms": {},
-          "facts": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD"
-            },
-            "bank": {
-              "type": "text"
+          "model": "priced-rights-v1",
+          "name": "Repayable owner advance",
+          "terms": {
+            "currency": {
+              "type": "text",
+              "default": "USD"
             }
           },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "fund_capital",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "financialAccountFact": "bank"
-            }
-          ],
-          "repeatable": true
-        }
-      }
-    },
-    {
-      "key": "definition-advance",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Owner's repayable advance (use instead of investment when the owner lends)",
-          "trigger": {
-            "type": "recorded"
-          },
-          "terms": {},
-          "facts": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD"
-            },
-            "bank": {
-              "type": "text"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "advance_related",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "financialAccountFact": "bank"
-            }
-          ],
-          "repeatable": true
-        }
-      }
-    },
-    {
-      "key": "definition-repay",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Repay the owner's advance",
-          "trigger": {
-            "type": "recorded"
-          },
-          "terms": {},
-          "facts": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD"
-            },
-            "bank": {
-              "type": "text"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "reimburse_related",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "financialAccountFact": "bank",
-              "accountingKey": "advance"
-            }
-          ],
-          "repeatable": true
-        }
-      }
-    },
-    {
-      "key": "definition-owner-paid",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Expense the owner paid personally",
-          "trigger": {
-            "type": "recorded"
-          },
-          "terms": {},
           "facts": {
             "amount": {
               "type": "integer",
@@ -206,27 +133,37 @@
               "accountTemplate": "gaap_startup"
             }
           },
-          "effects": [
-            {
-              "pattern": "related_expense",
-              "ledger": "money",
+          "price": {
+            "treatment": "priced",
+            "currencyTerm": "currency",
+            "calculation": {
+              "type": "fixed",
               "amount": "fact:amount"
             }
-          ],
-          "repeatable": true
+          },
+          "economics": {
+            "kind": "financing",
+            "direction": "provide",
+            "classification": {
+              "monetaryLedger": "money"
+            }
+          }
         }
       }
     },
     {
-      "key": "definition-leave-in",
+      "key": "draw-right",
       "command": "activities.create",
       "input": {
         "definition": {
-          "name": "Owner leaves a personally paid expense in as investment",
-          "trigger": {
-            "type": "recorded"
+          "model": "priced-rights-v1",
+          "name": "Approved owner drawings",
+          "terms": {
+            "currency": {
+              "type": "text",
+              "default": "USD"
+            }
           },
-          "terms": {},
           "facts": {
             "amount": {
               "type": "integer",
@@ -242,101 +179,22 @@
               "accountTemplate": "gaap_startup"
             }
           },
-          "effects": [
-            {
-              "pattern": "contribute_related",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "accountingKey": "owner-paid"
-            }
-          ],
-          "repeatable": true
-        }
-      }
-    },
-    {
-      "key": "definition-draw",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Owner's draw",
-          "trigger": {
-            "type": "recorded"
-          },
-          "terms": {},
-          "facts": {
-            "amount": {
-              "type": "integer",
-              "unit": "USD"
-            },
-            "bank": {
-              "type": "text"
+          "price": {
+            "treatment": "priced",
+            "currencyTerm": "currency",
+            "calculation": {
+              "type": "fixed",
+              "amount": "fact:amount"
             }
           },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
+          "economics": {
+            "kind": "distribution",
+            "direction": "provide",
+            "classification": {
+              "monetaryLedger": "money",
+              "capitalAccount": 3120
             }
-          },
-          "effects": [
-            {
-              "pattern": "owner_draw",
-              "ledger": "money",
-              "amount": "fact:amount",
-              "financialAccountFact": "bank"
-            }
-          ],
-          "repeatable": true
-        }
-      }
-    },
-    {
-      "key": "definition-year-end",
-      "command": "activities.create",
-      "input": {
-        "definition": {
-          "name": "Year-end: close the draws and allocate the year's result to the owner's capital",
-          "trigger": {
-            "type": "recorded"
-          },
-          "terms": {},
-          "facts": {
-            "draws": {
-              "type": "integer",
-              "unit": "USD"
-            },
-            "loss": {
-              "type": "integer",
-              "unit": "USD"
-            }
-          },
-          "ledgers": {
-            "money": {
-              "classification": "gaap",
-              "unitKind": "currency",
-              "unitCode": "USD",
-              "decimals": 2,
-              "accountTemplate": "gaap_startup"
-            }
-          },
-          "effects": [
-            {
-              "pattern": "close_draws",
-              "ledger": "money",
-              "amount": "fact:draws",
-              "accountingKey": "draw"
-            },
-            {
-              "pattern": "allocate_loss",
-              "ledger": "money",
-              "amount": "fact:loss"
-            }
-          ],
-          "repeatable": true
+          }
         }
       }
     },
@@ -345,7 +203,8 @@
       "command": "templates.create",
       "input": {
         "definition": {
-          "name": "Project owner arrangement",
+          "model": "priced-rights-v1",
+          "name": "Project ownership and financing agreement",
           "parties": [
             "owner"
           ],
@@ -360,17 +219,9 @@
           },
           "activities": [
             {
-              "key": "accept",
+              "key": "owner",
               "activityDocumentId": {
-                "$ref": "definition-accept.documentId"
-              },
-              "partyRole": "owner",
-              "ledgers": {}
-            },
-            {
-              "key": "invest",
-              "activityDocumentId": {
-                "$ref": "definition-invest.documentId"
+                "$ref": "owner-right.documentId"
               },
               "partyRole": "owner",
               "ledgers": {
@@ -380,37 +231,7 @@
             {
               "key": "advance",
               "activityDocumentId": {
-                "$ref": "definition-advance.documentId"
-              },
-              "partyRole": "owner",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "repay",
-              "activityDocumentId": {
-                "$ref": "definition-repay.documentId"
-              },
-              "partyRole": "owner",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "owner-paid",
-              "activityDocumentId": {
-                "$ref": "definition-owner-paid.documentId"
-              },
-              "partyRole": "owner",
-              "ledgers": {
-                "money": "money"
-              }
-            },
-            {
-              "key": "leave-in",
-              "activityDocumentId": {
-                "$ref": "definition-leave-in.documentId"
+                "$ref": "advance-right.documentId"
               },
               "partyRole": "owner",
               "ledgers": {
@@ -420,22 +241,154 @@
             {
               "key": "draw",
               "activityDocumentId": {
-                "$ref": "definition-draw.documentId"
+                "$ref": "draw-right.documentId"
               },
               "partyRole": "owner",
               "ledgers": {
                 "money": "money"
               }
+            }
+          ],
+          "consequences": [
+            {
+              "key": "invest",
+              "sourceRights": [
+                "owner"
+              ],
+              "trigger": {
+                "type": "exercise",
+                "activityKey": "owner"
+              },
+              "rule": {
+                "type": "capital_contribution",
+                "consideration": {
+                  "type": "money",
+                  "amount": "fact:amount",
+                  "currencyTerm": "currency",
+                  "recognition": "unconditional_obligation"
+                }
+              },
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
             },
             {
-              "key": "year-end",
-              "activityDocumentId": {
-                "$ref": "definition-year-end.documentId"
+              "key": "leave-in",
+              "sourceRights": [
+                "owner"
+              ],
+              "trigger": {
+                "type": "exercise",
+                "activityKey": "owner"
               },
-              "partyRole": "owner",
-              "ledgers": {
-                "money": "money"
-              }
+              "rule": {
+                "type": "convert_claim",
+                "claimFact": "claim",
+                "amount": "fact:amount",
+                "currencyTerm": "currency",
+                "monetaryLedger": "money",
+                "equityAccount": 3120
+              },
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
+            },
+            {
+              "key": "advance",
+              "sourceRights": [
+                "advance"
+              ],
+              "trigger": {
+                "type": "exercise",
+                "activityKey": "advance"
+              },
+              "rule": {
+                "type": "financing_commitment",
+                "liability": "owner_advance",
+                "consideration": {
+                  "type": "money",
+                  "amount": "fact:amount",
+                  "currencyTerm": "currency",
+                  "recognition": "condition_satisfied"
+                }
+              },
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
+            },
+            {
+              "key": "draw",
+              "sourceRights": [
+                "draw"
+              ],
+              "trigger": {
+                "type": "exercise",
+                "activityKey": "draw"
+              },
+              "rule": {
+                "type": "owner_draw",
+                "amount": "fact:amount"
+              },
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
+            },
+            {
+              "key": "allocate-loss",
+              "sourceRights": [
+                "owner"
+              ],
+              "trigger": {
+                "type": "period_close",
+                "schedule": {
+                  "startTerm": "start",
+                  "endTerm": "end",
+                  "everyMonths": 12,
+                  "timing": "end",
+                  "offsetDays": 0
+                }
+              },
+              "rule": {
+                "type": "profit_allocation",
+                "result": "loss",
+                "monetaryLedger": "money",
+                "ownershipBasis": "agreement",
+                "amount": "fact:amount",
+                "completeThroughFact": "completeThrough"
+              },
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
+            },
+            {
+              "key": "close-draws",
+              "sourceRights": [
+                "owner"
+              ],
+              "trigger": {
+                "type": "period_close",
+                "schedule": {
+                  "startTerm": "start",
+                  "endTerm": "end",
+                  "everyMonths": 12,
+                  "timing": "end",
+                  "offsetDays": 0
+                }
+              },
+              "rule": {
+                "type": "close_draws",
+                "monetaryLedger": "money",
+                "completeThroughFact": "completeThrough"
+              },
+              "evidence": [
+                "acceptance",
+                "economic"
+              ]
             }
           ]
         }
@@ -463,16 +416,46 @@
     },
     {
       "key": "accept",
+      "command": "contracts.accept",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
+        },
+        "expectedStatus": "draft",
+        "effectiveAt": "2025-01-01T00:00:00Z",
+        "sourceFactId": "accept",
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "invest-approved",
       "command": "contracts.record",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "accept",
-        "occurrenceKey": "accept",
-        "sourceFactId": "accept",
+        "activityKey": "owner",
+        "phase": "exercise",
+        "consequenceKey": "invest",
+        "obligationKey": "invest-approved",
+        "occurrenceKey": "invest-approved",
+        "sourceFactId": "invest:economic",
         "effectiveAt": "2025-01-01T00:00:00Z",
-        "facts": {},
+        "facts": {
+          "amount": "500000"
+        },
         "evidence": {
           "acceptance": [
             {
@@ -482,74 +465,74 @@
               }
             }
           ],
-          "service": [
+          "economic": [
             {
-              "kind": "other",
-              "ref": "synthetic:accepted-service:accept"
-            }
-          ],
-          "payment": [
-            {
-              "kind": "other",
-              "ref": "synthetic:bank-receipt:accept"
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
             }
           ]
         }
+      }
+    },
+    {
+      "key": "investment-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        },
+        "as_of": "2025-01-02"
       }
     },
     {
       "key": "invest",
-      "command": "contracts.record",
+      "command": "payments.record",
       "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "invest",
-        "occurrenceKey": "invest",
+        "financialAccountId": "operating",
+        "direction": "in",
+        "partyId": "owner",
+        "amount": "500000",
+        "currency": "USD",
         "sourceFactId": "invest",
         "effectiveAt": "2025-01-01T00:00:00Z",
-        "facts": {
-          "amount": "500000",
-          "bank": "operating"
-        },
-        "evidence": {
-          "acceptance": [
-            {
-              "kind": "signed_doc",
-              "ref": {
-                "$ref": "source.documentId"
-              }
-            }
-          ],
-          "service": [
-            {
-              "kind": "other",
-              "ref": "synthetic:accepted-service:invest"
-            }
-          ],
-          "payment": [
-            {
-              "kind": "other",
-              "ref": "synthetic:bank-receipt:invest"
-            }
-          ]
-        }
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "synthetic:bank-receipt:invest"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "investment-claim.claims.0.claimId"
+            },
+            "component": {
+              "$ref": "investment-claim.claims.0.component"
+            },
+            "amount": "500000"
+          }
+        ]
       }
     },
     {
-      "key": "advance",
+      "key": "advance-approved",
       "command": "contracts.record",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
         "activityKey": "advance",
-        "occurrenceKey": "advance",
-        "sourceFactId": "advance",
+        "phase": "exercise",
+        "consequenceKey": "advance",
+        "obligationKey": "advance-approved",
+        "occurrenceKey": "advance-approved",
+        "sourceFactId": "advance:economic",
         "effectiveAt": "2025-01-02T00:00:00Z",
         "facts": {
-          "amount": "1000000",
-          "bank": "operating"
+          "amount": "1000000"
         },
         "evidence": {
           "acceptance": [
@@ -560,16 +543,261 @@
               }
             }
           ],
+          "economic": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "advance-claims",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        },
+        "as_of": "2025-01-03"
+      }
+    },
+    {
+      "key": "advance",
+      "command": "payments.record",
+      "input": {
+        "financialAccountId": "operating",
+        "direction": "in",
+        "partyId": "owner",
+        "amount": "1000000",
+        "currency": "USD",
+        "sourceFactId": "advance",
+        "effectiveAt": "2025-01-02T00:00:00Z",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "synthetic:bank-receipt:advance"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "advance-claims.claims.1.claimId"
+            },
+            "component": {
+              "$ref": "advance-claims.claims.1.component"
+            },
+            "amount": "1000000"
+          }
+        ]
+      }
+    },
+    {
+      "key": "expense-receipt",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "U3ludGhldGljIHByb2plY3QgZXhwZW5zZSByZWNlaXB0OiBFeGFtcGxlIFN1cHBsaWVyLCBwcm9qZWN0IHN1cHBsaWVzIGRlbGl2ZXJlZCAyMDI1LTAyLTEwLiBVU0QgNDAwLjAwIHBhaWQgYnkgdGhlIG93bmVyIHBlcnNvbmFsbHkuIFJlcGxhY2Ugd2l0aCB0aGUgYWN0dWFsIG1lcmNoYW50LCByZWNlaXB0IGFuZCBwYXltZW50IGV2aWRlbmNlLg==",
+        "externalId": "synthetic:project-expense"
+      }
+    },
+    {
+      "key": "supplier",
+      "command": "parties.create",
+      "input": {
+        "partyId": "supplier",
+        "name": "Example Supplier",
+        "categories": [
+          "vendor"
+        ]
+      }
+    },
+    {
+      "key": "owner-account",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "owner_personal",
+        "name": "Owner personal funding",
+        "currency": "USD",
+        "kind": "other",
+        "ownerPartyId": "owner"
+      }
+    },
+    {
+      "key": "expense-right",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "model": "priced-rights-v1",
+          "name": "Project supplies",
+          "terms": {
+            "currency": {
+              "type": "text",
+              "default": "USD"
+            }
+          },
+          "facts": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD"
+            }
+          },
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "price": {
+            "treatment": "priced",
+            "currencyTerm": "currency",
+            "calculation": {
+              "type": "fixed",
+              "amount": "fact:amount"
+            }
+          },
+          "economics": {
+            "kind": "service",
+            "direction": "receive",
+            "billing": {
+              "timing": "arrears"
+            },
+            "recognition": {
+              "timing": "delivery"
+            },
+            "classification": {
+              "monetaryLedger": "money",
+              "expenseAccount": 5520,
+              "expenseFunction": "general_and_administrative"
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "expense-contract",
+      "command": "contracts.create",
+      "input": {
+        "definition": {
+          "model": "priced-rights-v1",
+          "name": "Project supplies purchase",
+          "parties": [
+            "vendor"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "activities": [
+            {
+              "key": "supplies",
+              "activityDocumentId": {
+                "$ref": "expense-right.documentId"
+              },
+              "partyRole": "vendor",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ],
+          "consequences": []
+        },
+        "parties": {
+          "vendor": "supplier"
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "expense-receipt.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "expense-accept",
+      "command": "contracts.accept",
+      "input": {
+        "contractId": {
+          "$ref": "expense-contract.id"
+        },
+        "expectedDocumentId": {
+          "$ref": "expense-contract.documentId"
+        },
+        "expectedStatus": "draft",
+        "sourceFactId": "expense:accepted",
+        "effectiveAt": "2025-02-10T00:00:00Z",
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "expense-receipt.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "expense-delivery",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "expense-contract.id"
+        },
+        "activityKey": "supplies",
+        "obligationKey": "project-expense",
+        "effectiveAt": "2025-02-10T00:00:00Z",
+        "facts": {
+          "amount": "40000"
+        },
+        "phase": "delivery",
+        "occurrenceKey": "expense:delivery",
+        "sourceFactId": "expense:delivery",
+        "evidence": {
           "service": [
             {
               "kind": "other",
-              "ref": "synthetic:accepted-service:advance"
+              "ref": "synthetic:accepted-service:owner-paid"
             }
-          ],
-          "payment": [
+          ]
+        }
+      }
+    },
+    {
+      "key": "expense-recognition",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "expense-contract.id"
+        },
+        "activityKey": "supplies",
+        "obligationKey": "project-expense",
+        "effectiveAt": "2025-02-10T00:00:00Z",
+        "facts": {
+          "amount": "40000"
+        },
+        "phase": "recognition",
+        "occurrenceKey": "expense:recognition",
+        "sourceFactId": "expense:recognition",
+        "evidence": {
+          "service": [
             {
               "kind": "other",
-              "ref": "synthetic:bank-receipt:advance"
+              "ref": "synthetic:accepted-service:owner-paid"
             }
           ]
         }
@@ -577,34 +805,41 @@
     },
     {
       "key": "owner-paid",
-      "command": "contracts.record",
+      "command": "receipts.record",
       "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "owner-paid",
-        "occurrenceKey": "owner-paid",
-        "sourceFactId": "owner-paid",
-        "effectiveAt": "2025-02-10T00:00:00Z",
-        "facts": {
-          "amount": "40000"
-        },
-        "evidence": {
-          "acceptance": [
-            {
-              "kind": "signed_doc",
-              "ref": {
-                "$ref": "source.documentId"
+        "billing": {
+          "contractId": {
+            "$ref": "expense-contract.id"
+          },
+          "activityKey": "supplies",
+          "obligationKey": "project-expense",
+          "effectiveAt": "2025-02-10T00:00:00Z",
+          "facts": {
+            "amount": "40000"
+          },
+          "phase": "billing",
+          "occurrenceKey": "expense:bill",
+          "sourceFactId": "expense:bill",
+          "evidence": {
+            "billing": [
+              {
+                "kind": "other",
+                "ref": {
+                  "$ref": "expense-receipt.documentId"
+                }
               }
-            }
-          ],
-          "service": [
-            {
-              "kind": "other",
-              "ref": "synthetic:accepted-service:owner-paid"
-            }
-          ],
-          "payment": [
+            ]
+          }
+        },
+        "payment": {
+          "financialAccountId": "owner_personal",
+          "direction": "out",
+          "partyId": "supplier",
+          "amount": "40000",
+          "currency": "USD",
+          "sourceFactId": "owner-paid",
+          "effectiveAt": "2025-02-10T00:00:00Z",
+          "evidence": [
             {
               "kind": "other",
               "ref": "synthetic:bank-receipt:owner-paid"
@@ -620,12 +855,23 @@
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "leave-in",
+        "activityKey": "owner",
+        "phase": "exercise",
+        "consequenceKey": "leave-in",
+        "obligationKey": "leave-in",
         "occurrenceKey": "leave-in",
         "sourceFactId": "leave-in",
         "effectiveAt": "2025-02-28T00:00:00Z",
         "facts": {
-          "amount": "40000"
+          "amount": "40000",
+          "claim": {
+            "claimId": {
+              "$ref": "owner-paid.payment.fundingClaims.0.claimId"
+            },
+            "component": {
+              "$ref": "owner-paid.payment.fundingClaims.0.component"
+            }
+          }
         },
         "evidence": {
           "acceptance": [
@@ -636,16 +882,12 @@
               }
             }
           ],
-          "service": [
+          "economic": [
             {
-              "kind": "other",
-              "ref": "synthetic:accepted-service:leave-in"
-            }
-          ],
-          "payment": [
-            {
-              "kind": "other",
-              "ref": "synthetic:bank-receipt:leave-in"
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
             }
           ]
         }
@@ -653,57 +895,50 @@
     },
     {
       "key": "repay",
-      "command": "contracts.record",
+      "command": "payments.record",
       "input": {
-        "contractId": {
-          "$ref": "contract.id"
-        },
-        "activityKey": "repay",
-        "occurrenceKey": "repay",
+        "financialAccountId": "operating",
+        "direction": "out",
+        "partyId": "owner",
+        "amount": "400000",
+        "currency": "USD",
         "sourceFactId": "repay",
         "effectiveAt": "2025-03-01T00:00:00Z",
-        "facts": {
-          "amount": "400000",
-          "bank": "operating"
-        },
-        "evidence": {
-          "acceptance": [
-            {
-              "kind": "signed_doc",
-              "ref": {
-                "$ref": "source.documentId"
-              }
-            }
-          ],
-          "service": [
-            {
-              "kind": "other",
-              "ref": "synthetic:accepted-service:repay"
-            }
-          ],
-          "payment": [
-            {
-              "kind": "other",
-              "ref": "synthetic:bank-receipt:repay"
-            }
-          ]
-        }
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "synthetic:bank-receipt:repay"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "advance-claims.claims.2.claimId"
+            },
+            "component": {
+              "$ref": "advance-claims.claims.2.component"
+            },
+            "amount": "400000"
+          }
+        ]
       }
     },
     {
-      "key": "draw",
+      "key": "draw-approved",
       "command": "contracts.record",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
         "activityKey": "draw",
-        "occurrenceKey": "draw",
-        "sourceFactId": "draw",
+        "phase": "exercise",
+        "consequenceKey": "draw",
+        "obligationKey": "draw-approved",
+        "occurrenceKey": "draw-approved",
+        "sourceFactId": "draw:economic",
         "effectiveAt": "2025-03-15T00:00:00Z",
         "facts": {
-          "amount": "100000",
-          "bank": "operating"
+          "amount": "100000"
         },
         "evidence": {
           "acceptance": [
@@ -714,35 +949,78 @@
               }
             }
           ],
-          "service": [
+          "economic": [
             {
-              "kind": "other",
-              "ref": "synthetic:accepted-service:draw"
-            }
-          ],
-          "payment": [
-            {
-              "kind": "other",
-              "ref": "synthetic:bank-receipt:draw"
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
             }
           ]
         }
       }
     },
     {
-      "key": "year-end",
+      "key": "draw-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        },
+        "as_of": "2025-03-16"
+      }
+    },
+    {
+      "key": "draw",
+      "command": "payments.record",
+      "input": {
+        "financialAccountId": "operating",
+        "direction": "out",
+        "partyId": "owner",
+        "amount": "100000",
+        "currency": "USD",
+        "sourceFactId": "draw",
+        "effectiveAt": "2025-03-15T00:00:00Z",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "synthetic:bank-receipt:draw"
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "draw-claim.claims.3.claimId"
+            },
+            "component": {
+              "$ref": "draw-claim.claims.3.component"
+            },
+            "amount": "100000"
+          }
+        ]
+      }
+    },
+    {
+      "key": "year-end-allocate-loss",
       "command": "contracts.record",
       "input": {
         "contractId": {
           "$ref": "contract.id"
         },
-        "activityKey": "year-end",
-        "occurrenceKey": "year-end",
-        "sourceFactId": "year-end",
-        "effectiveAt": "2025-12-31T23:00:00Z",
+        "activityKey": "owner",
+        "phase": "period_close",
+        "consequenceKey": "allocate-loss",
+        "period": {
+          "from": "2025-01-01T00:00:00Z",
+          "through": "2026-01-01T00:00:00Z"
+        },
+        "occurrenceKey": "year-end:allocate-loss",
+        "sourceFactId": "year-end:allocate-loss",
+        "effectiveAt": "2025-12-31T23:59:59.999Z",
         "facts": {
-          "draws": "100000",
-          "loss": "40000"
+          "amount": "40000",
+          "completeThrough": "2026-01-01T00:00:00Z"
         },
         "evidence": {
           "acceptance": [
@@ -753,16 +1031,49 @@
               }
             }
           ],
-          "service": [
+          "economic": [
             {
               "kind": "other",
-              "ref": "synthetic:accepted-service:year-end"
+              "ref": "synthetic:year-end-accounts"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "year-end-close-draws",
+      "command": "contracts.record",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "owner",
+        "phase": "period_close",
+        "consequenceKey": "close-draws",
+        "period": {
+          "from": "2025-01-01T00:00:00Z",
+          "through": "2026-01-01T00:00:00Z"
+        },
+        "occurrenceKey": "year-end:close-draws",
+        "sourceFactId": "year-end:close-draws",
+        "effectiveAt": "2026-01-01T00:00:00Z",
+        "facts": {
+          "amount": "40000",
+          "completeThrough": "2026-01-01T00:00:00Z"
+        },
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "source.documentId"
+              }
             }
           ],
-          "payment": [
+          "economic": [
             {
               "kind": "other",
-              "ref": "synthetic:bank-receipt:year-end"
+              "ref": "synthetic:year-end-accounts"
             }
           ]
         }

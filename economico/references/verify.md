@@ -11,16 +11,23 @@ parameters and a runnable example; dates are `YYYY-MM-DD` or UTC instants, `unti
 |---|---|---|
 | Is every contract live? | `subjects {action: "list", type: "contract"}` | Customer and vendor contracts `active`; none left `draft` unless the founder is still negotiating |
 | Is the price book right? | `subjects {action: "list", type: "template", plan: "on_sale"}` | One template per purchasable plan in the brief |
-| What is the recurring revenue? | `reports run saas_metrics` with `year` and `month` | MRR equals the sum of fixed monthly fees in the brief; usage adds nothing |
+| Does actual service match the agreement? | Returned phase statement documents and `ledgers` footprint/statement reads | Evidenced delivery/usage and recognition match the requested period; no inferred fulfillment |
 | What did the business earn and spend? | `reports run income_statement` with `from` and `until` | Revenue per account and expenses per nature and function match recorded occurrences |
 | Who owns the company? | `reports run cap_table`, and `capital_accounts` for an LLC, partnership or project | Every owner from the formation documents with their units; never empty for a company that has owners |
 | Where is the money? | `reports run balance_sheet` with `as_of` | Cash per account matches the bank and card statements at that date, where history was recorded |
-| Who owes what? | `reports run aging` with `direction` `receivable` or `payable` and `as_of` | Open invoices and bills only; card and paid-at-purchase receipts never appear |
-| What is open on one contract? | `reports run activity_claims` with `contract_id` | `outstanding` per invoice; `"0"` once paid |
-| Is every completed month earned? | `reports run activity_plan` per contract, from its start through today; `ledgers {action: "balances", ledger_id}` for 2150 | No period due before today left unrecorded, whatever its status (`blocked` and `contingent` say why in `reason`); deferred revenue is only the billed, unearned part (this month of a monthly plan, the rest of an annual one). Record any missing `service` ([recording history](customer-contracts.md#recording-history)) |
-| What happens next? | `reports run activity_plan` with `contract_id`, `from`, `through` | The next scheduled periods; usage shows as contingent until measured |
-| Billing and cash for a period | `reports run revenue_summary` with `period_start`, `period_end` | Invoiced, paid, outstanding and recognized per currency |
+| Who owes what? | `reports run aging` with `direction` `receivable` or `payable` and `as_of` | Outstanding 1120 receivables and 2110 payables; paid vendor claims are zero. Owner/card debts use claim and native-balance reads below |
+| What is owed to owners or card issuers? | `activity_claims` for the originating agreement, plus party footprint/native balance reads | Identified 2135/2190 funding claims and reimbursements; these are not included in aging |
+| What is open on one contract? | `reports run activity_claims` with `contract_id` | Original/outstanding per claim component, with its kind; `"0"` once settled or converted |
+| What remains deferred or prepaid? | `reports run balance_sheet`, supported actual `recognition`/`amortization` detail | Billed value less evidenced consumption; payment alone never proves earning or expense |
 | Is the history intact? | `events {action: "head"}` and, over REST, `POST /v1/events/verify` | Verification ok |
+
+Priced ownership vesting supports `activity_plan` and timers for its declared grant schedule;
+service forecast and automatic recognition/backfill remain limited. Recurring metrics and
+revenue summaries include supported priced services and actual independent settlements.
+Do not use an empty legacy occurrence list or zero legacy metric as proof that nothing happened.
+Retain returned statement IDs and compare claims and native actual postings against source
+truth. For unsupported ownership families or reports, disclose the gap instead of manufacturing
+records to populate a view. Existing historical books retain their historical read paths.
 
 ## Reading the numbers
 

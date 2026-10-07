@@ -1,5 +1,51 @@
 # Changelog
 
+## 1.8.0 (2026-10-07)
+
+- The "How Economico works" reference explains connecting with another business (`connections.request` and `connections.accept`) and waiting for a message's record to say `delivered`.
+- The `economico` skill's "How Economico works" reference now tells the agent to report what is broken, unclear or missing to
+  the Economico team with `messages.send`, as a support request or feature suggestion.
+
+## 1.7.0 (2026-10-06)
+
+- Settle claims and exchange cash across currencies with both evidenced amounts, each in its own currency's books; cancellation refunds follow the active books.
+
+- Model founders’ restricted shares as one ownership right with independent funding, exact par/premium allocation and scheduled vesting; all original executable recipes now use priced rights.
+
+- Model project ownership and repayable advances without invented shares or convertible instruments.
+
+- Model LLC subscriptions, funding, owner draws and year-end allocations independently from payments.
+
+- Derive priced overage from evidenced included-call consumption; invoice and collect separately.
+
+- Model prepaid credits as one priced right: separate billing/payment, native lots and exact value release on usage.
+
+- Replaced platform-plus-usage and Stripe recipes with priced services, coordinated processor fees and independent net payouts.
+
+- Model services as priced rights with separate billing, recognition and payments.
+- Added payment, reimbursement and correction guidance; vendor recipes now use independent
+  bank/card/owner funding without a founder-expenses contract.
+- Added an evidenced owner cash contribution recipe without invented shares; preserve supplied
+  source identities and keep transaction facts separate from opening carry-forward journals.
+- Settle existing historical claims through independent payments without recreating invoices.
+- Added a convertible financing commitment recipe with separate funding and no invented equity.
+- Added approved capital distributions with separate payments and holder balance safeguards.
+- Added owner/card advances with later bill matching and separate reimbursement.
+- Added financing debt conversion and repayment, with component-qualified claims and cap-table reconciliation.
+- Close evidenced accumulated owner draws as a period consequence without another payment.
+- Allocate evidenced retained profit or loss to existing members and select matching period consequences explicitly.
+- Trace owner/card refunds to their original funding and recover refunds received after reimbursement, with an executable example.
+- Replaced annual customer and insurance recipes with priced rights, independent payments and equal monthly recognition.
+- Amend prospective service terms with evidence; the seat-expansion recipe preserves earlier prices and collections.
+- Replaced consulting and SAFE recipes with priced rights and independent payments; reconcile commercial receipts in revenue summaries.
+- Added a priced monthly subscription recipe with historical MRR/ARR and separate collection.
+- Clearly distinguish validated new workflows from historical recipes still being replaced.
+
+## 1.6.0 (2026-10-06)
+
+- Added a consulting recipe for monthly hourly billing and a fixed milestone. Both customer
+  receipts settle the billed contract claims through receipt activities.
+
 ## 1.5.3 (2026-10-06)
 
 - The plugin directory listing now opens "Discover the business behind your product".
