@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.0 (2026-10-10)
+
+- Paying a bill or collecting an invoice in another currency than the business's own realizes the foreign-exchange gain or loss in the same step: record only the evidenced amounts, and the books derive the difference.
+- A vendor that bills in another currency is booked at the rate of the day the bill is first recorded. When no rate is on file for that day, the skill asks for the rate your bank statement shows instead of guessing one.
+- The Stripe gross/net payout recipe no longer lists an empty account in its expected balances.
+
 ## 1.8.0 (2026-10-07)
 
 - The "How Economico works" reference explains connecting with another business (`connections.request` and `connections.accept`) and waiting for a message's record to say `delivered`.

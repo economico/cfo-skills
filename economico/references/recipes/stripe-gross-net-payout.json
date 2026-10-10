@@ -809,10 +809,6 @@
             {
               "account_code": 1110,
               "balance": "14311"
-            },
-            {
-              "account_code": 1120,
-              "balance": "0"
             }
           ],
           "total": "14311"

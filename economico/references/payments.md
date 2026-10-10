@@ -58,6 +58,17 @@ USD 2,200 states `amount` CHF 2,000 and `cashAmount` USD 2,200, each as a minor-
 currency. Owner/card funding claims and unapplied residuals stay in the payment currency, and
 `payments.allocate`/`payments.unallocate` take the same two amounts for a cross-currency match.
 Never infer one amount from the other with a rate: each must come from evidence.
+
+When the claim is in another currency than the business's functional one, it was booked at
+its transaction date's rate, and settling it with cash in another currency realizes the
+difference in the same event: the bill or invoice at that booked rate against the cash in the
+functional currency goes to 7150 Realized foreign-exchange loss or 7250 Realized
+foreign-exchange gain, attributed to the claim. You record only the evidenced amounts; the
+kernel derives the gain or loss. Paying from a third currency (a CHF card on a EUR bill) values
+the cash at the payment date's rate from the shared rate store. If the command answers
+`missing_rates`, the store had no rate for that date: ask for the bank statement's rate and
+state it as `exchangeRate` (`base`, `quote`, `date`, `numerator`, `denominator`, `evidence`)
+rather than inventing one. Undo a match that realized FX whole, not in part.
 Claim reads retain the original `component`, `unitCode` and `original` amount while showing
 `ledgerId`, `ledgerUnitCode` and `ledgerOutstanding` for the ledger that holds the claim.
 

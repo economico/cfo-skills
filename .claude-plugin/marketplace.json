@@ -7,13 +7,13 @@
   },
   "metadata": {
     "description": "Economico for Claude Code: real books your agent runs, numbers you can explain",
-    "version": "1.8.0"
+    "version": "1.9.0"
   },
   "plugins": [
     {
       "name": "economico",
       "description": "Discover the business behind your product. Your agent reads your code, Stripe and email, then keeps real double-entry books in Economico: customers and contracts, invoices and payments, vendor bills and receipts, investor updates. Ask your burn, runway or revenue and see the entries behind every number. Free forever for a single founder under $10k a month in recognized revenue.",
-      "version": "1.8.0",
+      "version": "1.9.0",
       "category": "productivity",
       "source": "./"
     }
