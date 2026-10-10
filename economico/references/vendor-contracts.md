@@ -33,6 +33,13 @@ payment. Otherwise record billing, read `activity_claims`, then use `payments.re
 returned claim identity. See [payments](payments.md) for account ownership, reimbursements,
 unapplied funds, transfers, provider fees and corrections.
 
+A vendor priced in another currency than the business's functional one keeps the bill's
+payable in that currency, and its expense is booked in the functional currency at the rate of
+the date the obligation is first booked (the bill, or the first recognition of an accrued
+service). The rate comes from the shared rate store; when a command answers `missing_rates`,
+ask for the rate the evidence states and pass it as `exchangeRate`, never a guessed one. See
+[payments](payments.md) for the gain or loss realized when the bill is paid.
+
 | Evidence-backed situation | Executable example |
 |---|---|
 | Hosting bill, paid later by bank | [vendor bill](recipes/vendor-bill-paid-from-bank.json) |
