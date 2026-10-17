@@ -19,6 +19,17 @@ Create the contract with its actual start date, vendor party and source document
 `contracts.accept` with the current document ID, expected draft status and acceptance evidence.
 Do not create an `accept` activity or add the founder as a vendor party to encode who paid.
 
+For a recurring vendor plan, declare `economics.billing.schedule` from the agreement's
+evidenced cadence: `everyMonths: 1` for monthly or `everyMonths: 12` for annual billing,
+with `startTerm` bound to the actual subscription start, `endTerm` only when an end date is
+known, and `timing: "start"` for advance billing or `timing: "end"` for arrears. Set
+`offsetDays` from the billing terms. Keep service recognition independent of billing; use
+elapsed-time recognition only when the agreement establishes continuous service. See the
+[monthly subscription recipe](recipes/vendor-monthly-subscription.json) for an open-ended,
+USD 29 monthly plan. Vendor cadence belongs in the billing schedule; `recurringValue` is
+only for customer service rights and is refused on vendor rights. If the cadence or anchor
+is unknown, request the missing terms rather than infer them from one receipt.
+
 ## Record the economics, then the funding
 
 Copy the supplied invoice ID exactly into billing's `sourceFactId`, and the supplied payment

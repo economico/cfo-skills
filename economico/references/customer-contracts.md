@@ -5,6 +5,18 @@ billing and recognition do not depend on which account collects the money. Follo
 [modeling products](modeling-products.md) for the rights and template, and
 [payments](payments.md) for collection and refunds.
 
+## Prepare a bespoke draft
+
+For finding and composing setup fees, hours, retainers, access and other components, use
+[business model patterns](business-model-patterns.md). A custom agreement is a contract, not a
+new record type. `contracts.create` accepts exactly one of a saved `templateDocumentId` or an
+inline `definition` using `priced-rights-v1`. The inline definition references saved activity
+document IDs and avoids creating a reusable plan solely for one client. Both paths require
+actual parties, resolved terms and ledger bindings, and create a draft.
+
+When asked only to prepare a draft, inspect and show its rights, terms and draft status, then
+stop. Do not infer acceptance or record billing, recognition or payments from that request.
+
 ## Establish and accept
 
 Create/reuse the customer party and preserve the signed order form or evidenced checkout and

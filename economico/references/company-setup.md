@@ -102,10 +102,12 @@ accounting framework, or registering for sales tax are separate commands
 `source_document_id` naming the filing or certificate. Never guess a registration number: ask for
 it exactly as printed. A headless agent cannot run these.
 
-These commands appear in `catalog list` only when the business's owner approved this
-connection: every connection gets full access, but only up to the approving person's own
-permissions. If they are missing, ask the owner to connect the agent themselves; never try to
-work around it.
+These commands appear in `catalog list` only when the business's owner approved this connection
+with the Owner preset (the default, and the only choice on the Solo plan), itself bounded by the
+approving person's own permissions. A Startup-plan business can connect an agent with a narrower preset
+instead (Reports only, Read books, Keep books, or Administer books and sharing), which never
+carries these owner-only commands. If they are missing, ask the owner to connect the agent
+themselves with the Owner preset; never try to work around it.
 
 ## Ownership
 

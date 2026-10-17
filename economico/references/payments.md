@@ -2,11 +2,14 @@
 
 Payments record money that moved elsewhere. They never initiate a transfer. A payment identifies
 its registered account, direction, amount/currency, counterparty, effective instant, source fact,
-evidence and allocations. Contracts determine what is owed; the account determines funding.
+evidence and allocations. A bill's `effectiveAt` is the invoice date; its payment's `effectiveAt`
+is the payment date. Contracts determine what is owed; the account determines funding.
 
 ## Settle an identified claim
 
-Describe `payments.record`, then read the claim from `activity_claims`. Omit `contract_id`
+Describe `payments.record`, then use the billing result's `claims` entries directly for
+`claimId` and `component`. For an existing claim or a remaining balance, read `activity_claims`.
+Omit `contract_id`
 to find contractless unapplied balances or recoverable owner/card funds. Copy `claimId` and
 `component: {originLedgerId, accountCode}` exactly. An allocation contains those fields and a
 positive amount. Several claims may share one payment if their party, currency, direction and

@@ -1,6 +1,6 @@
 ---
 name: economico
-description: "Model a founder's business in Economico: connect the ledger, read the product's code, Stripe and email to learn what it sells, to whom and what it costs to run, record plans as rights templates, customer and vendor agreements as contracts, and evidence-backed economics and independent payments, then prove the books with reports. Use when someone wants to set up or connect Economico or their books, model their business, pick up the books where an earlier session left off, turn Stripe or pricing into contracts, set up vendors, record receipts or invoices, or asks how Economico works."
+description: "Model a business in Economico: discover pricing from code, Stripe and email; find patterns and saved rights; compose plans or bespoke contracts; record evidenced economics and payments; prove the books. Use to connect or set up Economico, explore business models, create custom agreements, resume the books, turn pricing into contracts, set up vendors, record receipts or invoices, or understand Economico."
 ---
 
 # Economico
@@ -68,6 +68,7 @@ the host renders Economico's app and as text everywhere else.
 |---|---|
 | connect an agent, log in, pick or create a business, run headless | [connect](references/connect.md) |
 | understand how Economico works, or why something was refused | [how Economico works](references/how-economico-works.md) |
+| explore business model patterns, find reusable rights, combine offerings or prepare a bespoke contract | [business model patterns](references/business-model-patterns.md) |
 | turn pricing (code, Stripe or a pricing page) into plans | [modeling products](references/modeling-products.md) |
 | add a customer, record a signed deal, bill or collect | [customer contracts](references/customer-contracts.md) |
 | set up vendors, process receipts or invoices from email | [explore email](references/explore-email.md), [vendor contracts](references/vendor-contracts.md) |

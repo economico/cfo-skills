@@ -1,0 +1,428 @@
+{
+  "name": "Vendor monthly subscription, billed in advance",
+  "description": "Synthetic StudioCloud Creator agreement: USD 29 each month from January 1, with no fixed end date. January billing, bank payment and elapsed-service recognition remain independent; February billing proves the next monthly period costs another USD 29. No customer recurring-value metrics are declared.",
+  "setupAt": "2026-01-01T00:00:00Z",
+  "recordedAt": "2026-02-02T00:00:00Z",
+  "steps": [
+    {
+      "key": "agreement",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "U3ludGhldGljIGZpeHR1cmUgb25seS4gU3R1ZGlvQ2xvdWQgQ3JlYXRvciBzdWJzY3JpcHRpb24gYWNjZXB0ZWQgSmFudWFyeSAxLCAyMDI2OiBVU0QgMjkgcGVyIGNhbGVuZGFyIG1vbnRoLCBiaWxsZWQgaW4gYWR2YW5jZSBvbiB0aGUgZmlyc3QgZGF5LCBtb250aCB0byBtb250aCB3aXRoIG5vIGZpeGVkIGVuZCBkYXRlLiBJbnZvaWNlIFNDLTIwMjYtMDEgY292ZXJzIEphbnVhcnkgMSB0byBGZWJydWFyeSAxLCAyMDI2LCBVU0QgMjk7IHBhaWQgYnkgb3BlcmF0aW5nLWJhbmsgQUNIIG9uIEphbnVhcnkgNS4gQWNjZXNzIGlzIGF2YWlsYWJsZSBjb250aW51b3VzbHkgdGhyb3VnaG91dCBKYW51YXJ5LiBJbnZvaWNlIFNDLTIwMjYtMDIgY292ZXJzIEZlYnJ1YXJ5IDEgdG8gTWFyY2ggMSwgMjAyNiwgVVNEIDI5Lg==",
+        "externalId": "studiocloud:creator:agreement-and-invoices"
+      }
+    },
+    {
+      "key": "vendor",
+      "command": "parties.create",
+      "input": {
+        "partyId": "ven_studiocloud",
+        "name": "StudioCloud",
+        "categories": [
+          "vendor"
+        ]
+      }
+    },
+    {
+      "key": "bank",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "bank_main",
+        "name": "Operating bank",
+        "currency": "USD",
+        "kind": "checking"
+      }
+    },
+    {
+      "key": "service-right",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "model": "priced-rights-v1",
+          "name": "Creator workspace access",
+          "terms": {
+            "price": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "2900"
+            },
+            "start": {
+              "type": "date"
+            },
+            "currency": {
+              "type": "text",
+              "default": "USD"
+            }
+          },
+          "facts": {},
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "price": {
+            "treatment": "priced",
+            "calculation": {
+              "type": "fixed",
+              "amount": "term:price"
+            },
+            "currencyTerm": "currency"
+          },
+          "economics": {
+            "kind": "service",
+            "direction": "receive",
+            "billing": {
+              "timing": "advance",
+              "schedule": {
+                "startTerm": "start",
+                "everyMonths": 1,
+                "timing": "start",
+                "offsetDays": 0
+              }
+            },
+            "recognition": {
+              "timing": "ratable",
+              "schedule": {
+                "startTerm": "start",
+                "everyMonths": 1,
+                "timing": "end",
+                "offsetDays": 0,
+                "serviceEvidence": "elapsed_time"
+              }
+            },
+            "classification": {
+              "monetaryLedger": "money",
+              "expenseAccount": 5310,
+              "expenseFunction": "general_and_administrative"
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "vendor-template",
+      "command": "templates.create",
+      "input": {
+        "definition": {
+          "name": "StudioCloud Creator monthly subscription",
+          "parties": [
+            "vendor"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "activities": [
+            {
+              "key": "access",
+              "activityDocumentId": {
+                "$ref": "service-right.documentId"
+              },
+              "partyRole": "vendor",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ],
+          "model": "priced-rights-v1"
+        }
+      }
+    },
+    {
+      "key": "contract",
+      "command": "contracts.create",
+      "input": {
+        "templateDocumentId": {
+          "$ref": "vendor-template.documentId"
+        },
+        "parties": {
+          "vendor": "ven_studiocloud"
+        },
+        "terms": {
+          "access": {
+            "start": "2026-01-01"
+          }
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "agreement.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "accept",
+      "command": "contracts.accept",
+      "at": "2026-01-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "sourceFactId": "studiocloud:creator:accepted",
+        "effectiveAt": "2026-01-01T00:00:00Z",
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "agreement.documentId"
+              }
+            }
+          ]
+        },
+        "expectedStatus": "draft",
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
+        }
+      }
+    },
+    {
+      "key": "declared-cadence",
+      "read": "subjects",
+      "input": {
+        "action": "get",
+        "type": "contract",
+        "id": {
+          "$ref": "contract.id"
+        }
+      },
+      "expect": {
+        "state": {
+          "activities": [
+            {
+              "key": "access",
+              "definition": {
+                "economics": {
+                  "billing": {
+                    "schedule": {
+                      "startTerm": "start",
+                      "everyMonths": 1,
+                      "timing": "start",
+                      "offsetDays": 0
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "bill-january",
+      "command": "contracts.record",
+      "at": "2026-01-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "access",
+        "phase": "billing",
+        "period": {
+          "from": "2026-01-01T00:00:00Z",
+          "through": "2026-02-01T00:00:00Z"
+        },
+        "occurrenceKey": "schedule:2026-01-01:2026-02-01",
+        "sourceFactId": "SC-2026-01",
+        "effectiveAt": "2026-01-01T00:00:00Z",
+        "evidence": {
+          "billing": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "agreement.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "january-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
+      },
+      "expect": {
+        "claims": [
+          {
+            "original": "2900",
+            "outstanding": "2900"
+          }
+        ]
+      }
+    },
+    {
+      "key": "pay-january",
+      "command": "payments.record",
+      "at": "2026-01-05T00:00:00Z",
+      "input": {
+        "financialAccountId": "bank_main",
+        "direction": "out",
+        "amount": "2900",
+        "currency": "USD",
+        "partyId": "ven_studiocloud",
+        "effectiveAt": "2026-01-05T00:00:00Z",
+        "sourceFactId": "studiocloud:ach:2026-01-05",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": "bank:statement:2026-01:line-3"
+          },
+          {
+            "kind": "other",
+            "ref": {
+              "$ref": "agreement.documentId"
+            }
+          }
+        ],
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "january-claim.claims.0.claimId"
+            },
+            "component": {
+              "$ref": "january-claim.claims.0.component"
+            },
+            "amount": "2900"
+          }
+        ]
+      }
+    },
+    {
+      "key": "recognize-january",
+      "command": "contracts.record",
+      "at": "2026-01-31T23:59:59.999Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "occurrenceKey": "schedule:2026-01-01:2026-02-01",
+        "sourceFactId": "studiocloud:SC-2026-01:2026-01",
+        "effectiveAt": "2026-01-31T23:59:59.999Z",
+        "facts": {},
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "elapsed:2026-01-01:2026-02-01"
+            }
+          ]
+        },
+        "activityKey": "access",
+        "phase": "recognition",
+        "period": {
+          "from": "2026-01-01T00:00:00Z",
+          "through": "2026-02-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "key": "january-expense",
+      "report": true,
+      "input": {
+        "kind": "income_statement",
+        "currency": "USD",
+        "until": "2026-02-01T00:00:00Z"
+      },
+      "expect": {
+        "operating_expenses": {
+          "general_and_administrative": {
+            "lines": [
+              {
+                "account_code": 5310,
+                "balance": "2900"
+              }
+            ],
+            "total": "2900"
+          }
+        },
+        "net_income": "-2900"
+      }
+    },
+    {
+      "key": "january-books",
+      "report": true,
+      "input": {
+        "kind": "balance_sheet",
+        "currency": "USD",
+        "as_of": "2026-02-01"
+      },
+      "expect": {
+        "assets": {
+          "total": "-2900"
+        },
+        "liabilities": {
+          "total": "0"
+        }
+      }
+    },
+    {
+      "key": "bill-february",
+      "command": "contracts.record",
+      "at": "2026-02-01T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "access",
+        "phase": "billing",
+        "period": {
+          "from": "2026-02-01T00:00:00Z",
+          "through": "2026-03-01T00:00:00Z"
+        },
+        "occurrenceKey": "schedule:2026-02-01:2026-03-01",
+        "sourceFactId": "SC-2026-02",
+        "effectiveAt": "2026-02-01T00:00:00Z",
+        "evidence": {
+          "billing": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "agreement.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "february-claim",
+      "report": true,
+      "input": {
+        "kind": "activity_claims",
+        "contract_id": {
+          "$ref": "contract.id"
+        }
+      },
+      "expect": {
+        "claims": [
+          {
+            "original": "2900",
+            "outstanding": "0"
+          },
+          {
+            "original": "2900",
+            "outstanding": "2900"
+          }
+        ]
+      }
+    }
+  ]
+}

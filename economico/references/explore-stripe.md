@@ -41,10 +41,10 @@ Page with `--starting-after <last id>` until `has_more` is false.
 |---|---|---|
 | Product + its active recurring Price(s) | One template per purchasable plan (`plan: "on_sale"`) | Record the product and price ids in the activity's `externalReferences` |
 | Price `recurring.interval` month / year | Monthly or annual schedule | An annual price billed upfront is the annual-prepaid recipe |
-| Price `billing_scheme: tiered`, `tiers_mode` | A `tiered` calculation, `graduated` or `volume` | Copy tier boundaries and unit amounts exactly |
+| Price `billing_scheme: tiered`, `tiers_mode` | A `tiered` calculation, `graduated` or `volume` | Read [tiered pricing](stripe-tiered-pricing.md); preserve boundaries, unit amounts, tier flat fees and zero usage |
 | Price `recurring.usage_type: metered`, a billing meter | A usage activity with a `rate` or `tiered` calculation | The meter's event name is the usage unit |
-| Price `transform_quantity` | `unitsPerPrice` | "$2 per 1,000" is rate `200` with `unitsPerPrice` `1000` |
-| `unit_amount_decimal` (on a price or a tier) | Rate over a larger unit | Stripe states it in **cents**, like `unit_amount`: `"0.002"` is 0.002¢ a unit (a fiftieth of a cent), not $0.002. Shift the decimal point off the rate and onto `unitsPerPrice`: `"0.002"` is rate `2` per `1000` units, `"0.15"` rate `15` per `100`. Never round the rate to a whole cent a unit |
+| Price `transform_quantity` | Explicit quantity transformation, only if supported | Preserve `divide_by` and rounding; dividing the rate alone is not equivalent. Stripe disallows this with tiers |
+| `unit_amount_decimal` (on a price or a tier) | Rate over a larger unit | Stripe states it in **cents**, like `unit_amount`: `"0.002"` is 0.002¢ a unit (a five-hundredth of a cent), not $0.002. Shift the decimal point off the rate and onto `unitsPerPrice`: `"0.002"` is rate `2` per `1000` units, `"0.15"` rate `15` per `100`. Never round the rate to a whole cent a unit |
 | Subscription (active, trialing, past_due, or canceled inside the history window) | One customer contract bound to the plan's template | Contract terms `start` = the subscription's `start_date` when you record history, so every past period is billed and earned; the current period's start only when the founder wants no history. A canceled one ends at `ended_at` |
 | Subscription `quantity` > 1 | Seats: price × quantity | Use a seat template or a per-contract price term |
 | Coupon / discount on a subscription | A per-contract price term | Keep the list price in the template; the discount is this customer's term |

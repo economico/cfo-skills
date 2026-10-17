@@ -90,8 +90,11 @@ State the target out loud before the first write: "Writing to `acme-sandbox-3f2a
 `business get` returns the legal form, `functionalCurrency`, `primaryLedgerId` (the GAAP ledger
 contracts bind; USD is `led_00000000000000000000000840`) and `fiscalYearEnd`. `catalog
 permissions` shows exactly what this token may do. If `commands` is missing from the tool list,
-the grant is read-only (a connection approved before full access became the rule, or a member
-whose own permissions are read-only): ask the founder to reconnect, or to widen the membership.
+the grant is read-only: a member whose own permissions are read-only, or — on a Startup-plan business —
+an owner who chose the Read books preset on the consent screen instead of Owner. If `business
+get` itself is refused but `reports list` works, the grant is Reports only — the narrowest
+preset, with no access to raw book data at all. Ask the founder to reconnect with a wider
+preset, or to widen the membership.
 
 ## Troubleshooting
 
@@ -99,6 +102,9 @@ whose own permissions are read-only): ask the founder to reconnect, or to widen 
   in again.
 - A business missing from `businesses`: it was not approved for this connection. Reconnect and
   tick it on the consent screen; approving another business never widens an existing grant.
-- `plan_required`: shared views and extra members need the Team plan, which is not on sale yet.
-  Nothing in this skill needs it.
-- The CLI's default server is the old system. Pass `--server` explicitly.
+- `plan_required` has two causes. With `details.through`, the business has used Solo's monthly
+  event allowance: nothing was recorded, and the limit is temporary. Tell the founder the limit
+  (`details.included` events, `details.used` already used) and the reset date (`through`), then
+  retry after `through`, or once they upgrade to Startup or accept paid extra events; reads and
+  exports keep working meanwhile. Without it, the command is a Startup feature (shared views and
+  extra members); nothing else in this skill needs it.

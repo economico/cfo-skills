@@ -27,7 +27,7 @@ the background reads the session afterwards, and the views are what they read. A
 
 | Phase | View | Read | Text version |
 |---|---|---|---|
-| Propose | The model before anything is recorded (in the review message; when told to proceed, at the top of the final message) | `reports run model_preview` with the brief's tables as `model` | The price book and the cost table from `business-model.md`, plus the run-rate line (money in, money out, per month) from the preview's `run_rate` |
+| Propose | The model before anything is recorded (in the review message; when told to proceed, at the top of the final message) | `reports run model_preview` with the brief's tables as `model` | The price book and the cost table from `business-model.md`, plus one run-rate line per native currency (money in, money out, per month) from the preview's `run_rates`; keep unknown prices, usage and tax notes visible |
 | Record | The price book as recorded | `subjects {action: "list", type: "template", plan: "on_sale"}` | One row per plan: plan, charge, price, when it bills |
 | Record | Who the business trades with | `parties {action: "list"}` | One row per party: name, customer or vendor, contact |
 | Record | The contracts as they land | `subjects {action: "list", type: "contract"}` | One row per contract: party, customer or vendor, template, status, since |

@@ -4,6 +4,10 @@ A product plan is a reusable agreement template containing the rights a customer
 Model the rights before recording invoices or payments. A monthly platform access right can be
 billed in advance, earned over the month and paid later without becoming three activities.
 
+For pattern discovery, saved-right lookup, a combined workspace brief or a bespoke composition,
+start with [business model patterns](business-model-patterns.md). It distinguishes reusable plan
+setup from creating a client draft.
+
 ## Identify rights and prices
 
 List what the party receives, the evidence, price treatment, billing timing and recognition
@@ -66,8 +70,11 @@ catalog supports them.
 
 ## Build and prove
 
-1. Describe the live activity, template and contract commands. Create immutable rights, bind
-   them in the template, and create a real party's contract at its agreement start date.
+1. Describe the live commands for the requested destination. Reuse/create immutable rights and
+   bind them in a reusable template, or directly in a bespoke draft contract's inline template.
+   For plan-only setup, read back the rights and plan and stop. For draft-only setup, read back
+   the contract and stop. Continue below only when recording an evidenced agreement and its
+   economics is also requested; date the contract at its actual agreement start.
 2. Accept through `contracts.accept`, with the current contract document ID and evidence.
 3. Record delivery/usage, billing and recognition against consistent obligation/period identity.
    Give each phase a stable distinct source identity. Recognition never creates a second invoice.
