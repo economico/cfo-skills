@@ -39,6 +39,13 @@ Then ask your agent to set up Economico. The `economico` skill connects it (MCP 
 `@economico/cli`) and walks you through the first session. Try it on a sandbox business before
 your real one.
 
+## OpenAI plugin
+
+The pack also carries a Codex plugin manifest and Economico’s remote MCP configuration.
+The OpenAI submission ZIP is built from the source repository; directory availability depends
+on OpenAI review and publication. Installing skills alone does not connect an MCP server.
+Stripe and email access are separate connections you authorize in your agent.
+
 ## Versions
 
 Releases are tagged `vX.Y.Z` and described in [CHANGELOG.md](./CHANGELOG.md). A major version

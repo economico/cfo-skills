@@ -1,0 +1,65 @@
+{
+  "name": "economico",
+  "version": "1.9.4",
+  "description": "Keep a founder-run company’s books in Economico: model contracts, record invoices and payments, reconcile receipts, and draft investor updates.",
+  "author": {
+    "name": "Economico",
+    "email": "hello@economi.co"
+  },
+  "homepage": "https://economi.co",
+  "repository": "https://github.com/economico/cfo-skills",
+  "license": "MIT",
+  "keywords": [
+    "bookkeeping",
+    "accounting",
+    "double-entry",
+    "ledger",
+    "invoicing",
+    "accounts-receivable",
+    "expenses",
+    "receipts",
+    "burn-rate",
+    "runway",
+    "startup-finance",
+    "investor-update",
+    "founder",
+    "mcp"
+  ],
+  "skills": [
+    "./economico",
+    "./add-customer",
+    "./investor-update",
+    "./record-payment",
+    "./record-receipts",
+    "./record-vendor-invoice",
+    "./send-invoice"
+  ],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Economico",
+    "shortDescription": "Books for founders",
+    "longDescription": "Use your agent to model your business in Economico, record customer and vendor contracts, invoices, payments and receipts, and draft investor updates from double-entry books. Requires an Economico account. Code, Stripe and email discovery use access you separately authorize in your agent. Economico records events that happened elsewhere; it does not move money, send invoices, sign agreements or file taxes.",
+    "developerName": "Economico",
+    "category": "Finance",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://economi.co/",
+    "supportURL": "https://github.com/economico/cfo-skills/issues",
+    "privacyPolicyURL": "https://economi.co/privacy/",
+    "termsOfServiceURL": "https://economi.co/agreements/",
+    "defaultPrompt": [
+      "Help me set up my company’s books in Economico.",
+      "Record a vendor invoice in Economico.",
+      "Draft my monthly investor update from my Economico books."
+    ],
+    "logo": "./.claude-plugin/icon.png",
+    "composerIcon": "./.claude-plugin/icon.png"
+  },
+  "extensions": {
+    "com.openai": {
+      "onboardingSkill": "./economico/SKILL.md"
+    }
+  }
+}
