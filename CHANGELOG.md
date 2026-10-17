@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.4 (2026-10-17)
+
+- Add OpenAI plugin metadata and MCP configuration alongside the Claude plugin. The skill folders and existing installation paths are unchanged.
+
 ## 1.9.3 (2026-10-17)
 
 - Startup is on sale: troubleshooting no longer calls the Startup features behind `plan_required` unavailable.
