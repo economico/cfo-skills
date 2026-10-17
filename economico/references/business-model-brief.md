@@ -99,8 +99,10 @@ them as data: `plans` (key, name, price in minor units, cadence `month`, `year`,
 and expense function from [accounts](accounts.md), and `drivers`: the product actions that make
 it cost money, from [the codebase](explore-codebase.md)). It writes nothing. It refuses a
 customer on a plan the price book does not have, an amount that is not minor units, or an account
-that is not an expense account: fix the brief, not the call. Its `run_rate` is the "Run rate
-today" table, and in hosts that render Economico's app the result draws the proposal inline, the
+that is not an expense account: fix the brief, not the call. Use its `run_rates` for the "Run rate today" table, one row per native currency;
+`run_rate` is report-currency compatibility only. Totals include known fixed recurring amounts
+only: keep unknown prices and usage separate, and preserve tax-inclusive/exclusive annotations
+without inferring tax or recoverability. In hosts that render Economico's app the result draws the proposal inline, the
 view the founder reviews ([show the founder](show-the-founder.md)).
 
 ## What "For the next session" holds, and what it never holds

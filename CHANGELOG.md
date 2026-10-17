@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.9.3 (2026-10-17)
+
+- Startup is on sale: troubleshooting no longer calls the Startup features behind `plan_required` unavailable.
+
+## 1.9.2 (2026-10-14)
+
+- The plans have new names: Free is now Solo, and Team is now Startup. The references use the new names; prices, features and the `plan_required` refusal are unchanged.
+- Troubleshooting explains the `plan_required` refusal for a used-up monthly Solo allowance: tell the founder the limit and the reset date, then retry after it or once they upgrade, rather than treating it as a permanent feature gate.
+- Stripe package pricing (`transform_quantity` with `divide_by`) maps to one tier with `unitsPerPrice`: rounding up is `startedUnits` (every started package charged in full), rounding down is `wholeUnits`.
+
+## 1.9.1 (2026-10-10)
+
+- The listing describes the current pricing: free for a single founder, with no fee on revenue.
+
 ## 1.9.0 (2026-10-10)
 
 - Paying a bill or collecting an invoice in another currency than the business's own realizes the foreign-exchange gain or loss in the same step: record only the evidenced amounts, and the books derive the difference.

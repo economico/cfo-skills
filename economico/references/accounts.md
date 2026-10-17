@@ -38,6 +38,9 @@ more than the account.
 | GitHub, Sentry, Cursor, Claude or ChatGPT subscriptions for the team | `5320` | AI and developer tools | `research_and_development` |
 | Contractors, employer-of-record | `5140` | Contractors and EOR services | by the work: `research_and_development` for engineering |
 | Customer support tools and outsourced support | `5150` | Customer support services | `cost_of_revenue` |
+| Mailroom, virtual office and registered-address service | `5510` | Rent and facilities | `general_and_administrative` |
+| Video, design and content-creation software | `5310` | SaaS and productivity tools | `sales_and_marketing` for marketing content; otherwise by purpose |
+| Outsourced video production and content creation | `5430` | Content and creative services | `sales_and_marketing` |
 | Ads, sponsorships | `5410` | Advertising and paid media | `sales_and_marketing` |
 | Conferences | `5420` | Events and conferences | `sales_and_marketing` |
 | Lawyers, incorporation | `5620` | Legal and corporate fees | `general_and_administrative` |

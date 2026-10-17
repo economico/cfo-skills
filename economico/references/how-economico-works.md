@@ -73,14 +73,16 @@ Separate rights only when what the party receives differs, even if two rights po
    its current document ID and expected status. A source terms URL proves the terms' location,
    not that someone accepted them; keep evidence of signup, signature or use as appropriate.
 2. Record a stable `obligationKey` for a one-off item or the same `period` for all phases of a
-   recurring obligation. Give each phase its own occurrence and source identity.
+   recurring obligation. Give each phase its own occurrence and source identity. Record phases
+   of one obligation in effective-time order (equal instants are allowed); collect older evidence
+   before recording a later phase.
 3. `delivery` or `usage` records fulfillment. `recognition` consumes that entitlement; it does
    not bill. Ratable recognition needs evidenced elapsed coverage under the frozen schedule.
 4. `billing` records the commercial claim and optional `dueDate`. Advance billing stays deferred
    or prepaid until earned/consumed. Recognition before billing accrues independently; later
    billing clears the accrual rather than recording the income or expense twice.
-5. Payment settles the claim independently. Read `activity_claims` and copy its `claimId` and
-   full `component`, not an activity name, invoice text or counterparty total. See
+5. Payment settles the claim independently. Copy `claimId` and the full `component` from the
+   billing result's `claims`; read `activity_claims` for existing claims or remaining balances, not an activity name, invoice text or counterparty total. See
    [payments](payments.md). Outstanding claims can still be settled after cancellation.
 6. Retain immutable evidence and retry identities. Never re-record old history to convert its
    model. Payment correction uses reversal/unallocation; service correction uses
@@ -134,3 +136,14 @@ other business accepts with `connections.accept`; then `messages.send` with `to`
 with `about` (their document ids).
 The message is kept permanently in this business's history and in Economico's own books, so
 never include secrets or credentials. Sent and received messages are both `message` subjects.
+
+
+## Related parties
+
+When the founder confirms a party is related to this business (for example, their other company),
+set `relatedParty: true` in `parties.create` or `parties.update`. Keep its customer/vendor roles.
+Use `false` to clear a mistaken marker; omitting it on update preserves the current value.
+Party reads, `activity_claims` and aging show the current marker, including for archived parties.
+The marker does not change accounts or payment allocation. Do not infer it from a founder or
+investor role. It is a current classification, not a dated relationship history or a complete
+related-party disclosure statement.

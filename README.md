@@ -43,8 +43,7 @@ your real one.
 
 Releases are tagged `vX.Y.Z` and described in [CHANGELOG.md](./CHANGELOG.md). A major version
 removes or renames a skill; a minor one adds a skill, a reference or a recipe; a patch fixes
-wording. `v0.1.0` and the `go-era` branch keep the earlier skill set, written for Economico's
-previous tools.
+wording.
 
 This repository is published from Economico's own repository, where the skills are developed and
 evaluated. Please open issues here; changes are made there and published.
