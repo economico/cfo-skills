@@ -56,11 +56,11 @@ the open questions, so resume from it ([a later session](references/first-sessio
 | 5 | Record | The legal form and the owners (the cap table, even for a sole owner), parties, accounts, templates, contracts, activity, evidence; the contracts shown as one table | [products](references/modeling-products.md), [customers](references/customer-contracts.md), [vendors](references/vendor-contracts.md), [evidence](references/evidence.md), [accounts](references/accounts.md), [payments](references/payments.md), [company](references/company-setup.md) |
 | 6 | Prove | A final message that opens with the price book, the contracts, the income statement, the balance sheet and the cap table as views, then a short summary | [verify](references/verify.md) |
 
-[first-session.md](references/first-session.md) is the playbook that strings these together,
+[first-session.md](references/first-session.md) is the playbook for all of it,
 including founder review and missing access. At the end of
 phases 4, 5 and 6, show the founder their business as it takes shape:
-[show the founder](references/show-the-founder.md) says which view, from which read, inline where
-the host renders Economico's app and as text everywhere else.
+[show the founder](references/show-the-founder.md) says which view and read to show, inline where
+the host renders Economico's app, else as text.
 
 ## When the request is narrower
 
@@ -68,20 +68,21 @@ the host renders Economico's app and as text everywhere else.
 |---|---|
 | connect an agent, log in, pick or create a business, run headless | [connect](references/connect.md) |
 | understand how Economico works, or why something was refused | [how Economico works](references/how-economico-works.md) |
-| explore business model patterns, find reusable rights, combine offerings or prepare a bespoke contract | [business model patterns](references/business-model-patterns.md) |
+| explore business model patterns, reuse rights, combine offerings or draft a bespoke contract | [business model patterns](references/business-model-patterns.md) |
 | turn pricing (code, Stripe or a pricing page) into plans | [modeling products](references/modeling-products.md) |
 | add a customer, record a signed deal, bill or collect | [customer contracts](references/customer-contracts.md) |
 | set up vendors, process receipts or invoices from email | [explore email](references/explore-email.md), [vendor contracts](references/vendor-contracts.md) |
 | record payments, reimbursements, transfers or payment corrections | [payments](references/payments.md) |
 | choose an account for a cost or a revenue line | [accounts](references/accounts.md) |
 | set the company profile, bank accounts, cards, legal identity, founders' shares or the cap table | [company setup](references/company-setup.md) |
+| import existing books | [import](references/import.md) |
 | check the books after a change | [verify](references/verify.md) |
 | see a statement, the contracts or who owes what | [show the founder](references/show-the-founder.md) |
 | write an investor update | [investor update](references/investor-update.md) |
 
 ## What is not available today
 
-Say so plainly instead of approximating: there is no standing Stripe sync, no email listener and
+Say so plainly, never approximate: there is no standing Stripe sync, no email listener and
 no bank feed (you gather facts with your own access and record them); no planning scenarios or
 forecast overlays; no stock options; no tax returns or filings. Economico never moves money, sends
 an invoice or signs anything; it records what happened elsewhere.

@@ -102,9 +102,29 @@ preset, or to widen the membership.
   in again.
 - A business missing from `businesses`: it was not approved for this connection. Reconnect and
   tick it on the consent screen; approving another business never widens an existing grant.
-- `plan_required` has two causes. With `details.through`, the business has used Solo's monthly
-  event allowance: nothing was recorded, and the limit is temporary. Tell the founder the limit
-  (`details.included` events, `details.used` already used) and the reset date (`through`), then
-  retry after `through`, or once they upgrade to Startup or accept paid extra events; reads and
-  exports keep working meanwhile. Without it, the command is a Startup feature (shared views and
-  extra members); nothing else in this skill needs it.
+- `plan_required` has two causes. With `details.through`, the business has used its monthly
+  event allowance: nothing was recorded. `details.reason` says why. `solo_limit`: Solo's
+  allowance; tell the founder the limit (`details.included` events, `details.used` already used)
+  and the reset date (`through`), then retry after `through`, or once they upgrade to Startup or
+  accept paid extra events. `plan_cancelled`: Startup was cancelled, or Solo's extra events were
+  turned off; the extra events so far were billed then, and until the plan ends
+  (`details.endsAt`) only `details.allowed` events in each billing period are allowed (the
+  included events, or more in the period the cancel billed a started block); retry after
+  `through` (the next period's included events) or after `endsAt`, when the business is on Solo
+  (`details.after: "solo"` for Startup). Before a batch, `business {action: "meter"}` shows the
+  same ceiling as the period's `allowed` while the cap holds. Tell the founder; the billing page
+  says whether the plan can be kept: once the extra events billed then are paid (for monthly Startup whose cancellation billed
+  extra events, keeping it takes a new Startup agreement from the end; a first-year YC price cannot
+  carry over, so that plan ends as scheduled), and a kept plan stays at its included events until
+  the settled period ends. Any new paid plan (Startup, extra events, a switch or that new
+  agreement) starts only once every invoice from Economico is paid; the billing page says so.
+  `usage_settled`: Startup or Solo's extra events were kept after a cancel; retry after `through`.
+  With `details.closesAt`, the business is set to close then (its owner approved closing it): tell
+  the founder, and do not wait for `endsAt` or suggest keeping or upgrading the plan; the owner can
+  stop the closing at `/account/cancel` until then. Reads and exports keep working meanwhile, and
+  upgrading too unless the business is set to close. Without
+  `details.through`, the command is a Startup feature (shared views and extra members); nothing
+  else in this skill needs it.
+- `validation` with `details.reason: "economico_delivers_plan_invoices"`: you tried to record a
+  bill on Economico's own plan contract. Nothing was recorded. Economico's invoices arrive in the
+  books by themselves; never record or import them. Pay one that is owed with `payments.record`.
