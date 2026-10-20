@@ -22,7 +22,7 @@ interruption until the review point:
 |---|---|---|
 | `Business` | Which business to write to (see [connect](connect.md)) | A sandbox, when the only business is the real one |
 | `Access` | What you may read: this repository, Stripe, the mailbox, anything else (Ramp, Mercury, a pricing page); multi-select, from what is connected | Everything connected |
-| `History` | How far back to record: "from today" (just the model), or "since <date>" (the model plus past invoices, receipts and payments) | From today |
+| `History` | How far back to record: "from today" (just the model), or "since <date>" (the model plus past invoices, receipts and payments; history dated before the business joined is a free [import](import.md)) | From today |
 | `Recording` | Whether you may record after review without asking again | Record after I approve the model |
 
 Skip any question the founder's request already answers. Missing access is not a blocker: work

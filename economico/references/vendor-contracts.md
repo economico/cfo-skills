@@ -4,6 +4,10 @@ Model what the company receives under each vendor agreement. A hosting service, 
 or domain registration is a right; an invoice, bank payment or personal-card charge is not a
 separate right. Payment method must not change the vendor's agreement or price.
 
+Economico itself is the one vendor never to model: its plan is already a contract in the books,
+and its invoices arrive there by themselves. Do not record or import an Economico invoice; pay one
+that is owed with `payments.record`.
+
 ## Establish the agreement
 
 Create/reuse the vendor party and preserve source terms, order forms and receipts with

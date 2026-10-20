@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.10.2 (2026-10-20)
+
+- Before a batch, `business {action: "meter"}` shows the same ceiling as the period's `allowed` while the monthly cap holds; the connect reference says the billing page tells the founder whether a cancelled plan can be kept.
+- Verifying history: while derived contract values are still catching up, `events verify` returns `ok: false` with empty `diffs` and a `pending` list. The core state matched; only a non-empty `diffs` is a real difference.
+
+## 1.10.1 (2026-10-19)
+
+- Bringing in a contract from before the business joined: Economico's daily schedule never invoices its past periods. It records only what falls due after the contract is recorded, however long after signup that is, so the agent imports every earlier invoice, service period and expiry from the old books without duplicates.
+- Economico's own plan invoices arrive in the books by themselves: the import, connection and vendor references say never to record or import them, and recording one is refused (`validation`, `details.reason: "economico_delivers_plan_invoices"`).
+
+## 1.10.0 (2026-10-18)
+
+- Bring in existing books free: a new import reference explains that history recorded at its own dates, before the business joined Economico, is a historical import. It does not count toward the monthly events and uses the one-time import allowance; the agent reads `business {action: "imports"}` for the cutoff and what is left, and each receipt says `imported: true`. Older packs work too: their history is imported the same way when it is dated before the business joined.
+
 ## 1.9.4 (2026-10-17)
 
 - Add OpenAI plugin metadata and MCP configuration alongside the Claude plugin. The skill folders and existing installation paths are unchanged.

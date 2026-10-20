@@ -19,7 +19,7 @@ parameters and a runnable example; dates are `YYYY-MM-DD` or UTC instants, `unti
 | What is owed to owners or card issuers? | `activity_claims` for the originating agreement, plus party footprint/native balance reads | Identified 2135/2190 funding claims and reimbursements; these are not included in aging |
 | What is open on one contract? | `reports run activity_claims` with `contract_id` | Original/outstanding per claim component, with its kind; `"0"` once settled or converted |
 | What remains deferred or prepaid? | `reports run balance_sheet`, supported actual `recognition`/`amortization` detail | Billed value less evidenced consumption; payment alone never proves earning or expense |
-| Is the history intact? | `events {action: "head"}` and, over REST, `POST /v1/events/verify` | Verification ok |
+| Is the history intact? | `events {action: "head"}` and, over REST, `POST /v1/events/verify` | Verification ok. While derived contract values are still catching up, `ok` is `false` with empty `diffs` and a `pending` list: the core state matched. A non-empty `diffs` is a real difference |
 
 Priced ownership vesting supports `activity_plan` and timers for its declared grant schedule;
 service forecast and automatic recognition/backfill remain limited. Recurring metrics and
