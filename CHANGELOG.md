@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.11.0 (2026-10-22)
+
+- Explore the books before connecting your own: plugin listings show real TinyCRM demo views for recurring revenue, overdue invoices and ownership, with prompts to try.
+- The ChatGPT upload includes five tested positive cases and three negative cases. Reviewer credentials stay in the private submission portal.
+- Claude plugin metadata includes documentation, support, privacy, terms and an icon; the connector submission kit supplies the screenshot carousel and paired prompts.
+- The ChatGPT skill explains priced service rights, contract acceptance, separate billing and recognition, and component-qualified payment allocations, with a fixed-price authoring example.
+- The shared Claude and Codex skill preserves bank-deposit source identities, uses permitted workspace file tools for evidence, separates completed-service recognition from billing cadence, and saves evidenced plans before the first customer, keeping future-launch offers off sale.
+- Company setup follows published issuer links for account branding. Founder review shows the model before asking material judgments, keeps missing ownership facts as gaps, and completes discovery, recording and verification in the foreground with a self-contained report.
+- Keep unidentified card issuers unknown, distinguish financial providers from vendors, and repeat complete statement tables in the final response.
+- Settle only unanswered scope choices before discovery, ask for model review after the brief and preview, and use the founder's stated business date for recording and reports.
+- Receipt reviews discover zero-charge notices and explain why they were skipped; missing ownership and registration evidence is requested in the final message instead of offered as factual multiple-choice questions.
+- Final reports list material decisions directly and format monetary amounts from ledger decimals; completed-service recognition remains delivery even when billing is monthly.
+- Explain native books and returned indicative totals in investor updates, founder views and account setup, including missing rates and historical provenance.
+- Add an optional market-rate check for independently evidenced payment amounts; it never supplies an amount or posts an invented difference.
+
+## 1.10.3 (2026-10-21)
+
+- The ChatGPT plugin package can be used without an existing business: someone without one creates it on the free Solo plan while connecting. Its skill and README say so. The Codex and Claude skills are unchanged.
+
 ## 1.10.2 (2026-10-20)
 
 - Before a batch, `business {action: "meter"}` shows the same ceiling as the period's `allowed` while the monthly cap holds; the connect reference says the billing page tells the founder whether a cancelled plan can be kept.

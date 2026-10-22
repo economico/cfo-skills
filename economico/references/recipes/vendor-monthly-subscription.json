@@ -1,6 +1,6 @@
 {
   "name": "Vendor monthly subscription, billed in advance",
-  "description": "Synthetic StudioCloud Creator agreement: USD 29 each month from January 1, with no fixed end date. January billing, bank payment and elapsed-service recognition remain independent; February billing proves the next monthly period costs another USD 29. No customer recurring-value metrics are declared.",
+  "description": "Synthetic StudioCloud Creator agreement: USD 29 each month from January 1, with no fixed end date. January billing, bank payment and elapsed-service recognition remain independent; February billing proves the next monthly period costs another USD 29. No customer recurring-value metrics are declared. This source explicitly establishes continuously available access. Its ratable recognition is not a default for monthly bills: an agreement requiring recognition at completed service uses delivery recognition instead.",
   "setupAt": "2026-01-01T00:00:00Z",
   "recordedAt": "2026-02-02T00:00:00Z",
   "steps": [

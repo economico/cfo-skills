@@ -38,9 +38,11 @@ them to the commands they justify, so the books can be audited from the first da
 For an email, store the attachment if the invoice is a PDF; otherwise store a text rendering with
 the headers that identify it (From, Date, Subject, Message-ID) followed by the body.
 
-Encode with the plainest tool: write the text to a scratch file in the workspace, then
-`base64 < file.txt`. No script interpreter is needed, so a host that refuses one does not stop
-the work; any other refusal is the founder's to decide. The text must be UTF-8: a refusal
+Use the host's file-writing tool to create a UTF-8 file directly in the current workspace,
+then encode it with `base64 < file.txt`. Use an already permitted equivalent when a scratch
+path or shell command is refused; a denied method does not make the accounting operation
+unavailable. Ask the founder when the operation itself requires permission, rather than
+repeating a denied shell command. No script interpreter is needed. The text must be UTF-8: a refusal
 saying the source is a binary office file usually means it was not, and a Latin-1 encoder
 mangled a `•` or an em dash.
 

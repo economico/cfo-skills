@@ -43,7 +43,8 @@ _As of <date>. Built by <agent> from <sources read>. Economico business: `<slug>
 | Ada Park | common stock | 8,000,000 | 100% | $800 at par | stock purchase agreement, certificate of incorporation |
 
 <Legal form and jurisdiction, and any SAFE or note outstanding. "None found" is not an answer
-for a company: say which document is missing and ask for it.>
+for a company: name the missing document as an evidence gap and request it in the final
+message. Do not turn missing holder names or share counts into a question-tool choice.>
 
 ## Run rate today
 

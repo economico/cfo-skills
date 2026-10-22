@@ -4,7 +4,7 @@ A founder answers a question fastest when it arrives as a choice: what is being 
 you recommend and why, and the options with yours first. Ask only for **decisions**. Facts are
 yours to find: a price, a customer or a vendor that the code, Stripe or the mailbox can tell you
 is never a question.
-A missing source is not a question either: when you need a document only the founder has (the
+A missing source is not a multiple-choice question either: when you need a document only the founder has (the
 incorporation papers, a signed order form), list it as a gap in the brief and name it in the
 final message, rather than asking for it with options that decide nothing.
 
@@ -23,6 +23,11 @@ the same way. One call carries up to four questions, and each question has:
 
 The host adds an "Other" answer for free text, so do not add one. Group related questions into
 one call rather than asking them one at a time; a round of questions is one interruption.
+Before sending the call, check every question: it decides an actual choice, its first option
+is marked `(recommended)`, and the question explains why that option fits the evidence.
+Use the literal suffix `(recommended)` on the first label. Missing documents, issuer identities
+or quantities stay gaps rather than choices that guess facts; never recommend estimated shares
+or investment amounts when ownership documents are missing.
 
 Options come from what you can see. Offer the businesses `businesses {action: "list"}` returned,
 the integrations actually connected, the dates the sources actually cover. An option you cannot
@@ -46,9 +51,14 @@ cannot be undone by a later command, such as writing to a real business instead 
 | When | Questions | Reference |
 |---|---|---|
 | Before discovery | Which business, what you may read, how far back, whether to record after review without asking again | [first session](first-session.md#0-agree-the-scope-one-round-of-questions) |
-| At the review | The three to five judgments that change the numbers, including every disagreement between sources you could not settle ([reconcile](first-session.md#2-reconcile)) | [first session](first-session.md#3-propose-write-business-modelmd) |
+| At the review | Material modeling judgments made during discovery that the founder has not already settled, including source disagreements you could not settle ([reconcile](first-session.md#2-reconcile)) | [first session](first-session.md#3-propose-write-business-modelmd) |
 
 | A later session, founder present | The open questions in `business-model.md`, and only the scope questions its standing answers do not settle | [a later session](first-session.md#a-later-session) |
+
+At the model review, options such as "I'll provide the details" and "No paperwork yet" only
+solicit facts; they do not decide a modeling judgment. Drop that question and disclose the
+missing evidence in the brief. In particular, missing ownership papers, holder names and share
+counts remain an ownership gap, rather than a question asking the founder to supply them.
 
 Everything else runs without interruption between those rounds. A question the brief already
 answers is not asked again: an answer the founder gave once is a standing answer until they

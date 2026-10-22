@@ -1,6 +1,7 @@
 {
   "mcpServers": {
     "economico": {
+      "type": "http",
       "url": "https://economi.co/mcp"
     }
   }

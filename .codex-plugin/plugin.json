@@ -1,7 +1,7 @@
 {
   "name": "economico",
-  "version": "1.10.2",
-  "description": "Keep a founder-run company’s books in Economico: model contracts, record invoices and payments, reconcile receipts, and draft investor updates.",
+  "version": "1.11.0",
+  "description": "Economico is the agentic finance function for ambitious founders who want the financial rigor of a company with a finance department, without hiring one.",
   "author": {
     "name": "Economico",
     "email": "hello@economi.co"
@@ -37,8 +37,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Economico",
-    "shortDescription": "Books for founders",
-    "longDescription": "Use your agent to model your business in Economico, record customer and vendor contracts, invoices, payments and receipts, and draft investor updates from double-entry books. Requires an Economico account. Code, Stripe and email discovery use access you separately authorize in your agent. Economico records events that happened elsewhere; it does not move money, send invoices, sign agreements or file taxes.",
+    "shortDescription": "Your agentic finance function",
+    "longDescription": "Economico is the agentic finance function for ambitious founders who want the financial rigor of a company with a finance department, without hiring one.\n\nEconomico isn’t another copilot or dashboard to learn. Your own agent connects over MCP and does the work, recording each business’s history in a hash-chained, append-only ledger. The agreement is recorded first, so most reconciliation never has to happen.\n\nThe result is one connected history of what you charge, what each customer agreed to, what they used and what it costs to serve them. Financial statements, cash, runway and revenue all come from that history. Ask what your burn is, then ask which customer, agreement or assumption changed it.\n\nConnect your agent and explore a fictional SaaS company before bringing your own books. You choose the business and permissions. Code, Stripe and email access require separate authorization in your agent. Economico records evidence you provide; it does not move money, send invoices, sign agreements or file taxes. Burn and runway depend on the records and assumptions supplied.",
     "developerName": "Economico",
     "category": "Finance",
     "capabilities": [
@@ -50,12 +50,17 @@
     "privacyPolicyURL": "https://economi.co/privacy/",
     "termsOfServiceURL": "https://economi.co/agreements/",
     "defaultPrompt": [
-      "Help me set up my company’s books in Economico.",
-      "Record a vendor invoice in Economico.",
-      "Draft my monthly investor update from my Economico books."
+      "Show my revenue, costs and profit for last month.",
+      "What do customers still owe us?",
+      "Why does my profit differ from cash?"
     ],
     "logo": "./.claude-plugin/icon.png",
-    "composerIcon": "./.claude-plugin/icon.png"
+    "composerIcon": "./.claude-plugin/icon.png",
+    "screenshots": [
+      "./assets/screenshots/saas.png",
+      "./assets/screenshots/receivables.png",
+      "./assets/screenshots/ownership.png"
+    ]
   },
   "extensions": {
     "com.openai": {

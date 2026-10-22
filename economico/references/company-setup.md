@@ -21,14 +21,26 @@ The functional currency was chosen at signup. Check it before the first entry: w
 still empty, the owner can correct it with `business.change_functional_currency`
 (`fromCurrency`, `toCurrency`, `reason`). Once anything is recorded it is fixed. A company that
 moves to another economy is set up as a new business in that currency, not converted. Money in
-other currencies is fine either way: each amount lives in its own currency's ledger.
+other currencies is fine either way: monetary positions retain native detail; revenue and expense
+may already be booked in the functional currency at a frozen transaction rate. Empty-book
+correction needs no rate. [Indicative totals](indicative-currency.md) explain comparison values
+without changing those books.
 
 ## Financial accounts
 
-Register one financial account per real place money sits, before anything pays or is paid. First
-register each bank, card issuer, wallet provider or processor as a party, then link its account
-with `providerPartyId`. The account registration classifies that party as a provider. Ask for
-the last four digits and network when they identify the account; never record the full number.
+Register one financial account per real place money sits, before anything pays or is paid.
+When evidence identifies its bank, card issuer, wallet provider or processor, register that
+party and link `providerPartyId`; account registration adds the `provider` category. Add
+`vendor` only for an evidenced vendor-service relationship, such as processing fees.
+
+A card's network and last four digits identify the card, not its issuing institution. Visa
+and Mastercard are networks; never guess a bank from them. Company-card settlement still
+requires an issuer party for its funding claim. If the institution is unknown, use a clearly
+labelled account-scoped role such as "Unidentified issuer of company Visa ••4242", link it as
+`providerPartyId`, and disclose the missing institution in the brief. Do not invent its legal
+name, URL or branding, or merge unidentified issuers across accounts. The role is a provider,
+not a vendor without separate service evidence. For other accounts with an unknown provider,
+omit `providerPartyId`. Retain evidenced account/network/last4; never record a full card number.
 
 ```json
 { "name": "parties.create", "input": { "partyId": "mercury", "name": "Mercury" } }
@@ -42,6 +54,9 @@ the last four digits and network when they identify the account; never record th
 - The kind picks the account when `glAccountCode` is omitted: a bank account posts to `1110`,
   `kind: "card"` to `2190` card payable, `kind: "wallet"` to `1310`. A card on `1110` or `1310`
   is refused: a card is a liability, never cash.
+- Read `reports run balances` without an explicit currency for shared `payment_accounts`
+  native/indicative totals. Keep bank/wallet cash apart from card debt and related-party funding;
+  report missing rates as an unavailable combined total, with every native balance accessible.
 - Checking and savings at the same bank are two accounts. One account reachable by several rails
   is one account.
 - These are bookkeeping records. Economico does not connect to them, read balances or move money.
@@ -68,13 +83,17 @@ the last four digits and network when they identify the account; never record th
 - **The account's look.** The workspace draws each account as what it is: a card in its
   issuer's color, a bank account under its bank's band, a wallet in its token's color. Research
   the issuer (the bank, the card issuer — PostFinance, Mercury, Brex — or the token, such as
-  Circle for USDC): its brand or press page names the primary color. Set it as `brandColor`
+  Circle for USDC): start from the issuer's homepage and follow its brand or press links,
+  or use an available web search tool. After a 404 on a guessed path, return to the homepage
+  and follow published links. Its brand page names the primary color. Set it as `brandColor`
   (`#RRGGBB`) when you register the account, or later with `accounts.update`. When you can
   fetch the issuer's logo as image bytes (a PNG, JPEG or WebP from its press kit, or its
   `apple-touch-icon`; never SVG; at most 256 KiB), receive it with `documents.receive` kind
   `image` and set the returned `documentId` as `logoDocumentId`. Reuse one logo document for
   every account at the same issuer. If you cannot find either, leave them unset rather than
-  guess; `null` clears a wrong one.
+  guess; `null` clears a wrong one. Before finishing account setup, check each issuer's
+  branding with the available web tools, save its evidenced color and read back the accounts.
+  If branding cannot be established, report that gap.
 
 ```json
 { "name": "documents.receive", "input": { "kind": "image", "contentBase64": "iVBORw0KGgo…", "title": "Mercury logo" } }
@@ -87,8 +106,10 @@ the last four digits and network when they identify the account; never record th
   a supported priced provider service; do not pass payment facts into a vendor activity.
   See [payments](payments.md).
 - An evidenced owner cash contribution uses the [cash contribution flow](#cash-contributions-without-new-units),
-  including when it establishes the bank's initial balance. Record the contribution and its
-  independent payment with their source identities; a journal would lose the payment/claim link.
+  including when it establishes the bank's initial balance. Reserve the supplied bank-deposit
+  source ID for `payments.record`; give the contribution authorization/exercise its own
+  distinct identity when none was supplied for it. Link both to their evidence. A journal
+  would lose the payment/claim link.
   An opening `journal.post` is only for an agreed carry-forward of pre-existing books, not a
   substitute for supplied transaction facts. Do not replay those carried-forward transactions.
 
@@ -99,8 +120,8 @@ accounting framework, or registering for sales tax are separate commands
 (`business.change_legal_name`, `business.change_legal_form`, `business.set_registration`,
 `business.change_fiscal_year`, `business.elect_accounting_framework`,
 `business.register_sales_tax`). Each needs the owner's interactive session and a
-`source_document_id` naming the filing or certificate. Never guess a registration number: ask for
-it exactly as printed. A headless agent cannot run these.
+`source_document_id` naming the filing or certificate. Never guess a registration number: name the missing filing as a gap and request it in the
+final message. A headless agent cannot run these.
 
 These commands appear in `catalog list` only when the business's owner approved this connection
 with the Owner preset (the default, and the only choice on the Solo plan), itself bounded by the
@@ -226,9 +247,9 @@ recipes for the legal form under `ownership`. The rules that matter:
 - A SAFE is financing (`fund_liability`, 2240) until it converts; it is not equity and not
   revenue.
 - Cash received never implies a share count; the share purchase agreement does.
-- The quantities come from the formation documents (the certificate, the stock purchase
-  agreements, the operating agreement) or from the founder. When none of them says, ask; do not
-  leave the cap table empty in silence.
+- The quantities come from formation documents (the certificate, stock purchase agreements,
+  operating agreement) or facts supplied by the founder. Missing quantities remain an ownership
+  gap in the brief; request the missing evidence in the final message.
 - Stock options, option pools and tax elections (83(b)) are not modeled; say so.
 
 `business {action: "get"}` returns, under `ownership`, the equity heading and the ownership
@@ -255,16 +276,20 @@ documents in place of its synthetic ones:
 5. **Vesting** uses `vest_units` period consequences of that same right: a one-year cliff
    followed by a monthly schedule. `grantConsequence` names the original issuance; it must
    identify exactly one grant. Give both schedules `serviceEvidence: "elapsed_time"` only
-   when the agreement authorizes vesting through elapsed service. Put the evidenced tranche
-   quantities in terms. When the grant is not a multiple of the monthly tranche, the period
+   when the agreement authorizes vesting through elapsed service. Bind each fixed tranche to
+   its evidenced term: `quantity: "term:cliffQuantity"` for the cliff and
+   `quantity: "term:monthlyQuantity"` for monthly vesting, with each founder's quantities in
+   contract term overrides. A `fact:` quantity needs a new observation every period and keeps
+   future vesting contingent even with elapsed service. When the grant is not a multiple of the monthly tranche, the period
    that leaves less than a full tranche vests exactly what remains (1000 at 334 a month vests
    334, 334, 332), so round the tranche up. Restricted units are outstanding from
    issuance. The timer records elapsed tranches through the ordinary economic command;
    `activity_plan` previews them as `fixed`, keeps missing evidence contingent and refuses
-   projected over-vesting. A manual recording uses the exact period and its final instant,
+   projected over-vesting. Read that preview before completion: evidenced scheduled tranches
+   must be `fixed`; resolve missing term bindings or report genuine evidence gaps. A manual recording uses the exact period and its final instant,
    with economic and service evidence, after the due date.
 6. Check with `reports {action: "run", kind: "cap_table"}`: authorized, outstanding, and each
-   founder's quantity, vested and unvested units. Show it to the founder as a table.
+   founder's quantity, vested and unvested units. Show it to the founder as a table, and repeat that table in the final response.
 
 Shares without vesting use `issue_units` with `restricted: false` and no vesting consequences. Units
 issued for no consideration use an explicit zero price and matching zero consideration, as in

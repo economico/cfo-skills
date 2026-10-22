@@ -7,30 +7,43 @@ exist. The founder should finish the session able to see their business on one p
 books, with every number traceable to a source.
 
 Do not install a generic chart of products. Shape the model around what this company actually
-does.
+does. Use the session's stated business date for the model and dated reads; the host's wall
+clock does not change that date.
+
+The question rounds are scope before discovery, then review after the brief is written,
+`model_preview` passes and the founder has seen the model. During discovery, keep gaps and
+judgments in the brief rather than inserting another question round.
 
 ## 0. Agree the scope (one round of questions)
 
 First look for `business-model.md` in the founder's repository. If it is there, an earlier
 session wrote it: this is [a later session](#a-later-session), which starts from it.
 
-Read `businesses {action: "list"}` and note which integrations you can reach, then ask once, in
-one round, as in [asking the founder](asking-the-founder.md), and work without further
-interruption until the review point:
+Read [asking the founder](asking-the-founder.md) before the first question-tool call.
+Extract the scope already settled by the request before composing any questions. A named
+business settles the target; "you can read" a source grants that access. Use those answers
+without reconfirming or offering to narrow them. Ask only the missing choices below. When the
+business and source access are given, the scope round needs only history and recording choices
+that remain unanswered.
+
+Read `businesses {action: "list"}` to verify the target and note which integrations you can reach.
+Do not read Stripe or mail just to find a date for the history question: offer "from today"
+versus "since the evidence begins". Ask the remaining scope questions in one round, then work
+uninterrupted until the review point:
 
 | Header | Decision | Usually recommend |
 |---|---|---|
 | `Business` | Which business to write to (see [connect](connect.md)) | A sandbox, when the only business is the real one |
-| `Access` | What you may read: this repository, Stripe, the mailbox, anything else (Ramp, Mercury, a pricing page); multi-select, from what is connected | Everything connected |
+| `Access` | Only additional sources whose access the request has not granted; name what extra access is needed | The additional source needed to resolve an evidenced gap |
 | `History` | How far back to record: "from today" (just the model), or "since <date>" (the model plus past invoices, receipts and payments; history dated before the business joined is a free [import](import.md)) | From today |
 | `Recording` | Whether you may record after review without asking again | Record after I approve the model |
 
-Skip any question the founder's request already answers. Missing access is not a blocker: work
-with what you have and list the gaps in the brief.
+Missing access is not a blocker: work with what you have and list the gaps in the brief.
 
 ## 1. Discover (read-only)
 
-Run the three discoveries. They are independent; run them in parallel if you can.
+Run the three discoveries in this session. Parallelize independent tool reads, rather than
+spawning background agents or scheduling follow-ups.
 
 | Source | Reference | You come back with |
 |---|---|---|
@@ -55,9 +68,11 @@ came from them.
 
 The sources disagree more often than not. Resolve each disagreement explicitly:
 
-- **Code vs Stripe.** The code enforces limits (included usage, seat caps); Stripe holds prices.
-  A plan in code with no Stripe price is either free or not launched. A Stripe price with no plan
-  in code is legacy or custom: make it a question at the review.
+- **Code vs Stripe.** The code enforces limits (included usage, seat caps); Stripe holds its
+  configured prices. With no Stripe price, use complete prices evidenced in code or published
+  pricing rather than assuming the plan is free. Save prelaunch plans as reusable off-sale
+  templates; no customers or checkout yet does not justify omitting their evidenced terms.
+  A Stripe price with no plan in code is legacy or custom: make it a question at the review.
 - **Stripe vs signed terms.** A signed order form wins over a Stripe price for that customer.
   Stripe is evidence of what was charged, not of what was agreed.
 - **Email vs code.** A vendor in the code (the hosting provider, the model API, the email API)
@@ -93,14 +108,21 @@ not a courtesy for the review. It checks the proposal and computes the run rate 
 a refusal is a mistake in the brief, so fix the brief and preview again. Record nothing until it
 passes.
 
-Stop here for the founder's review unless they told you to proceed. The review message shows
-the model from the preview: the price book, the cost table and the run-rate line, as in
-[show the founder](show-the-founder.md). If they told you to proceed, the price book opens the
-final message instead. Keep the review short, then ask the three to five judgments that change the
-numbers as one round of questions (a plan you treated as legacy, a vendor you classified as cost of
-revenue, a customer whose price differs from the plan), each with the reading you recommend first
-([asking the founder](asking-the-founder.md)). When told to proceed, take your recommendations and
-list them in the final message.
+Before asking for the founder's review, show the preview in an assistant message: the actual
+price-book table, cost table and one run-rate line per native currency, as in
+[show the founder](show-the-founder.md). Writing the brief or calling the preview tool alone
+does not show these views in a terminal. The founder must see what they are deciding before
+the question tool is called.
+
+Then ask the founder to review the material modeling judgments you made, such as a vendor's
+expense function, how a legacy plan is represented or a customer's negotiated terms, together
+with unresolved source disagreements. Exclude choices the founder already settled. Use one
+round of up to four questions, each with its recommended reading first ([asking the founder](asking-the-founder.md)).
+A missing document or fact is a disclosed gap, not a decision: missing ownership evidence never
+justifies recommending a guessed owner, share count, par value or investment amount. If the model required no material
+judgment, ask whether to record the displayed model with those gaps or revise it. When already
+told to proceed without review, take your recommendations, open the final message with these
+views and list the decisions you took.
 
 ## 4. Record, in this order
 
@@ -119,9 +141,11 @@ session replays instead of duplicating.
    or slug>`, `ven_<domain slug>`, `founder_<name>`.
 4. **Source documents.** Every order form, terms page, receipt and invoice you will cite, with
    `externalId` set to its source identity. See [evidence](evidence.md).
-5. **Rights and templates.** One template per actual agreement shape, reused across equivalent
-   agreements. Start with the supported [modeling guidance](modeling-products.md#recipes).
-   Name rights by what the party receives; keep billing, recognition and payment separate.
+5. **Rights and templates.** Save the source-backed price book with `templates.create`,
+   including prelaunch plans with `definition.plan: "off_sale"`. Read each saved template back and match its returned
+   ID, price and sale status to the brief before proceeding. Reuse a template across equivalent
+   agreements. Follow [modeling guidance](modeling-products.md#recipes) for the command shape;
+   name rights by what the party receives and separate billing, recognition and payment.
 6. **Contracts.** Bind each real agreement at its actual start date, with source documents and
    its party roles. Accept through `contracts.accept` with evidence. A wrongly dated unused
    draft can be discarded and recreated; accepted history is preserved.
@@ -152,36 +176,48 @@ aging and the cap table to the founder as you read them, inline or as text ([sho
 
 ## Finish
 
-Open the final message with the views: the price book table (plan, price, billing), the contracts
-table (party, customer or vendor, template,
-status), the income statement (its flow line and its table), the balance sheet table, the cap table as a table (one row per holder) and
-the open items from the aging, inline or as text
-([show the founder](show-the-founder.md)). A sentence that quotes the totals is not the view.
-Before the final message, update "For the next session" in the brief: the standing answers,
-the rules the founder set, and the questions still waiting for them
-([template](business-model-brief.md)).
+Complete the foreground work and verification, then reread
+[show the founder](show-the-founder.md) immediately before composing the final response.
+Build the response from the verified reads and brief. Before sending, check it contains:
 
-Then report in five lines or fewer: the business
-written to, what was recorded (counts of templates, contracts, occurrences, documents), the
-headline numbers, the open gaps, and the one thing the founder should do next (usually: grant email or Stripe access that was missing, or confirm a
-judgment).
+- Price-book and contract tables, with prices, billing, parties and status.
+- Income-statement flow and table, balance-sheet table and balancing check, with period and currency.
+- One ownership table with each holder's instrument, share or unit quantity, ownership
+  percentage and vested units together in that holder's row; applicable capital balances.
+  Build it from `cap_table`, with the [table shape](show-the-founder.md#the-text-versions).
+  Explain missing or inapplicable reports.
+- Open receivables and payables, material decisions and remaining evidence gaps.
+
+Earlier messages and the brief do not replace these final views. Update "For the next session"
+in the brief with standing answers, founder rules and open questions ([template](business-model-brief.md)).
+End with a short paragraph naming the business, recorded work and the founder's next action.
 
 ## A later session
 
 A founder who comes back should not be asked again what they already answered. When
 `business-model.md` exists:
 
-1. **Read it first**, "For the next session" before anything else. Its business slug is the one
-   to write to (still check `businesses` lists it; if it does not, ask). Its standing answers
+1. **Read it first**, "For the next session" before anything else. Load the complete brief
+   with the host's file-reading tool (`Read` in Claude Code), including its standing answers.
+   When no file-reading tool is offered, read the complete file with the available method.
+   Use the business date stated
+   in this request for recording and reports: "Today is <date>" pins that business cutoff, even
+   when the host date is later. Do not advance an explicit historical cutoff from the host clock,
+   record catch-ups after it or call future invoices overdue. Its business slug is the one to
+   write to (still check `businesses` lists it; if it does not, ask). Its standing answers
    are this session's scope: ask the scope round only for what they do not cover or what the
    founder's request changes.
-2. **Do not relitigate.** A judgment under "Judgments and gaps" stands, whoever made it, and a
-   rule the founder set applies to everything new. Change one only when the founder asks, or when
-   new evidence contradicts it; then say which and why.
-3. **Ask what is waiting.** The open questions are the first round of questions when the
-   founder is present ([asking the founder](asking-the-founder.md)); when they are away, keep
-   them open. Every one has a recommended option first, a gap only the founder can fill
-   included: recommend what you would record if they did not answer, and say why.
+2. **Keep confirmed decisions.** A judgment the founder confirmed stands, and a rule they set
+   applies to everything new. Change one only when the founder asks or new evidence contradicts
+   it; then say which and why.
+3. **Review unconfirmed decisions.** When the returning founder asks what needs deciding, put
+   material modeling judgments made in their absence through one recommended-choice round
+   ([asking the founder](asking-the-founder.md)). Tie each choice and reason to the specific
+   plan, customer, vendor or payment in the brief. An autonomous judgment is not a standing answer
+   confirmed by the founder. Otherwise ask only genuinely open choices; reuse confirmed answers.
+   When they are away, keep open decisions in the brief. Missing documents, identities and
+   quantities remain evidence gaps; request them in the final message, without question-tool
+   options or a recorded default.
 4. **Read the books for what exists**: `subjects`, `parties` and `documents` by `externalId`
    and `sourceFactId`, and extend them. Record only what is new since the last session, with the
    same idempotency keys, so a rerun replays instead of duplicating.

@@ -28,7 +28,7 @@ the background reads the session afterwards, and the views are what they read. A
 | Phase | View | Read | Text version |
 |---|---|---|---|
 | Propose | The model before anything is recorded (in the review message; when told to proceed, at the top of the final message) | `reports run model_preview` with the brief's tables as `model` | The price book and the cost table from `business-model.md`, plus one run-rate line per native currency (money in, money out, per month) from the preview's `run_rates`; keep unknown prices, usage and tax notes visible |
-| Record | The price book as recorded | `subjects {action: "list", type: "template", plan: "on_sale"}` | One row per plan: plan, charge, price, when it bills |
+| Record | The price book as recorded | `subjects {action: "list", type: "template", plan: "on_sale"}`; read explicitly planned `off_sale` templates separately | One row per plan: plan, sale status, charge, price, when it bills |
 | Record | Who the business trades with | `parties {action: "list"}` | One row per party: name, customer or vendor, contact |
 | Record | The contracts as they land | `subjects {action: "list", type: "contract"}` | One row per contract: party, customer or vendor, template, status, since |
 | Record | One contract that needed a judgment | `subjects {action: "get", type: "contract", id}` | The contract’s rights, agreed price and separate billing/recognition timing |
@@ -45,6 +45,24 @@ views once, after contracts are recorded, not after every command, and repeat th
 at the top of the final message with the prove views. In the app, the price book reads each
 charge's price from the charge itself, so it shows the prices the templates were built on. Show the prove views in the
 order above; they are the "What the books say now" section of the brief, as pictures.
+
+For mixed currencies, follow [native and indicative currency totals](indicative-currency.md).
+Present recorded statements and native groups beside a labelled returned indicative view,
+including requested/observation dates and provenance. Keep period segments separate. If rates
+are missing, show native detail and the missing pairs/days instead of a combined total. Use
+supported returned metrics; disclose unsupported inputs and incomplete books.
+
+## Prepare the final response
+
+List the material decisions you took for the founder in the final response, with the reason
+for each. A section titled "Decisions made for you" can be short: classification choices,
+how conflicting sources were resolved, unknown-provider roles and other modeling judgments.
+Saying decisions are saved in the brief does not show them to the founder.
+
+Before writing money values, read the ledger's `decimals` and convert minor-unit strings to
+display strings in code. For USD with `decimals: 2`, `"7000"` is `$70.00`, not `$7,000`.
+Use those converted strings consistently in statements, capital balances and narrative totals;
+a monetary account code or a report's raw integer is not a formatted currency amount.
 
 ## The text versions
 
