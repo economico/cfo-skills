@@ -18,7 +18,9 @@ an aggregate party balance for claim identity.
 
 - Company bank/wallet: settles the claim against that account's cash.
 - Company card: settles the vendor claim and creates an attributable claim owed to its issuer.
-  Register the issuer as `providerPartyId` on the account.
+  Register the evidenced issuer as `providerPartyId`. When its institution is unknown, use
+  the disclosed account-scoped issuer role in [financial accounts](company-setup.md#financial-accounts);
+  omitting the party cannot create an attributable card-funding claim.
 - Personal card/account: settles the vendor claim and creates an attributable owner claim.
   Register `ownerPartyId`; never add that owner to the vendor agreement just to describe payment.
 - Reimbursement/card-statement payment: use the company bank to settle the returned funding
@@ -61,6 +63,10 @@ USD 2,200 states `amount` CHF 2,000 and `cashAmount` USD 2,200, each as a minor-
 currency. Owner/card funding claims and unapplied residuals stay in the payment currency, and
 `payments.allocate`/`payments.unallocate` take the same two amounts for a cross-currency match.
 Never infer one amount from the other with a rate: each must come from evidence.
+
+An optional [market-rate sanity check](indicative-currency.md#optional-payment-price-check)
+compares two independently evidenced executed amounts. It supplies neither amount and never
+posts a guessed fee or difference. Missing rates leave only that comparison unavailable.
 
 When the claim is in another currency than the business's functional one, it was booked at
 its transaction date's rate, and settling it with cash in another currency realizes the

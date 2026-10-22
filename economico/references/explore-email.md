@@ -23,6 +23,11 @@ subject:(signed OR "completed:" OR docusign OR "pandadoc" OR "order form")
 "is now incorporated" OR "certificate of formation" OR "certificate of incorporation" OR "operating agreement" OR "stock purchase" OR "83(b)" OR "SAFE"
 ```
 
+For a receipt-processing task, also search `subject:("free tier" OR "no charge" OR "trial")`
+within the requested period. Read relevant notices and distinguish zero-charge usage from
+missing bills. A free-tier notice creates no payable, expense or payment; include its source
+and the reason in the skipped-items summary.
+
 Then one search per vendor found in the code (`from:(@render.com)`, `from:(@anthropic.com)`) to
 collect the full series of that vendor's receipts.
 
