@@ -8,6 +8,14 @@ Economico itself is the one vendor never to model: its plan is already a contrac
 and its invoices arrive there by themselves. Do not record or import an Economico invoice; pay one
 that is owed with `payments.record`.
 
+## Recognition follows the service evidence
+
+When the source requires recognition on completed service, including completion at a service
+month-end, declare `recognition: {"timing": "delivery"}` and record the evidenced completion.
+Do not add a ratable recognition schedule because the bill recurs monthly or is paid in advance.
+Use `ratable` only when the source establishes continuous service and elapsed-time recognition.
+The source's completion rule takes priority over a recipe for a different service.
+
 ## Establish the agreement
 
 Create/reuse the vendor party and preserve source terms, order forms and receipts with
@@ -28,19 +36,27 @@ evidenced cadence: `everyMonths: 1` for monthly or `everyMonths: 12` for annual 
 with `startTerm` bound to the actual subscription start, `endTerm` only when an end date is
 known, and `timing: "start"` for advance billing or `timing: "end"` for arrears. Set
 `offsetDays` from the billing terms. Keep service recognition independent of billing; use
-elapsed-time recognition only when the agreement establishes continuous service. See the
+elapsed-time recognition only when the agreement establishes continuous service. Explicit
+recognition on completed service uses `recognition.timing: "delivery"`, including completion
+at a month-end; monthly billing alone does not authorize `ratable` recognition. See the
 [monthly subscription recipe](recipes/vendor-monthly-subscription.json) for an open-ended,
 USD 29 monthly plan. Vendor cadence belongs in the billing schedule; `recurringValue` is
 only for customer service rights and is refused on vendor rights. If the cadence or anchor
-is unknown, request the missing terms rather than infer them from one receipt.
+is unknown, keep it as a gap and request the terms in the final message; one receipt is not a schedule.
+A month label on an invoice does not establish a calendar-month billing anchor. Preserve the
+actual invoice and payment dates; when no evidenced schedule fits them, use unscheduled billing
+for those observed facts and keep future cadence unresolved. An inferred future period must not
+make an already-issued, paid invoice disappear from the historical books.
 
 ## Record the economics, then the funding
 
 Copy the supplied invoice ID exactly into billing's `sourceFactId`, and the supplied payment
 ID exactly into the payment's `sourceFactId`. Do not rename them to match a recipe's conventions.
 Identify the right and the obligation or service period. Record delivery/usage from source
-facts; record recognition when the service is consumed and billing when invoiced. A bill can
-precede or follow recognition. An annual payment does not prove twelve months of service:
+facts; record recognition when the service is consumed and billing when invoiced. For
+`contracts.record`, supply that phase's date as `input.effectiveAt`; an envelope `effective_at`
+does not supply this required input field. Follow the validated recipe's phase inputs and read
+back the resulting statements. A bill can precede or follow recognition. An annual payment does not prove twelve months of service:
 retain prepaid value and recognize the evidenced portions under the right's ratable schedule.
 
 A paid receipt can use `receipts.record` for one new billing phase and its full same-time
@@ -71,6 +87,14 @@ Register personal accounts with `ownerPartyId`; register company cards with thei
 `providerPartyId`. A founder payment initially creates an owner claim. Reimbursement settles
 that claim with company cash and no expense. Conversion to capital requires separate evidence
 and an ownership right, never a silent choice or founder-expenses contract.
+
+## Finish the receipt review
+
+Read back the recorded contracts, expense totals, vendor claims and owner/issuer balances.
+In the final response, summarize what was recorded and what was skipped, naming each reviewed
+zero-charge/free-tier notice and why it produces no entry. Also explain excluded customer mail
+and duplicates when found. Use only notices actually read; do not invent a skipped item or
+claim the mailbox is complete after a narrow search.
 
 ## Tax and missing evidence
 

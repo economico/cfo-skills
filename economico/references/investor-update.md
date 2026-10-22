@@ -11,13 +11,19 @@ unless the founder names another.
 | Recurring revenue | `reports run saas_metrics` with `year` and `month`, for this month and the one before | MRR and ARR, and their change on last month |
 | Revenue and spend | `reports run income_statement` with `from` the first of the month, `until` the first of the next | Revenue, cost of revenue, gross margin, operating expenses, net income or loss |
 | Cash and runway | `reports run default_alive` with `period` `YYYY-MM` | Cash at month end, net burn, months of runway |
-| Money owed to the company | `reports run aging` with `direction` `receivable` and `as_of` the month end | Anything overdue worth a line |
+| Money owed to the company | `reports run aging` with `direction` `receivable` and `as_of` the first instant of the next month (exclusive cutoff) | Anything overdue worth a line |
 
 Scale every amount once by the ledger's `decimals`, as [verify](verify.md) says. Compare with
 last month by reading last month the same way; never estimate a figure the reports did not
 return. When the books for the month are incomplete (receipts not yet recorded, a Stripe payout
 missing), say which, and offer to record them first: an update built on partial books understates
 burn.
+
+Use [native and indicative currency totals](indicative-currency.md) for mixed-currency books.
+Show booked financial results and supported indicative recurring/cash/aging values with their
+currency, cutoff and rate provenance. Use returned historical metrics and ratios. If a combined
+view is unavailable, retain native amounts and name the missing pairs/days; do not show a zero,
+partial total or invented month-on-month change.
 
 ## Ask the founder for the story
 

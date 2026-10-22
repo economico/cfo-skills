@@ -1,9 +1,35 @@
 # Economico skills
 
-Agent skills for keeping a founder-run company's books on [Economico](https://economi.co), a
-double-entry ledger that your own agent operates. Install them in the agent you already use
-(Claude Code, Codex, Hermes, OpenClaw, or anything that reads a skills directory), then ask it to
-set up your books.
+Economico is the agentic finance function for ambitious founders who want the financial rigor of a company with a finance department, without hiring one.
+
+Economico isn’t another copilot or dashboard to learn. Your own agent connects over MCP and does the work, recording each business’s history in a hash-chained, append-only ledger. The agreement is recorded first, so most reconciliation never has to happen.
+
+The result is one connected history of what you charge, what each customer agreed to, what they used and what it costs to serve them. Financial statements, cash, runway and revenue all come from that history. Ask what your burn is, then ask which customer, agreement or assumption changed it.
+
+**[Connect your agent](https://economi.co/connect/).** Explore TinyCRM Studio, a fictional SaaS
+company with its own customers, subscriptions and funding, before bringing your own books.
+You choose the business and permissions. Code, Stripe and email access are separate connections
+you authorize in your agent; Economico does not automatically read those services.
+
+## See the business behind the numbers
+
+![Recurring revenue, burn and runway in the TinyCRM demo](./assets/screenshots/saas.png)
+
+Ask: “Show recurring revenue, burn and runway for September 2026.” The demo report shows the
+recorded amounts and calculation basis; the answer depends on the books and assumptions supplied.
+
+![Overdue customer invoices in the TinyCRM demo](./assets/screenshots/receivables.png)
+
+Ask: “What do customers still owe us as of October 22, 2026?” See each outstanding invoice and
+how long it has been overdue.
+
+![Founder ownership and outstanding financing in the TinyCRM demo](./assets/screenshots/ownership.png)
+
+Ask: “Show the cap table before October 22, 2026.” Inspect founder ownership and outstanding
+convertible financing, including what the diluted total excludes.
+
+These are Economico MCP App views captured from a disposable TinyCRM demo in a local protocol
+host. Directory availability and rendering in each agent depend on that host's support and review.
 
 ## Skills
 
@@ -36,8 +62,7 @@ Claude Code, as a plugin:
 ```
 
 Then ask your agent to set up Economico. The `economico` skill connects it (MCP or the
-`@economico/cli`) and walks you through the first session. Try it on a sandbox business before
-your real one.
+`@economico/cli`) and walks you through the first session. Open TinyCRM Studio from the connection screen to explore your own demo copy first.
 
 ## OpenAI plugin
 

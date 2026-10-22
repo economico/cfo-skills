@@ -1,7 +1,13 @@
 # Modeling products and pricing
 
 A product plan is a reusable agreement template containing the rights a customer receives.
-Model the rights before recording invoices or payments. A monthly platform access right can be
+A reusable price book precedes customer contracts and needs neither an activated billing
+integration nor an existing customer. Save complete source-backed plans as reusable templates
+before the first customer or checkout launch, rather than leaving them only in the brief.
+Set `definition.plan` in `templates.create`: `"on_sale"` for current offers and `"off_sale"`
+for explicitly future-launch, inactive, retired or superseded offers. An unmarked agreement
+template is not a saved price-book plan. An unavailable checkout alone does not retire a current offer.
+Disclose launch status in the brief; do not invent customers, sales or speculative prices. Model the rights before recording invoices or payments. A monthly platform access right can be
 billed in advance, earned over the month and paid later without becoming three activities.
 
 For pattern discovery, saved-right lookup, a combined workspace brief or a bespoke composition,
