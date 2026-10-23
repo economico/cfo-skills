@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.11.1 (2026-10-23)
+
+- Reports for a month, quarter or year end with the next period's first instant as a UTC timestamp (`2026-10-01T00:00:00Z` for September), in the investor update and every recipe. A timestamp is read the same way before and after Economico's report dates came to include their whole day, so September never picks up 1 October's entries.
+
 ## 1.11.0 (2026-10-22)
 
 - Explore the books before connecting your own: plugin listings show real TinyCRM demo views for recurring revenue, overdue invoices and ownership, with prompts to try.

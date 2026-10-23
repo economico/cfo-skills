@@ -698,7 +698,7 @@
           "$ref": "spa-ada-contract.id"
         },
         "from": "2025-12-01",
-        "through": "2026-03-01"
+        "through": "2026-03-01T00:00:00Z"
       },
       "expect": {
         "flows": [
@@ -734,7 +734,7 @@
       "report": true,
       "input": {
         "kind": "cap_table",
-        "as_of": "2025-12-31"
+        "as_of": "2025-12-31T00:00:00Z"
       },
       "expect": {
         "instruments": [

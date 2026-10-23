@@ -306,7 +306,7 @@
       "input": {
         "kind": "balance_sheet",
         "currency": "USD",
-        "as_of": "2026-06-03"
+        "as_of": "2026-06-03T00:00:00Z"
       },
       "expect": {
         "assets": {
@@ -573,7 +573,7 @@
       "input": {
         "kind": "balance_sheet",
         "currency": "USD",
-        "as_of": "2026-06-06"
+        "as_of": "2026-06-06T00:00:00Z"
       },
       "expect": {
         "assets": {

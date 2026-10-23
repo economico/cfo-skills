@@ -7,13 +7,13 @@
   },
   "metadata": {
     "description": "Economico: the agentic finance function for ambitious founders",
-    "version": "1.11.0"
+    "version": "1.11.1"
   },
   "plugins": [
     {
       "name": "economico",
       "description": "Economico is the agentic finance function for ambitious founders who want the financial rigor of a company with a finance department, without hiring one.\n\nEconomico isn’t another copilot or dashboard to learn. Your own agent connects over MCP and does the work, recording each business’s history in a hash-chained, append-only ledger. The agreement is recorded first, so most reconciliation never has to happen.\n\nThe result is one connected history of what you charge, what each customer agreed to, what they used and what it costs to serve them. Financial statements, cash, runway and revenue all come from that history. Ask what your burn is, then ask which customer, agreement or assumption changed it. You choose the business and permissions. Code, Stripe and email access require separate authorization in your agent. Economico records evidence you provide; it does not move money, send invoices, sign agreements or file taxes. Burn and runway depend on the records and assumptions supplied.",
-      "version": "1.11.0",
+      "version": "1.11.1",
       "category": "productivity",
       "source": "./"
     }

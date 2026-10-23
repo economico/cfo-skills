@@ -319,7 +319,7 @@
         "kind": "income_statement",
         "currency": "USD",
         "from": "2026-07-01",
-        "until": "2026-08-01"
+        "until": "2026-08-01T00:00:00Z"
       },
       "expect": {
         "revenue": {

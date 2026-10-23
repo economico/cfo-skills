@@ -720,7 +720,7 @@
       "input": {
         "action": "balances",
         "ledger_id": "led_00000000000000000000000840",
-        "as_of": "2026-08-01"
+        "as_of": "2026-08-01T00:00:00Z"
       },
       "expect": {
         "items": [
@@ -801,7 +801,7 @@
       "input": {
         "kind": "balance_sheet",
         "currency": "USD",
-        "as_of": "2026-08-01"
+        "as_of": "2026-08-01T00:00:00Z"
       },
       "expect": {
         "assets": {
@@ -825,7 +825,7 @@
         "kind": "income_statement",
         "currency": "USD",
         "from": "2026-07-01",
-        "until": "2026-08-01"
+        "until": "2026-08-01T00:00:00Z"
       },
       "expect": {
         "revenue": {
@@ -850,7 +850,7 @@
       "input": {
         "kind": "aging",
         "direction": "receivable",
-        "as_of": "2026-08-01"
+        "as_of": "2026-08-01T00:00:00Z"
       },
       "expect": {
         "rows": [],

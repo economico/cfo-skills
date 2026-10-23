@@ -310,7 +310,7 @@
       "input": {
         "kind": "balance_sheet",
         "currency": "USD",
-        "as_of": "2026-06-01"
+        "as_of": "2026-06-01T00:00:00Z"
       },
       "expect": {
         "liabilities": {
@@ -356,7 +356,7 @@
         "kind": "income_statement",
         "currency": "USD",
         "from": "2026-05-01",
-        "until": "2026-06-01"
+        "until": "2026-06-01T00:00:00Z"
       },
       "expect": {
         "net_income": "-3200"
