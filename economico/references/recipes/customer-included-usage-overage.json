@@ -465,7 +465,7 @@
         "contract_id": {
           "$ref": "contract.id"
         },
-        "as_of": "2026-09-02"
+        "as_of": "2026-09-02T00:00:00Z"
       }
     },
     {
@@ -692,7 +692,7 @@
         "contract_id": {
           "$ref": "contract.id"
         },
-        "as_of": "2026-10-03"
+        "as_of": "2026-10-03T00:00:00Z"
       }
     },
     {
@@ -759,7 +759,7 @@
         "kind": "income_statement",
         "currency": "USD",
         "from": "2026-09-01",
-        "until": "2026-10-01"
+        "until": "2026-10-01T00:00:00Z"
       },
       "expect": {
         "revenue": {
