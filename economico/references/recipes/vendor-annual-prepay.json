@@ -361,7 +361,7 @@
       "report": true,
       "input": {
         "kind": "amortization",
-        "as_of": "2026-04-01"
+        "as_of": "2026-04-01T00:00:00Z"
       },
       "expect": {
         "items": [
@@ -403,7 +403,7 @@
       "input": {
         "kind": "balance_sheet",
         "currency": "USD",
-        "as_of": "2026-04-01"
+        "as_of": "2026-04-01T00:00:00Z"
       },
       "expect": {
         "assets": {

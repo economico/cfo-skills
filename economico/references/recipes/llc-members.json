@@ -606,7 +606,7 @@
         "contract_id": {
           "$ref": "contract.id"
         },
-        "as_of": "2025-01-02"
+        "as_of": "2025-01-02T00:00:00Z"
       }
     },
     {
@@ -694,7 +694,7 @@
         "contract_id": {
           "$ref": "contract.id"
         },
-        "as_of": "2025-01-02"
+        "as_of": "2025-01-02T00:00:00Z"
       }
     },
     {
@@ -990,7 +990,7 @@
         "contract_id": {
           "$ref": "customer-contract.id"
         },
-        "as_of": "2025-07-01"
+        "as_of": "2025-07-01T00:00:00Z"
       }
     },
     {
@@ -1080,7 +1080,7 @@
         "contract_id": {
           "$ref": "contract.id"
         },
-        "as_of": "2025-10-01"
+        "as_of": "2025-10-01T00:00:00Z"
       }
     },
     {
@@ -1170,7 +1170,7 @@
         "contract_id": {
           "$ref": "contract.id"
         },
-        "as_of": "2025-10-01"
+        "as_of": "2025-10-01T00:00:00Z"
       }
     },
     {

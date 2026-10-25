@@ -141,10 +141,12 @@ preset, or to widen the membership.
   tick it on the consent screen; approving another business never widens an existing grant.
 - `demo: true` on the `business` read: a demo company with made-up figures, the user's alone.
   Say it is a demo whenever you report its numbers (its books run up to `demoOpenedAt`).
-  `demo_business` means a demo may not do that (reach another business, send a message,
-  support included, add a member, publish, take a plan, or look like a real company) or has
-  recorded the 2,000 events a demo may record; tell the user they can create their own
-  business for it.
+  `demo_business` means a demo may not do that (reach another business, send a message other
+  than a support request or feature suggestion to Economico, add a member, publish, take a
+  plan, or look like a real company) or has recorded the 2,000 events a demo may record; tell
+  the user they can create their own business for it. Economico cannot reply to a demo's
+  message, so tell the user to write from their own business when they need an answer. A demo
+  delivers a few such messages a day; past that its message is `undeliverable` with the reason.
 - `plan_required` has two causes. With `details.through`, the business has used its monthly
   event allowance: nothing was recorded. `details.reason` says why. `solo_limit`: Solo's
   allowance; tell the founder the limit (`details.included` events, `details.used` already used)

@@ -9,9 +9,9 @@ unless the founder names another.
 | Section | Read | Use |
 |---|---|---|
 | Recurring revenue | `reports run saas_metrics` with `year` and `month`, for this month and the one before | MRR and ARR, and their change on last month |
-| Revenue and spend | `reports run income_statement` with `from` the first of the month, `until` the first of the next | Revenue, cost of revenue, gross margin, operating expenses, net income or loss |
+| Revenue and spend | `reports run income_statement` with `from` the first of the month and `until` the next month's first instant as a UTC timestamp (`2026-10-01T00:00:00Z` for September) | Revenue, cost of revenue, gross margin, operating expenses, net income or loss |
 | Cash and runway | `reports run default_alive` with `period` `YYYY-MM` | Cash at month end, net burn, months of runway |
-| Money owed to the company | `reports run aging` with `direction` `receivable` and `as_of` the first instant of the next month (exclusive cutoff) | Anything overdue worth a line |
+| Money owed to the company | `reports run aging` with `direction` `receivable` and `as_of` the next month's first instant as a UTC timestamp (`2026-10-01T00:00:00Z` for September) | Anything overdue worth a line |
 
 Scale every amount once by the ledger's `decimals`, as [verify](verify.md) says. Compare with
 last month by reading last month the same way; never estimate a figure the reports did not

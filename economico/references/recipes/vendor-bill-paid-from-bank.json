@@ -298,7 +298,7 @@
       "input": {
         "kind": "aging",
         "direction": "payable",
-        "as_of": "2026-07-02"
+        "as_of": "2026-07-02T00:00:00Z"
       }
     },
     {
@@ -338,7 +338,7 @@
       "input": {
         "kind": "balance_sheet",
         "currency": "USD",
-        "as_of": "2026-07-21"
+        "as_of": "2026-07-21T00:00:00Z"
       },
       "expect": {
         "assets": {
