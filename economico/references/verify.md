@@ -2,8 +2,9 @@
 
 After recording, prove the model with reads. Each figure you report should trace to rows in the
 business model brief, and each row to a source. `reports {action: "list"}` gives every kind's
-parameters and a runnable example; dates are `YYYY-MM-DD` or UTC instants, `until` is exclusive,
-`through` and `period_end` are inclusive.
+parameters and a runnable example; dates are `YYYY-MM-DD` or UTC instants. End a period with the
+next period's first instant as a UTC timestamp (`until`, `as_of` or `period_end`
+`2026-10-01T00:00:00Z` for September); `through` includes the instant it is given.
 
 ## The checks
 

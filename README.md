@@ -1,10 +1,10 @@
 # Economico skills
 
-Economico is the agentic finance function for ambitious founders who want the financial rigor of a company with a finance department, without hiring one.
+Economico is the ERP for ambitious founders and their agents.
 
-Economico isn’t another copilot or dashboard to learn. Your own agent connects over MCP and does the work, recording each business’s history in a hash-chained, append-only ledger. The agreement is recorded first, so most reconciliation never has to happen.
+Your own agents connect over MCP and run it: they record what you charge, what each customer agreed to, what they used and what it costs to serve them, as real double-entry books. Financial statements, cash, burn, runway and revenue all come from that one record. Ask what your burn is, then ask which customer, agreement or assumption changed it.
 
-The result is one connected history of what you charge, what each customer agreed to, what they used and what it costs to serve them. Financial statements, cash, runway and revenue all come from that history. Ask what your burn is, then ask which customer, agreement or assumption changed it.
+It is your own source of truth, beside your bank and your bookkeeper's tools; your agents can read those and tie them in. Try it on a demo company first. Free for a single founder, no card required.
 
 **[Connect your agent](https://economi.co/connect/).** Explore TinyCRM Studio, a fictional SaaS
 company with its own customers, subscriptions and funding, before bringing your own books.

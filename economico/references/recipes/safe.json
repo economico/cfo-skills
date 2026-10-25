@@ -299,7 +299,7 @@
       "input": {
         "kind": "revenue_summary",
         "period_start": "2025-01-01",
-        "period_end": "2026-01-02"
+        "period_end": "2026-01-02T00:00:00Z"
       },
       "expect": {
         "by_currency": []

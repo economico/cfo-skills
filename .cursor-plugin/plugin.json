@@ -1,0 +1,45 @@
+{
+  "name": "economico",
+  "version": "1.11.2",
+  "description": "Economico: The ERP for ambitious founders and their agents.\n\nYour own agents connect over MCP and run it: they record what you charge, what each customer agreed to, what they used and what it costs to serve them, as real double-entry books. Financial statements, cash, burn, runway and revenue all come from that one record. Ask what your burn is, then ask which customer, agreement or assumption changed it.\n\nIt is your own source of truth, beside your bank and your bookkeeper's tools; your agents can read those and tie them in. Try it on a demo company first. Free for a single founder, no card required.\n\nYou choose the business and permissions. Code, Stripe and email access require separate authorization in your agent. Economico records evidence you provide; it does not move money, send invoices, sign agreements or file taxes. Burn and runway depend on the records and assumptions supplied.",
+  "author": {
+    "name": "Economico",
+    "email": "support@economi.co"
+  },
+  "homepage": "https://economi.co",
+  "repository": "https://github.com/economico/cfo-skills",
+  "license": "MIT",
+  "keywords": [
+    "agents",
+    "erp",
+    "bookkeeping",
+    "accounting",
+    "double-entry",
+    "ledger",
+    "invoicing",
+    "accounts-receivable",
+    "expenses",
+    "receipts",
+    "burn-rate",
+    "runway",
+    "startup-finance",
+    "investor-update",
+    "founder",
+    "mcp"
+  ],
+  "logo": ".claude-plugin/icon.png",
+  "skills": [
+    "./economico",
+    "./add-customer",
+    "./investor-update",
+    "./record-payment",
+    "./record-receipts",
+    "./record-vendor-invoice",
+    "./send-invoice"
+  ],
+  "mcpServers": {
+    "economico": {
+      "url": "https://economi.co/mcp"
+    }
+  }
+}
