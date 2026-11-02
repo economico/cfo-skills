@@ -134,3 +134,29 @@ activity. Undo dependent payment allocations or payments first, using the paymen
 commands and their evidence requirements. Check that the original claim is cancelled and that
 replacement billing, recognition and quantities reconcile. Do not use this service path for
 linked lifecycle, capacity, minimum or ownership consequences, or for prior-period restatement.
+
+## Void a contract set up in error
+
+When a whole contract was set up wrongly (the wrong rights, terms or usage metrics) and its
+recorded history is wrong because of it, void it and rebuild it instead of correcting phase by
+phase. If the history is right and only something is missing, such as a new right or metric
+from a date, amend the contract (`contracts.amend`) instead.
+
+1. Run `contracts.void` with `contractId`, `expectedDocumentId`, a `reason`, correction
+   `evidence` and `preview: true`. Show the founder what it reverses (`reversedEvents`,
+   `occurrenceIds`) and which payments it returns to unapplied funds (`releases`), and get their
+   approval. It writes nothing.
+2. Run it again without `preview`, with the preview's `planDigest` as `expectedPlanDigest`. A
+   conflict means the contract changed since the preview: preview again.
+3. A historical contract's own payment recordings (a founder paying personally, a card, a receipt
+   collected) are taken back too and listed as `recordedPayments`: record each again, on the
+   replacement or as an independent payment.
+4. Create and accept the corrected contract, and record its facts with the same source fact IDs
+   (new idempotency keys). Match each released payment to the new claims with
+   `payments.allocate`, from the payment's unapplied funds.
+5. Check that the voided contract reads `voided`, its claims `cancelled`, and that the
+   replacement's claims, revenue or expense and the party's unapplied funds reconcile.
+
+The void takes everything back at each fact's own date, so earlier periods read as if the
+contract never existed. It refuses capacity, ownership, minimum and lifecycle consequences,
+reversals that owe refunds and cross-currency settlements, naming what to undo first.

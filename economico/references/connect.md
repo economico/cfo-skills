@@ -74,16 +74,19 @@ To add a coworker, the owner's interactive connection can call `members_invite` 
 email and `access` (`reader`, `bookkeeper` or `administrator`; never ownership). Economico emails
 the address; the coworker signs in or creates an account with it and accepts in the browser, and
 nobody has access until then. `member_invitations` lists pending invitations and
-`members_revoke_invitation` withdraws one. Members beyond the owner need Startup: on Solo the
+`members_revoke_invitation` withdraws one. Members beyond the owner need Founders or Startup: on Solo the
 tool answers `plan_required` with a pricing link, which is information, not a purchase.
 
 ## Buying a plan or paying an invoice
 
 Use `platform_purchase` with the selected `business`. A live owner-full grant can request an
-`offer` (`plan: "team"` for Startup, `"events"` for Solo extra events), read its terms, `accept`
+`offer` (`plan: "founders"` for Founders, `"team"` for Startup, `"events"` for Solo extra events), read its terms, `accept`
 the exact `offerId` and `offerCid` with `capacity` and `authorized: true`, then `prepare` and
-poll `status` using that offer. Every business starts Solo; new Startup offers have no ordinary
-trial. Server-verified YC eligibility determines any concession.
+poll `status` using that offer. Every business starts Solo; paid offers have no ordinary trial. Founders includes three
+people total, including the owner and read-only members; teammates use reader or bookkeeper
+access. Scoped agents are included and do not count as people. Startup permits unlimited people
+and custom member permissions. A member-limit refusal links the owner to the billing page
+for a plan switch. Existing Startup agreements retain their signed terms. Server-verified YC eligibility determines any concession.
 
 Use `pay` with `method: "card"` for a saved card, or follow `browserFallback` for card setup
 and bank confirmation. Use the returned `paymentUrl` for an advertised

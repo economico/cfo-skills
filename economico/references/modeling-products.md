@@ -26,6 +26,12 @@ them because their account codes match.
 
 Use `model: "priced-rights-v1"` on activity and template definitions. An activity's `price`
 contains `treatment`, and for a priced right, a fixed/rate/tiered calculation and currency term.
+When the agreement establishes a party's relationship to the business, declare it in the
+template's `partyCategories` map: for example `{"counterparty": ["customer"]}` or
+`{"holder": ["founder", "employee"]}`, using the template's actual local roles and evidenced
+relationship. Acceptance adds these categories to the bound parties. An investor's SAFE uses
+`investor`; a vendor agreement uses `vendor`. Read the party after acceptance to verify its
+categories. Existing contracts keep their frozen declarations when a template is replaced.
 Agreed values live in `terms`; measured quantities live in `facts`. State quantity scaling in the
 right's description: for example, the consulting recipe uses integer millionths of an hour,
 so 1,000,000 measured units and `unitsPerPrice: 1000000` mean one hour at the stated rate.
