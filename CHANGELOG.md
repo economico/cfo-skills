@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.12.0 (2026-11-02)
+
+- Voiding a contract set up in error: a new "void a contract set up in error" section in the vendor-contracts reference walks the preview, approval, `contracts.void`, rebuild and `payments.allocate` steps, and the contract and how-it-works references point to it instead of correcting phase by phase.
+- Party roles come from the agreement: the product-modeling reference tells the agent to declare a party's relationship (customer, vendor, investor, founder, employee) in the template's `partyCategories` and to read the party back after acceptance.
+- Founders and Startup plans: the connect reference describes the Founders offer (three people in total, scoped agents included) beside Startup's unlimited people, and the import allowance (10,000 events) applies to Founders as well as Startup.
+- The SAFE recipe checks the cap table's terms at the cap: a post-money cap, a discount and the ownership estimate at the cap, kept apart from fully diluted ownership.
+
 ## 1.11.2 (2026-10-23)
 
 - Cursor can install the plugin: `.cursor-plugin/plugin.json` declares the same skills, the Economico MCP server and the icon, and leads with the same "ERP for ambitious founders and their agents" description and keywords as the Claude listing.

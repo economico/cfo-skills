@@ -99,7 +99,9 @@ occurrence and correction evidence, then record replacement phases with fresh so
 Preserve the source's effective date; a date alone does not authorize inventing an intraday time.
 When a time is required but absent, use the start of that date and state the convention. Keep an
 explicitly supplied instant unchanged. Read the [service correction boundaries](vendor-contracts.md)
-before reversing dependent or already settled obligations.
+before reversing dependent or already settled obligations. When the whole contract was set up
+wrongly, void and rebuild it instead: see
+[void a contract set up in error](vendor-contracts.md#void-a-contract-set-up-in-error).
 
 Show the founder the accepted agreement, commercial claim balances/aging, recognized revenue,
 deferred/unbilled balances and actual collections. Keep unsupported corrections, historical

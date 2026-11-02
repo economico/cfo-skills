@@ -86,7 +86,8 @@ Separate rights only when what the party receives differs, even if two rights po
    [payments](payments.md). Outstanding claims can still be settled after cancellation.
 6. Retain immutable evidence and retry identities. Never re-record old history to convert its
    model. Payment correction uses reversal/unallocation; service correction uses
-   `contracts.reverse_economics`. Supported historical claims settle through independent
+   `contracts.reverse_economics`; a contract set up in error is voided with `contracts.void`
+   and rebuilt. Supported historical claims settle through independent
    [payments](payments.md) without reissuing their invoices.
 
 Do not assume a declared schedule has executed itself. Read returned phase statements, claims

@@ -1,6 +1,6 @@
 {
   "name": "SAFE held as financing until conversion",
-  "description": "An evidenced $100,000 SAFE purchase creates a financing liability, with separate bank funding of its claim. No equity, units or commercial invoice is invented. Use the actual signed instrument and bank evidence in place of this synthetic example.",
+  "description": "An evidenced $100,000 SAFE purchase with a $10,000,000 post-money cap and a 20% discount reduction creates a financing liability, with separate bank funding of its claim. Its 1% estimate at the cap is separate from issued shares and a future conversion. Use the actual signed instrument and bank evidence in place of this synthetic example.",
   "setupAt": "2025-01-01T00:00:00Z",
   "recordedAt": "2026-01-02T00:00:00Z",
   "steps": [
@@ -9,7 +9,7 @@
       "command": "documents.receive",
       "input": {
         "kind": "source_document",
-        "contentBase64": "U3ludGhldGljIFNBRkUgZml4dHVyZTogSW52ZXN0b3IgcHVyY2hhc2VzIFVTRCAxMDAsMDAwIG9mIGNvbnZlcnRpYmxlIGZpbmFuY2luZyBvbiBNYXJjaCAxLCAyMDI1LiBFdmlkZW5jZWQgcHVyY2hhc2UgY29uZGl0aW9ucyBhcmUgc2F0aXNmaWVkLiBUaGlzIGZpeHR1cmUgdHJlYXRzIHRoZSBhbW91bnQgYXMgZmluYW5jaW5nIGxpYWJpbGl0eSBwZW5kaW5nIHNlcGFyYXRlbHkgZXZpZGVuY2VkIGNvbnZlcnNpb247IG5vIHVuaXRzIGFyZSBpc3N1ZWQu",
+        "contentBase64": "U3ludGhldGljIFNBRkUgZml4dHVyZTogSW52ZXN0b3IgcHVyY2hhc2VzIFVTRCAxMDAsMDAwIG9mIGNvbnZlcnRpYmxlIGZpbmFuY2luZyBvbiBNYXJjaCAxLCAyMDI1LCB3aXRoIGEgVVNEIDEwLDAwMCwwMDAgcG9zdC1tb25leSB2YWx1YXRpb24gY2FwIGFuZCBhIDIwJSBkaXNjb3VudCByZWR1Y3Rpb24uIEV2aWRlbmNlZCBwdXJjaGFzZSBjb25kaXRpb25zIGFyZSBzYXRpc2ZpZWQuIFRoaXMgZml4dHVyZSB0cmVhdHMgdGhlIGFtb3VudCBhcyBmaW5hbmNpbmcgbGlhYmlsaXR5IHBlbmRpbmcgc2VwYXJhdGVseSBldmlkZW5jZWQgY29udmVyc2lvbjsgbm8gdW5pdHMgYXJlIGlzc3VlZC4gVGhlIGF0LWNhcCBlc3RpbWF0ZSBpcyAxJSwgbm90IGEgY29udmVyc2lvbiBmb3JlY2FzdC4=",
         "externalId": "example:authorization"
       }
     },
@@ -59,6 +59,16 @@
               "type": "integer",
               "unit": "USD",
               "default": "10000000"
+            },
+            "cap": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "1000000000"
+            },
+            "discount": {
+              "type": "integer",
+              "unit": "ppm",
+              "default": "200000"
             }
           },
           "facts": {},
@@ -84,6 +94,11 @@
             "direction": "provide",
             "classification": {
               "monetaryLedger": "money"
+            },
+            "safe": {
+              "valuationBasis": "post_money",
+              "capTerm": "cap",
+              "discountPpmTerm": "discount"
             }
           }
         }
@@ -303,6 +318,39 @@
       },
       "expect": {
         "by_currency": []
+      }
+    },
+    {
+      "key": "terms-at-the-cap",
+      "report": true,
+      "input": {
+        "kind": "cap_table",
+        "as_of": "2026-01-02T00:00:00Z",
+        "safe_party_id": "investor"
+      },
+      "expect": {
+        "safes": {
+          "partyId": "investor",
+          "complete": true,
+          "instruments": [
+            {
+              "purchaseAmount": "10000000",
+              "outstanding": "10000000",
+              "valuationBasis": "post_money",
+              "cap": {
+                "amount": "1000000000",
+                "currency": "USD",
+                "decimals": 2
+              },
+              "discountPpm": "200000",
+              "ownershipAtCapBasisPoints": "100"
+            }
+          ]
+        },
+        "fullyDiluted": {
+          "total": "0",
+          "holders": []
+        }
       }
     }
   ]
