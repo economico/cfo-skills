@@ -98,8 +98,13 @@ and custom member permissions. A member-limit refusal links the owner to the bil
 for a plan switch. Existing Startup agreements retain their signed terms. Server-verified YC eligibility determines any concession.
 
 Use `pay` with `method: "card"` for a saved card, or follow `browserFallback` for card setup
-and bank confirmation. Use the returned `paymentUrl` for an advertised
-wallet method. Wallet credentials belong in that separate authenticated HTTP exchange:
+and bank confirmation. For MPP or x402, `prepare` with `method` set to
+one of the offer's `methods`, and use the returned `paymentUrl`. On `prepare`, also give
+`fundingAccountId`: the account in these books that pays the invoice, a live USD account for
+Link or Stripe, or a company-owned token wallet for a direct Tempo payment. Until then `status`
+shows `funding.status: "required"` and the payment waits to be booked in these books. The
+choice can be corrected on `prepare` until the payment is booked. Each invoice takes its own
+`fundingAccountId` on `prepare` with that `invoiceId`. Wallet credentials belong in that separate authenticated HTTP exchange:
 `Payment` for MPP or `PAYMENT-SIGNATURE` for x402, preserving the OAuth bearer. Let the wallet
 apply its approval policy. `methods` describes configured options; public access to Link/MPP
 and x402 depends on merchant enablement. Use `status` and its paged `invoices` for later usage

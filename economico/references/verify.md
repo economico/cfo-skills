@@ -17,6 +17,7 @@ next period's first instant as a UTC timestamp (`until`, `as_of` or `period_end`
 | Who owns the company? | `reports run cap_table`, and `capital_accounts` for an LLC, partnership or project | Every owner from the formation documents with their units; never empty for a company that has owners |
 | Where is the money? | `reports run balance_sheet` with `as_of` | Cash per account matches the bank and card statements at that date, where history was recorded |
 | Who owes what? | `reports run aging` with `direction` `receivable` or `payable` and `as_of` | Outstanding 1120 receivables and 2110 and 2170-2172 payables; paid vendor claims are zero. Owner/card debts use claim and native-balance reads below |
+| What does each wallet hold? | `accounts {action: "overview", id}` for each wallet | `holdings` lists each token in its own unit and `decimals` and matches the wallet or explorer; a wallet's `balance` counts only its currency ledger |
 | What is owed to owners or card issuers? | `reports run owner_balance` with `party_id` and `as_of` for an owner (2135 only), and `activity_claims` for the originating agreement, plus party footprint/native balance reads for 2190 card issuers | Identified 2135/2190 funding claims and reimbursements, per native currency; these are not included in aging |
 | How did each month go? | `reports run income_statement_periods` with `through_month` | Revenue, expenses and net income for the trailing months; the current month marked as in progress |
 | What does each unit earn and cost? | `reports run unit_economics` with `from` and `until` | Units each customer activity was paid on, revenue per unit, and its own posted cost; unattributed cost reported apart, never allocated |
@@ -69,7 +70,8 @@ the numbers up yourself, and do not export to a spreadsheet.
 1. `report_sql {action: "schema"}` once: it lists the views, every table with its columns, and the
    conventions. Prefer the views (`journal_lines`, `accounts`, `contracts`, `claims`,
    `payments`, `events`, `commands`, `ingestions`, and `monthly_metrics` for recurring revenue,
-   customers, burn, cash and runway by month, which are the built-in reports' own figures); a
+   customers, burn, cash and runway by month, which are the built-in reports' own figures and
+   leave out a wallet's tokens); a
    table is the books as stored and can change. If
    `schema` is refused, this connection may not query: use the report kinds.
 2. `report_sql {action: "query", sql, params}` with one `SELECT`. Bind values with `?` and

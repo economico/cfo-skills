@@ -66,21 +66,32 @@ omit `providerPartyId`. Retain evidenced account/network/last4; never record a f
   them on the cash line, through its reporting profile.
 - A wallet the business holds itself counts each token in the token's own unit. Register it
   with `kind: "wallet"` and `currency` set to the token's symbol (`"USDC"`); the symbol is only
-  its label. Record each movement with the token's CAIP-19 as `currency` and the amount in the
+  its label. Leave out `openingBalance`; open the tokens it already holds as in
+  [accounts](accounts.md#starting-with-an-existing-account-balance). Record each movement with the token's CAIP-19 as `currency` and the amount in the
   token's smallest unit: 1.5 USDC is `"1500000"`, because USDC has 6 decimals. Each token gets
   a ledger of its own, at the precision its contract reports. For a token the registry does not
   list, omit `decimals` to have the control plane read `decimals()` through ValidationCloud on
   a supported, configured EVM chain. If that lookup is unavailable or the chain is unsupported,
-  read the contract directly and pass its evidenced `decimals` on the first journal. Move
+  read the contract directly and pass its evidenced `decimals` on the first journal. A native coin has no
+  contract: name it by its CAIP-19, such as `eip155:1/slip44:60` for Ether with `decimals: 18`,
+  and that first `journal.post` opens its ledger. Move
   tokens to a bank or another wallet with `payments.transfer`, naming the CAIP-19 on the
-  wallet's side; a sale for dollars also states `receivedAmount`/`receivedCurrency`. Read what
-  a wallet holds from `holdings` in `accounts overview`. Reports total a dollar stablecoin at
-  par; a token without par shows a missing rate, not a guess. A provider account kept in
+  wallet's side; a sale for dollars also states `receivedAmount`/`receivedCurrency`. Buying tokens from the bank is the same
+  transfer the other way: `currency` `USD` from the bank and the token's CAIP-19 as
+  `receivedCurrency`. A move between two wallets in one token needs that token's first movement
+  recorded first. Read what
+  a wallet holds from `holdings` in `accounts overview`. Reports total a stablecoin at par in its
+  own currency (USDC in dollars, EURC in euros at the day's rate). A token without par, such as a
+  yield-bearing one like sUSDe, or one the registry does not list, shows a missing rate, not a
+  guess. A provider account kept in
   dollars, such as a Stripe financial account, stays on `1410` in `USD`.
 - A company wallet on Tempo can be watched instead of recorded by hand. With the founder's
   agreement, `accounts.monitor_wallet` with the wallet's `financialAccountId`, the token's
   CAIP-19 as `token` and the wallet's `address` (addresses only: never ask for keys or
-  signing). The answer's `monitorId` names it from then on. The opening balance comes from the
+  signing). The answer's `monitorId` names it from then on.
+  The token must be a Tempo CAIP-19 (`eip155:4217/erc20:0x…`). Watch each token the wallet holds
+  with its own `accounts.monitor_wallet` call at the same address; a second address holding the
+  same token is its own wallet account. The opening balance comes from the
   chain at a stated block, and only its difference from what the books already hold is
   journaled. Economico reads the wallet once a day; `accounts.check_wallet_monitor` asks for a
   read now (at most once every five minutes, and not while paused), for example while the
@@ -91,7 +102,11 @@ omit `providerPartyId`. Retain evidenced account/network/last4; never record a f
   commands take the `monitorId`. A transfer between two watched company wallets is recorded
   once by itself. A movement to or from another company account that is still unclassified is
   a transfer: record it with `payments.transfer`, the movement's `reference` as `sourceFactId`,
-  never by classifying it. Before classifying, look for the same amount and date already
+  never by classifying it. A Tempo token payment recorded by hand takes `sourceFactId`
+  `chain:eip155:4217:<transaction hash in lower case>:<log index>`, the movement's `reference`,
+  and evidence `[{ "kind": "chain_tx", "ref": "<that reference>" }, { "kind": "other", "ref":
+  "block:eip155:4217:<block number>:<block hash in lower case>" }]`, so the monitor shows it as
+  `recorded` and a movement already in its opening is not counted twice. Before classifying, look for the same amount and date already
   recorded by hand. Token payments sit in the token's own ledger, not in the account's
   `overview` movements: find it in `ledgers {action: "list"}` (its unit is the token's
   CAIP-19), then read `ledgers {action: "statement", ledger_id, account_code: 1410}`. If the
@@ -108,6 +123,13 @@ omit `providerPartyId`. Retain evidenced account/network/last4; never record a f
 - Read `reports run balances` without an explicit currency for shared `payment_accounts`
   native/indicative totals. Keep bank/wallet cash apart from card debt and related-party funding;
   report missing rates as an unavailable combined total, with every native balance accessible.
+  Tokens a wallet holds in their own ledgers are not in `payment_accounts`, in an account's
+  `balance`, `summary` or `summaries`, or in the cash and runway of `default_alive` and
+  `saas_metrics`. Read them from `holdings` in `accounts overview` and from `reports run
+  balance_sheet`, which lists each token in `other_currencies`; `indicative` totals them only
+  when every token and currency has a rate: one token without par (Ether, sUSDe) leaves the
+  combined total unavailable, so report each native amount.
+  When a wallet holds tokens, show them beside those figures and say they are not in them.
 - Checking and savings at the same bank are two accounts. One account reachable by several rails
   is one account.
 - An account has one currency, set when you register it. A company account takes the currency
@@ -124,7 +146,13 @@ omit `providerPartyId`. Retain evidenced account/network/last4; never record a f
 - Register each payment instruction with `payment_endpoints.register`: the account or
   counterparty party, its payto/CAIP-10 URI, and the supported direction, rail and asset.
   Card collection methods attach to the account without a URI. Deactivate a retired
-  instruction with `payment_endpoints.update` and register its replacement.
+  instruction with `payment_endpoints.update` and register its replacement. A counterparty's
+  own wallet or bank instruction is registered the same way with `partyId` instead of
+  `financialAccountId`, and always has a URI. A method may state `etaSeconds` and
+  `minAmountMinor`/`maxAmountMinor`; quotes rely on them. CAIP-10 ids use the `eip155`,
+  `solana`, `bip122`, `cosmos`, `stellar` or `tron` namespace. Register a counterparty's address
+  only from their own evidenced document, read the full address back to the founder and register
+  it once they confirm; a changed address is a new instruction the founder confirms again.
 - **Payment details.** When the founder's mail or documents give an account's receiving
   details, register them on that account so the workspace can show and copy them. A US bank
   account is `payto://ach/{routing}/{account}`, an IBAN account `payto://iban/{BIC}/{IBAN}`
@@ -157,10 +185,14 @@ omit `providerPartyId`. Retain evidenced account/network/last4; never record a f
 { "name": "documents.receive", "input": { "kind": "image", "contentBase64": "iVBORw0KGgo…", "title": "Mercury logo" } }
 { "name": "accounts.update", "input": { "financialAccountId": "bank_mercury_checking", "brandColor": "#1F2033", "logoDocumentId": "doc_…" } }
 ```
-- `payment_routes {action: "quote"}` ranks the active methods that have a matching fee
-  term in the account's provider contract. It returns `methodId` and exact minor-unit
-  cost; with `party_id`, outbound routes also need that party's matching receiving
-  instruction. It is a read, not a payment. Use `payments.process` with the account, rail and explicit gross/net evidence for
+- `payment_routes {action: "quote", direction, amount_minor}` ranks the active methods that
+  have a matching fee term in the account's provider contract, so a wallet the business holds
+  itself, with no provider contract, never appears. Narrow it with `assets` (CAIP-19 for a
+  token), `rails`, `max_eta_seconds` (methods without `etaSeconds` drop out) and `optimize`
+  (`cheapest`, the default, or `fastest`). `amount_minor` is in the smallest unit of the asset
+  quoted, so quote one asset per call with `assets` exactly as the endpoint registered it, and
+  state a method's `minAmountMinor`/`maxAmountMinor` in its asset's smallest unit. It returns `methodId` and exact minor-unit cost;
+  with `party_id`, outbound routes also need that party's matching receiving instruction. It is a read, not a payment. Use `payments.process` with the account, rail and explicit gross/net evidence for
   a supported priced provider service; do not pass payment facts into a vendor activity.
   See [payments](payments.md).
 - An evidenced owner cash contribution uses the [cash contribution flow](#cash-contributions-without-new-units),

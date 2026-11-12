@@ -72,7 +72,7 @@ inline when the host renders them, otherwise as text.
 | review subscriptions, or record which tools and seats are used | [vendor usage](references/vendor-usage.md) |
 | record payments, reimbursements, transfers or payment corrections | [payments](references/payments.md) |
 | choose an account for a cost or a revenue line | [accounts](references/accounts.md) |
-| set the company profile, bank accounts, cards, legal identity, founders' shares or the cap table | [company setup](references/company-setup.md) |
+| set the company profile, bank accounts, cards, wallets, legal identity, founders' shares or the cap table | [company setup](references/company-setup.md) |
 | import existing books | [import](references/import.md) |
 | check the books after a change | [verify](references/verify.md) |
 | see a statement, the contracts or who owes what | [show the founder](references/show-the-founder.md) |

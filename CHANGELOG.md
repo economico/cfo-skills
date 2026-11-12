@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.13.1 (2026-11-13)
+
+- A model API used for development or experiments books to `5220` AI and model inference with the research and development function, beside the API the product calls in production.
+- Opening a self-held wallet: it takes no `openingBalance`, which would book dollars; each token it holds opens with a `journal.post` in the token's CAIP-19, on the wallet's own account (`1410` or `1310`), against `3900`. A native coin such as Ether is named by its CAIP-19 (`eip155:1/slip44:60`) with its `decimals` on that first journal.
+- Tokens in the figures: a wallet's tokens are not in `payment_accounts`, an account's `balance` or `summary`, or the cash and runway of `default_alive` and `saas_metrics`; the agent reads them from `holdings` and the balance sheet and says so, in the investor update too. A new verify row checks each wallet's holdings.
+- Paying and getting paid in tokens: `payments.record` names the token by CAIP-19 with `amount` in its smallest unit, and settles a dollar claim with `cashAmount`. Buying tokens from the bank is a `payments.transfer` with the token as `receivedCurrency`; a move between two wallets in one token needs that token's first movement recorded first.
+- Watched Tempo wallets: each token is its own monitor at the same address; a payment recorded by hand takes the movement's chain reference as `sourceFactId`, with the chain transaction and block proof as evidence, so the monitor shows it as recorded and never counts it twice.
+- Paying Economico by MPP or x402: `prepare` takes `method` and `fundingAccountId`, the account in these books that pays each invoice (a USD account, or a company Tempo token wallet); until it is given, `status` shows `funding.status: "required"`, and it can be corrected until the payment is booked.
+- The skill's routing table sends wallet questions to company setup.
+- Payment routes and endpoints: `payment_routes quote` takes `direction`, `amount_minor`, `assets`, `rails`, `max_eta_seconds` and `optimize`, and never lists a self-held wallet; a counterparty's instruction is registered with `partyId`, with per-method `etaSeconds` and amount limits. Stablecoins are valued at par in their own currency (EURC in euros), and a token without par shows a missing rate.
+- A free trial the business started is set up as one vendor contract from the trial's start, at its post-trial price with unscheduled billing, so nothing is billed during the trial; the first bill is recorded when the vendor issues it.
+
 ## 1.13.0 (2026-11-12)
 
 - Custom reports: an answer the founder will want again is saved as a report Economico draws from a definition the agent writes, with charts, tables, figures and text, and parameters such as the month. The verify reference teaches the order: `report_format {action: "guide"}`, `report_sql {action: "schema"}`, `report_format {action: "check"}`, `reports {action: "preview"}`, then `report_definitions.publish`.

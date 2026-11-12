@@ -63,7 +63,11 @@ months under review, which gives each vendor contract's spend, last use, seats a
 `unused_days` if the founder set another threshold. Check its findings with the steps below before
 you present them, and say what you read. A count fetched partway through a month reads as that whole
 month, so re-fetch the finished month before reporting seats as unused. Its spend is recognized cost, so a bill not yet recognized
-shows none, and trials need the founder's notes or the vendor's emails.
+shows none, and trials need the founder's notes or the vendor's emails. A trial the business started
+is still an agreement: set the vendor up with one contract from the trial's start, with the
+post-trial price as its term and unscheduled billing (as in [vendor contracts](vendor-contracts.md)),
+so nothing is billed during the trial; record the first bill when the vendor issues it, and no
+expense or payment before then.
 
 1. List the vendor contracts with `subjects`. On each, `activities[].definition.usage` says whether a
    usage meter exists at all, which separates "no usage source" from "no use".

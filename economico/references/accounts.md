@@ -32,6 +32,7 @@ more than the account.
 | AWS, GCP, Azure, Cloudflare, Render, Fly, Vercel, Neon, Supabase (production) | `5210` | Hosting and cloud infrastructure | `cost_of_revenue` |
 | The same, for staging, CI or development | `5210` | Hosting and cloud infrastructure | `research_and_development` |
 | OpenAI, Anthropic, model APIs called by the product | `5220` | AI and model inference | `cost_of_revenue` |
+| The same model APIs, used for development or experiments | `5220` | AI and model inference | `research_and_development` |
 | Stripe, Paddle, PayPal fees | `5230` | Payment processing fees | `cost_of_revenue` |
 | Twilio, Resend, Postmark, Algolia, data vendors used by the product | `5240` | Third-party APIs and data | `cost_of_revenue` |
 | Notion, Google Workspace, Slack, Linear, 1Password | `5310` | SaaS and productivity tools | `general_and_administrative` |
@@ -143,7 +144,8 @@ original evidence, but the card spending figure does not attribute it back to it
 
 ## Starting with an existing account balance
 
-When registering a company bank account, card or wallet that already has a balance, supply
+When registering a company bank account or card, or a wallet kept in its account currency such
+as a dollar provider account, that already has a balance, supply
 `openingBalance` as an exact signed minor-unit string and `openingDate` as `YYYY-MM-DD`:
 
 ```json
@@ -157,13 +159,23 @@ For a card, a positive opening balance is the amount owed (credit `2190`, debit 
 means a credit owed by the issuer. For a bank or wallet, positive is money held and negative is an
 overdraft. Zero is valid and still establishes the start date.
 
+A wallet the business holds itself takes no `openingBalance`: an opening is booked in the
+account's currency, so a wallet labelled `USDC` would start with dollars, not tokens. Open each
+token it already holds with `journal.post` in the token's CAIP-19 (`currency`), in the token's
+smallest unit, effective at the opening date: debit the wallet's own account
+(`balanceAccount.accountCode` in `accounts overview`: `1410` for stablecoins, `1310` for Ether
+and other crypto) with `subKey: {kind: 4, financialAccountId}` and credit `3900`. Record no
+wallet movement dated before that journal; history before it is already in the opening. A watched Tempo wallet needs neither:
+`accounts.monitor_wallet` takes its opening from the chain.
+
 The other side defaults to `3900` Opening balance equity. Use `openingEquityAccountCode` if the
 business chooses another postable equity account. This records the starting position, not income
 or a fresh capital contribution. Do not invent the balance or date; obtain them from the business
 or its statement. Personal accounts registered with `ownerPartyId` do not take opening balances:
 the books track only what the business owes the owner.
 
-For an account registered earlier without an opening, `accounts.set_opening_balance` accepts
-`financialAccountId` and the same opening fields, once, while it has no postings. For an account
+For a bank account or card registered earlier without an opening, `accounts.set_opening_balance`
+accepts `financialAccountId` and the same opening fields, once, while it has no postings; a
+wallet the business holds itself never takes it. For an account
 already in use, reconcile the evidenced difference with `journal.post` instead. An unused legacy
 card recorded on cash must be archived and registered correctly on `2190` before adding its opening.

@@ -75,6 +75,14 @@ currency. Owner/card funding claims and unapplied residuals stay in the payment 
 `payments.allocate`/`payments.unallocate` take the same two amounts for a cross-currency match.
 Never infer one amount from the other with a rate: each must come from evidence.
 
+A payment into or out of a company wallet names the token by its CAIP-19 as `currency`, with
+`amount` in the token's smallest unit, never the token's symbol. A claim in dollars is then in
+another currency: a customer paying a USD 79.00 invoice with 79 USDC on Base states `amount`
+`"79000000"`, and the allocation `amount` `"7900"` with `cashAmount` `"79000000"`. Paying a
+vendor's bill in tokens is the same with `direction: "out"`. Evidence it with
+`{ "kind": "chain_tx", "ref": "<transaction hash>" }`; on a watched Tempo wallet use the
+evidence pair in [company setup](company-setup.md) instead.
+
 An optional [market-rate sanity check](indicative-currency.md#optional-payment-price-check)
 compares two independently evidenced executed amounts. It supplies neither amount and never
 posts a guessed fee or difference. Missing rates leave only that comparison unavailable.
