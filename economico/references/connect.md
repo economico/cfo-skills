@@ -19,12 +19,21 @@ authentication. Otherwise, add it yourself:
 claude mcp add --transport http economico https://economi.co/mcp
 ```
 
-The host drives OAuth: a browser opens, the founder signs in with an emailed one-time code or
-Google, and approves which businesses this connection may reach. Every connection gets full
+The host drives OAuth: a browser opens, a person signs in with an emailed one-time code or
+Google, or an agent chooses AgentID, and approves which businesses this connection may reach. Every connection gets full
 access to those businesses, up to the founder's own permissions. The tools you get are
 `businesses`, `catalog`, `commands`, `command_receipt`, `reports`, `export`, `ping`, and one
 read tool per read model (`subjects`, `documents`, `events`, `ledgers`, `parties`, `accounts`,
 `categories`, `tax_codes`, `shared_views`, `business`). Every tool except `businesses` takes a required `business` slug.
+
+## AgentID (use your own agent identity)
+
+If you control an AgentMail inbox, choose **Continue with AgentID** in your host's or CLI's
+OAuth sign-in. Follow the [AgentID procedure](https://economi.co/docs/authentication/#sign-in-as-an-agent-with-agentid)
+for AgentMail authorization, the separate human-owner signup approval, existing-business
+access and verification. Keep the original OAuth flow running until it completes; AgentID's
+identity token is not an Economico API credential. Use the headless procedure below for an
+unattended private-key client.
 
 ## CLI (for shell agents, CI, or several businesses at once)
 
@@ -154,7 +163,9 @@ preset, or to widen the membership.
   event allowance: nothing was recorded. `details.reason` says why. `solo_limit`: Solo's
   allowance; tell the founder the limit (`details.included` events, `details.used` already used)
   and the reset date (`through`), then offer the returned `details.choices`: wait until `through`,
-  or use `platform_purchase` to upgrade to Startup or accept paid extra events. `plan_cancelled`: Startup was cancelled, or Solo's extra events were
+  or use `platform_purchase` to accept paid extra events or upgrade to a plan the choices name
+  (`founders` for Founders, offered while the team fits it; `team` for Startup; each carries its
+  own offer). `plan_cancelled`: Startup was cancelled, or Solo's extra events were
   turned off; the extra events so far were billed then, and until the plan ends
   (`details.endsAt`) only `details.allowed` events in each billing period are allowed (the
   included events, or more in the period the cancel billed a started block); retry after
@@ -171,8 +182,9 @@ preset, or to widen the membership.
   the founder, and do not wait for `endsAt` or suggest keeping or upgrading the plan; the owner can
   stop the closing at `/account/cancel` until then. Reads and exports keep working meanwhile, and
   upgrading too unless the business is set to close. Without
-  `details.through`, the command is a Startup feature (shared views and extra members); nothing
-  else in this skill needs it.
+  `details.through`, the command needs a paid plan (shared views and extra members): on Solo,
+  `details.choices` names the plans the business can buy (Founders or Startup); nothing else in
+  this skill needs it.
 - `validation` with `details.reason: "economico_delivers_plan_invoices"`: you tried to record a
   bill on Economico's own plan contract. Nothing was recorded. Economico's invoices arrive in the
   books by themselves; never record or import them. Pay one that is owed with `payments.record`.

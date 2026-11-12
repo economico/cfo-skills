@@ -148,3 +148,13 @@ Party reads, `activity_claims` and aging show the current marker, including for 
 The marker does not change accounts or payment allocation. Do not infer it from a founder or
 investor role. It is a current classification, not a dated relationship history or a complete
 related-party disclosure statement.
+
+## Party logos
+
+Show a customer's or vendor's logo only from an image the founder supplied or approved: the
+image becomes public, and its exact bytes (EXIF and GPS included) are kept. Upload it with the
+`logos` tool, `{ "action": "upload", "content_base64": "…", "publish": true }` (PNG, JPEG or
+WebP, at most 256 KiB and 1,024 pixels a side), then set the returned `url` as `logoUrl` in
+`parties.create` or `parties.update`. `list` shows the business's images; `replace` with `cid`
+swaps one, then set its new `url` on each party that showed the old one; `delete` with `cid`
+removes one. Over REST, `/v1/logos` does the same.

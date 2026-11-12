@@ -23,6 +23,17 @@ an aggregate party balance for claim identity.
   omitting the party cannot create an attributable card-funding claim.
 - Personal card/account: settles the vendor claim and creates an attributable owner claim.
   Register `ownerPartyId`; never add that owner to the vendor agreement just to describe payment.
+  It is registered in the company's currency even when the card settles in another: the owner
+  claim is the bill's amount, and the owner bears their card's conversion
+  ([company setup](company-setup.md#financial-accounts)). For a bill in another currency, state
+  the payment (or the paid receipt's `payment`) in the bill's currency and amount, without
+  `cashAmount`: it is recorded in the company's currency at the bill's booking rate, and the
+  founder is owed that; the result's `currency` and `amount` say what was recorded, so report
+  those. Never use the card statement's amount. See
+  [founder card, foreign bill](recipes/founder-card-foreign-bill.json).
+  A vendor's refund of such a bill is stated the same way, in the bill's currency with
+  `refundsFundingClaim`, and reduces what the founder is owed at the same rate. See
+  [founder card, foreign refund](recipes/founder-card-foreign-refund.json).
 - Reimbursement/card-statement payment: use the company bank to settle the returned funding
   claim IDs/components. The counterparty is now the owner/issuer. No second expense is recorded.
 
@@ -113,7 +124,9 @@ taxes and cross-currency fees are currently refused.
   allocation ID, claim components, amounts and correction evidence. Funds return to unapplied;
   no cash moves. Reapply them to the correct claims.
 - `payments.reverse` reverses a whole independent payment with correction evidence. It restores
-  claims and reverses funding. Consumed residual funds or reimbursed/converted funding claims
+  a payment's claims, or the live successor when its vendor bill was explicitly replaced;
+  the original bill stays cancelled and unused excess vendor credit is consumed first. It
+  also reverses funding. Consumed residual funds or reimbursed/converted funding claims
   must first be restored by supported dependent corrections. Initial allocations made inside
   `payments.record` use whole reversal followed by corrected recording.
 - A real refund is a new opposite-direction payment against an evidenced refund claim, not a
@@ -141,3 +154,26 @@ Historical capital distributions, financing repayments and refund claims retain 
 meaning. An owner-funded payment creates a separately reimbursable claim on the same report.
 A historical bill already referenced by an independent payment or allocation cannot be edited;
 use an evidenced linked credit for the commercial correction.
+
+For a later `payments.allocate` match to an explicitly replaced vendor bill, use
+`payments.unallocate` before reversing the cash payment. Unallocation reopens the live
+replacement, leaves the original bill cancelled, and restores unapplied funds.
+
+A replacement refuses if an unreversed payment or later match dated after the replacement
+remains on the original claim, including a repayment after a bounce. Use `payments.unallocate`
+for a later match, or `payments.reverse` for an initial allocation,
+then record or match it against the replacement. Fully undone later payments and matches
+do not block replacement or contribute retained credit. The replacement result’s
+`remainingCredit` includes bounces already recorded in the command, even when their effective
+date follows the replacement. Source retries retain that outcome. If a replacement was itself
+credited with `refundSettled`, a bounce consumes its available refund credit; when a refund
+payment consumed that credit, undo that payment with `payments.unallocate` or `payments.reverse`
+first, then retry the original payment reversal.
+
+For an initial refund-payment allocation, reverse the payment and record the actual cash refund
+again with no allocations before retrying the bounce. This retains real cash as unapplied vendor
+funds while freeing the refund claim. A later allocation can be unapplied without moving cash.
+The same step applies when a cash refund consumed excess credit from a smaller replacement.
+If the refund allocation was wholly or partly undone after the proposed bounce date, the reversal
+refuses with that undo date. Date the payment correction at or after it and retain the original
+bank bounce as evidence. This prevents simultaneously reopening payable and restoring vendor credit.

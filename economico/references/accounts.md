@@ -67,3 +67,103 @@ ambiguous, ask the founder and explain the effect.
 `2110` payables (per vendor), `2135` due to related parties (per founder), `1150` prepaid
 expenses, `1170` recoverable input tax, `2160` output tax, `2240` SAFE and other financing,
 `3100`/`3110` share capital and premium.
+
+
+## Company cards and received issuer statements
+
+A company card is a vendor contract with its issuer. Register its account as `kind: "card"`
+(on 2190), with `providerPartyId` and `providerContractId` naming the issuer and its active
+agreement. The issuer agreement can exist without processing-fee schedules.
+
+Set `paymentTerms` through `contracts.create` or `contracts.amend`: `payingAccountId` is the
+registered account used by default; `statementClosingDay` and `paymentDueDay` are
+calendar days 1–31; set `autopay: true` only when that instruction is evidenced. Supply the full
+replacement block on amendment. These are contract terms, never fields on the card account.
+
+When purchases have already been booked per charge (Dr expense / Cr 2190), receive the issuer's
+PDF with `documents.receive`, then call `card_statements.record` with `financialAccountId`,
+`contractId`, `closingDate`, `statementBalance`, `minimumDue`, `dueDate`, `documentId` and the
+issuer's unique `sourceFactId`. Amounts are minor-unit strings in the card currency. This records
+a bill over existing debt, without repeating purchase expenses. Optional `interest` and `fees`
+are only charges not already booked: interest posts to 7100, issuer fees to 5910, both against
+2190. Check the result's `difference` (statement less booked closing balance, including these
+items). A mismatch is accepted; research missing charges or timing rather than inventing an
+expense to make it match.
+
+Record a completed repayment with `card_statements.pay`: `statementId`, actual
+`financialAccountId`, `amount`, `effectiveAt`, fresh `sourceFactId` and payment `evidence`. It
+posts Dr 2190 / Cr cash and no expense. Partial repayment is supported. The account overview and
+card page show the latest statement only after one is recorded; aging counts the latest bill
+per card so overlapping statements do not double-count debt. An open bill's **Pay from** uses
+the issuer contract; a settled bill uses the actual payment account. This records autopay
+instructions and payments; it does not send money.
+
+To correct statement facts or duplicated interest/fees, use `card_statements.void` with
+`statementId`, `reason`, `effectiveAt`, a fresh `sourceFactId`, and correction `evidence`,
+then record the correct statement with `card_statements.record` and a new `sourceFactId`.
+When replacing a statement, date its void at the end of its original closing date:
+`<closingDate>T23:59:59.999Z`. Otherwise the old interest and fees remain in the historical
+closing balance and a correct replacement can show a negative `difference` equal to those
+removed charges. A later-dated void reduces spending in the void's calendar month; if that is
+a later month, the original closing month retains the old charges. Do not treat that
+date-driven difference alone as a missing purchase.
+An incorrectly future-dated statement can also be voided today; a void may precede the
+mistyped closing date. Such an early void reduces spending and debt in its own period while
+the original future-dated charges retain their recorded dates.
+The same closing date can be reused after voiding. This reverses only the statement's own
+interest and fees, preserves purchases and history, and removes its bill from aging and the
+card page; the earlier unvoided statement becomes latest. If the statement has payments,
+reverse them first with `card_statements.reverse_payment` using `paymentId`, `effectiveAt`,
+a fresh `sourceFactId`, and correction `evidence`. It reverses the whole payment (Dr cash /
+Cr 2190) and restores the unpaid amount. Record a replacement payment against the correct
+statement or cash account. Corrections work across incorporation through ledger carrying.
+Keep the replacement payment's true date even if its reversal is later-dated. The payment
+guard counts back later reversals only for payments already effective by that true date, and
+the replacement consumes the restored debt so it cannot be used twice.
+Both commands return `reversalId`; retry with the same idempotency key. They do not move funds.
+
+For monthly-only bookkeeping on a card in the business's functional currency, first record
+its evidenced purchases with `journal.post`, one balanced entry per category within the
+statement period (for example, on the closing date). Receive the PDF first, attach it as the
+command's `source_document_id`, and set the command envelope's `effective_at` to that date.
+Use the functional `currency` and minor-unit strings. Debit the expense leaf with
+`subKey: {kind: 6, expenseFunction: "general_and_administrative"}` (choose the actual function),
+and credit 2190 with `subKey: {kind: 4, financialAccountId: "the-registered-card-id"}`.
+For example, 7,000 of software (5310) and 3,000 of hosting (5210, `cost_of_revenue`) leave
+10,000 on the card before the 10,000 statement is recorded; paying it clears 2190 against cash.
+This journal path works on fresh books. Its currency must match the business's functional
+currency; do not invent an exchange amount to fit it.
+
+Omit purchases already booked individually. If supplier bills already record the expenses,
+use `payments.record` funded by the registered card to move their 2110 payable onto the card's
+2190 before recording the issuer statement; do not repeat those expenses in a journal. Direct
+`card_expense` contract effects are available only on existing legacy agreements, not through
+fresh contract authoring. A journal backdated across incorporation keeps its card debt and
+original evidence, but the card spending figure does not attribute it back to its original month.
+
+## Starting with an existing account balance
+
+When registering a company bank account, card or wallet that already has a balance, supply
+`openingBalance` as an exact signed minor-unit string and `openingDate` as `YYYY-MM-DD`:
+
+```json
+{"financialAccountId":"operating-bank","name":"Operating bank","currency":"USD","kind":"checking","openingBalance":"125000","openingDate":"2026-11-01"}
+```
+
+This starts the books with $1,250 in the bank. Use the statement's balance at the start of the
+opening date: it stands for everything before that date. Do not also record earlier transactions;
+payments and journals before that date are refused. Transactions on the opening date are accepted.
+For a card, a positive opening balance is the amount owed (credit `2190`, debit equity); negative
+means a credit owed by the issuer. For a bank or wallet, positive is money held and negative is an
+overdraft. Zero is valid and still establishes the start date.
+
+The other side defaults to `3900` Opening balance equity. Use `openingEquityAccountCode` if the
+business chooses another postable equity account. This records the starting position, not income
+or a fresh capital contribution. Do not invent the balance or date; obtain them from the business
+or its statement. Personal accounts registered with `ownerPartyId` do not take opening balances:
+the books track only what the business owes the owner.
+
+For an account registered earlier without an opening, `accounts.set_opening_balance` accepts
+`financialAccountId` and the same opening fields, once, while it has no postings. For an account
+already in use, reconcile the evidenced difference with `journal.post` instead. An unused legacy
+card recorded on cash must be archived and registered correctly on `2190` before adding its opening.

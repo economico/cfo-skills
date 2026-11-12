@@ -1,0 +1,363 @@
+{
+  "name": "Vendor refunded a foreign bill paid on a founder's own card",
+  "description": "A EUR receipt on a founder's own card is owed to them at its booking rate in USD. When the vendor credits the bill and refunds the card, the refund is stated in EUR with its original funding claim, is recorded in USD at the same rate, and clears what the company owed.",
+  "setupAt": "2026-03-01T00:00:00Z",
+  "recordedAt": "2026-05-01T00:00:00Z",
+  "steps": [
+    {
+      "key": "acceptance-source",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "U3ludGhldGljIGFjY2VwdGFuY2UgZXZpZGVuY2UgZm9yIHRoaXMgZXhlY3V0YWJsZSBmaXh0dXJlOiB0aGUgY29tcGFueSBhY2NlcHRlZCB0aGUgdmVuZG9yIHNlcnZpY2UgYWdyZWVtZW50IG9uIDIwMjYtMDMtMDRUMDA6MDA6MDBaLiBUaGUgc3Vic2VxdWVudCBpbnZvaWNlL3JlY2VpcHQgZXN0YWJsaXNoZXMgdGhlIHNwZWNpZmljIHNlcnZpY2UgY2hhcmdlOyBiYW5rL2NhcmQgZXZpZGVuY2UgZXN0YWJsaXNoZXMgcGF5bWVudCBzZXBhcmF0ZWx5Lg==",
+        "externalId": "founder-card-foreign-bill:acceptance:2026-03-04"
+      }
+    },
+    {
+      "key": "receipt",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "RnJvbTogYmlsbGluZ0BoZXR6bmVyLmNvbQpTdWJqZWN0OiBJbnZvaWNlIFIwMDEyMzQ1CkNsb3VkIHNlcnZlciBDWDIyLCBNYXJjaCAyMDI2OiBFVVIgMjAuMDAKQ2hhcmdlZCB0byBWaXNhIGVuZGluZyA4NTcwLg==",
+        "externalId": "email:hetzner:R0012345"
+      }
+    },
+    {
+      "key": "rate",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "RUNCIGV1cm8gcmVmZXJlbmNlIHJhdGUsIDIwMjYtMDMtMDQ6IDEgRVVSID0gMS4wODAwIFVTRA==",
+        "externalId": "ecb:eurofxref:2026-03-04"
+      }
+    },
+    {
+      "key": "founder",
+      "command": "parties.create",
+      "input": {
+        "partyId": "founder_ada",
+        "name": "Ada Founder",
+        "categories": [
+          "founder"
+        ]
+      }
+    },
+    {
+      "key": "vendor",
+      "command": "parties.create",
+      "input": {
+        "partyId": "ven_hetzner",
+        "name": "Hetzner",
+        "iri": "https://www.hetzner.com",
+        "categories": [
+          "vendor"
+        ]
+      }
+    },
+    {
+      "key": "founder-card",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "card_ada_visa_8570",
+        "name": "Ada's Visa ending 8570",
+        "currency": "USD",
+        "kind": "card",
+        "ownerPartyId": "founder_ada",
+        "last4": "8570",
+        "network": "Visa"
+      }
+    },
+    {
+      "key": "service-right",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "model": "priced-rights-v1",
+          "name": "Cloud server",
+          "terms": {
+            "price": {
+              "type": "integer",
+              "unit": "EUR",
+              "default": "2000"
+            },
+            "currency": {
+              "type": "text",
+              "default": "EUR"
+            }
+          },
+          "facts": {},
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "EUR",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "price": {
+            "treatment": "priced",
+            "calculation": {
+              "type": "fixed",
+              "amount": "term:price"
+            },
+            "currencyTerm": "currency"
+          },
+          "economics": {
+            "kind": "service",
+            "direction": "receive",
+            "billing": {
+              "timing": "arrears"
+            },
+            "recognition": {
+              "timing": "delivery"
+            },
+            "classification": {
+              "monetaryLedger": "money",
+              "expenseAccount": 5310,
+              "expenseFunction": "general_and_administrative"
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "vendor-template",
+      "command": "templates.create",
+      "input": {
+        "definition": {
+          "model": "priced-rights-v1",
+          "name": "Cloud server agreement",
+          "parties": [
+            "vendor"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "EUR",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "activities": [
+            {
+              "key": "service",
+              "activityDocumentId": {
+                "$ref": "service-right.documentId"
+              },
+              "partyRole": "vendor",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "contract",
+      "command": "contracts.create",
+      "input": {
+        "templateDocumentId": {
+          "$ref": "vendor-template.documentId"
+        },
+        "parties": {
+          "vendor": "ven_hetzner"
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000978"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "receipt.documentId"
+          },
+          {
+            "$ref": "acceptance-source.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "accept",
+      "command": "contracts.accept",
+      "at": "2026-03-04T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "expectedDocumentId": {
+          "$ref": "contract.documentId"
+        },
+        "expectedStatus": "draft",
+        "effectiveAt": "2026-03-04T00:00:00Z",
+        "sourceFactId": "hetzner:account:terms",
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "acceptance-source.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "paid-receipt",
+      "command": "receipts.record",
+      "at": "2026-03-04T00:00:00Z",
+      "input": {
+        "billing": {
+          "contractId": {
+            "$ref": "contract.id"
+          },
+          "activityKey": "service",
+          "obligationKey": "R0012345",
+          "effectiveAt": "2026-03-04T00:00:00Z",
+          "facts": {},
+          "phase": "billing",
+          "occurrenceKey": "R0012345:bill",
+          "sourceFactId": "hetzner:invoice:R0012345:bill",
+          "evidence": {
+            "billing": [
+              {
+                "kind": "other",
+                "ref": {
+                  "$ref": "receipt.documentId"
+                }
+              }
+            ]
+          },
+          "exchangeRate": {
+            "base": "EUR",
+            "quote": "USD",
+            "date": "2026-03-04",
+            "numerator": "108",
+            "denominator": "100",
+            "evidence": [
+              {
+                "kind": "other",
+                "ref": {
+                  "$ref": "rate.documentId"
+                }
+              }
+            ]
+          }
+        },
+        "payment": {
+          "financialAccountId": "card_ada_visa_8570",
+          "direction": "out",
+          "amount": "2000",
+          "currency": "EUR",
+          "partyId": "ven_hetzner",
+          "effectiveAt": "2026-03-04T00:00:00Z",
+          "sourceFactId": "hetzner:invoice:R0012345:payment",
+          "evidence": [
+            {
+              "kind": "other",
+              "ref": {
+                "$ref": "receipt.documentId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "owed-to-founder",
+      "report": true,
+      "input": {
+        "kind": "balance_sheet",
+        "currency": "USD",
+        "as_of": "2026-03-06T00:00:00Z"
+      },
+      "expect": {
+        "liabilities": {
+          "total": "2160"
+        }
+      }
+    },
+    {
+      "key": "credit",
+      "command": "contracts.reverse_economics",
+      "at": "2026-03-21T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "contract.id"
+        },
+        "activityKey": "service",
+        "occurrenceId": {
+          "$ref": "paid-receipt.economic.occurrenceId"
+        },
+        "effectiveAt": "2026-03-21T00:00:00Z",
+        "sourceFactId": "hetzner:credit:R0012345",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": {
+              "$ref": "receipt.documentId"
+            }
+          }
+        ],
+        "refundSettled": true
+      }
+    },
+    {
+      "key": "refund",
+      "command": "payments.record",
+      "at": "2026-03-21T00:00:00Z",
+      "input": {
+        "financialAccountId": "card_ada_visa_8570",
+        "direction": "in",
+        "amount": "2000",
+        "currency": "EUR",
+        "partyId": "ven_hetzner",
+        "effectiveAt": "2026-03-21T00:00:00Z",
+        "sourceFactId": "hetzner:refund:R0012345",
+        "evidence": [
+          {
+            "kind": "other",
+            "ref": {
+              "$ref": "receipt.documentId"
+            }
+          }
+        ],
+        "refundsFundingClaim": {
+          "claimId": {
+            "$ref": "paid-receipt.payment.fundingClaims.0.claimId"
+          },
+          "component": {
+            "$ref": "paid-receipt.payment.fundingClaims.0.component"
+          }
+        },
+        "allocations": [
+          {
+            "claimId": {
+              "$ref": "credit.refundClaims.0.claimId"
+            },
+            "component": {
+              "$ref": "credit.refundClaims.0.component"
+            },
+            "amount": "2000"
+          }
+        ]
+      }
+    },
+    {
+      "key": "settled",
+      "report": true,
+      "input": {
+        "kind": "balance_sheet",
+        "currency": "USD",
+        "as_of": "2026-03-22T00:00:00Z"
+      },
+      "expect": {
+        "liabilities": {
+          "total": "0"
+        }
+      }
+    }
+  ]
+}

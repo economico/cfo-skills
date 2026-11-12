@@ -41,7 +41,7 @@ host. Directory availability and rendering in each agent depend on that host's s
 | `record-payment` | `/record-payment`: record a customer's payment against an invoice. |
 | `record-vendor-invoice` | `/record-vendor-invoice`: record a bill a vendor sent, with the invoice as evidence. |
 | `record-receipts` | `/record-receipts`: find vendor receipts and bills in your email and record them. |
-| `investor-update` | `/investor-update`: draft this month's investor update from the books. |
+| `investor-update` | `/investor-update`: build this month's investor update from the books, as a report to send by link. |
 
 The slash-command skills are shortcuts you type. Each hands your request to the `economico`
 skill, so install them together.

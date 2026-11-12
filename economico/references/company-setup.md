@@ -13,7 +13,8 @@ profit, create an expense, redeem units or permit spending another holder's capi
 ## Profile
 
 `business.update` with a one-line `description` (280 characters at most) and the `url`. Write it
-straight away from what you learned in discovery; the founder can correct it. `business
+straight away from what you learned in discovery; the founder can correct it. A `logoUrl`, the
+link an image upload returns, puts the business's logo on its share pages. `business
 {action: "get"}` shows the rest: legal name and form, jurisdiction, functional currency, fiscal
 year end, and, under `ownership`, the recipes (ownership setups) that apply to this legal form.
 
@@ -52,13 +53,70 @@ omit `providerPartyId`. Retain evidenced account/network/last4; never record a f
 ```
 
 - The kind picks the account when `glAccountCode` is omitted: a bank account posts to `1110`,
-  `kind: "card"` to `2190` card payable, `kind: "wallet"` to `1310`. A card on `1110` or `1310`
-  is refused: a card is a liability, never cash.
+  `kind: "card"` to `2190` card payable, `kind: "wallet"` to `1410` stablecoin holdings. A
+  stablecoin account goes on `1410` whether the business holds the tokens itself or a provider
+  holds them, such as a Stripe financial account kept in US dollars. A wallet holding Bitcoin,
+  Ether or other crypto names `glAccountCode: 1310`. A card on `1110`, `1310` or `1410` is
+  refused: a card is a liability, never cash.
+- To the founder a stablecoin is money, and screens show `1410` beside their cash. Its status
+  differs by accounting framework: under US GAAP it is not cash, and the Swiss Code of
+  Obligations files it as a short-term receivable. The reporting package applies that status,
+  so record the account on `1410` and leave the classification to the report. Only a business
+  whose accountant concludes, with evidence, that its stablecoins are cash equivalents files
+  them on the cash line, through its reporting profile.
+- A wallet the business holds itself counts each token in the token's own unit. Register it
+  with `kind: "wallet"` and `currency` set to the token's symbol (`"USDC"`); the symbol is only
+  its label. Record each movement with the token's CAIP-19 as `currency` and the amount in the
+  token's smallest unit: 1.5 USDC is `"1500000"`, because USDC has 6 decimals. Each token gets
+  a ledger of its own, at the precision its contract reports. For a token the registry does not
+  list, omit `decimals` to have the control plane read `decimals()` through ValidationCloud on
+  a supported, configured EVM chain. If that lookup is unavailable or the chain is unsupported,
+  read the contract directly and pass its evidenced `decimals` on the first journal. Move
+  tokens to a bank or another wallet with `payments.transfer`, naming the CAIP-19 on the
+  wallet's side; a sale for dollars also states `receivedAmount`/`receivedCurrency`. Read what
+  a wallet holds from `holdings` in `accounts overview`. Reports total a dollar stablecoin at
+  par; a token without par shows a missing rate, not a guess. A provider account kept in
+  dollars, such as a Stripe financial account, stays on `1410` in `USD`.
+- A company wallet on Tempo can be watched instead of recorded by hand. With the founder's
+  agreement, `accounts.monitor_wallet` with the wallet's `financialAccountId`, the token's
+  CAIP-19 as `token` and the wallet's `address` (addresses only: never ask for keys or
+  signing). The answer's `monitorId` names it from then on. The opening balance comes from the
+  chain at a stated block, and only its difference from what the books already hold is
+  journaled. Economico reads the wallet once a day; `accounts.check_wallet_monitor` asks for a
+  read now (at most once every five minutes, and not while paused), for example while the
+  founder waits for a payment; read the movements again once it has run. Read the state with
+  `accounts {action: "wallet_monitors", id: financialAccountId}` and the movements with
+  `accounts {action: "wallet_movements", id: financialAccountId}`: both take the wallet's
+  account id, not the `monitorId`, and an empty page for the wrong id is not an error. The
+  commands take the `monitorId`. A transfer between two watched company wallets is recorded
+  once by itself. A movement to or from another company account that is still unclassified is
+  a transfer: record it with `payments.transfer`, the movement's `reference` as `sourceFactId`,
+  never by classifying it. Before classifying, look for the same amount and date already
+  recorded by hand. Token payments sit in the token's own ledger, not in the account's
+  `overview` movements: find it in `ledgers {action: "list"}` (its unit is the token's
+  CAIP-19), then read `ledgers {action: "statement", ledger_id, account_code: 1410}`. If the
+  payment is there, tell the founder instead of classifying, because classifying would count
+  the cash twice. Any other movement with `status`
+  `unclassified` keeps an unknown purpose until you ask the founder who it is from or paid to
+  and what it settles, then `accounts.classify_wallet_movement` with the `monitorId`, the movement's `reference`,
+  the `partyId` and the claim `allocations` (an empty list leaves it unapplied). Never classify
+  a movement as revenue or a customer's payment on a guess. `accounts.set_wallet_monitoring`
+  with `enabled` pauses or resumes it. After a chain reorganisation the monitor stops recording
+  for review: correct the books with ordinary commands, then `accounts.reconcile_wallet_monitor`
+  with a `reason`. Only explicitly registered Tempo tokens are watched; other chains, token
+  discovery and history before the opening are not.
 - Read `reports run balances` without an explicit currency for shared `payment_accounts`
   native/indicative totals. Keep bank/wallet cash apart from card debt and related-party funding;
   report missing rates as an unavailable combined total, with every native balance accessible.
 - Checking and savings at the same bank are two accounts. One account reachable by several rails
   is one account.
+- An account has one currency, set when you register it. A company account takes the currency
+  its statement settles in. A founder's or employee's own card (`ownerPartyId`) takes the
+  company's functional currency, whatever currency the card itself settles in: the company owes
+  what the bill says, and the person bears their card's conversion. A founder's CHF-settled
+  Visa that paid the company's USD and EUR bills is one USD account, owed USD, the EUR bills at
+  their booking rate ([payments](payments.md#settle-an-identified-claim)); never register it
+  again per bill currency, and never record the francs on their card statement.
 - These are bookkeeping records. Economico does not connect to them, read balances or move money.
 - When the provider's fee agreement is known, create its vendor contract as described in
   [provider services](payments.md#provider-services) and link it with
@@ -202,7 +260,7 @@ membership units. Read `capital_accounts` to verify capital and undistributed ea
 and the income statement to confirm no second revenue or expense. Distributing cash is a
 separate approved distribution right and independent payment. Schema 12 is required.
 
-The [SAFE example](recipes/safe.json) now uses a priced financing right, evidenced purchase
+The [SAFE example](recipes/safe.json) uses a priced financing right, evidenced purchase
 conditions, and independent bank funding. It preserves the financing liability without
 inventing shares, equity, revenue or a commercial invoice. Its evidence is explicitly synthetic;
 replace it with the signed instrument and actual bank record.

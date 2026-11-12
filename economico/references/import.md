@@ -4,7 +4,7 @@ Use this when the founder wants their history in Economico: the books they kept 
 business was created here (last year's customers, contracts, invoices, receipts, payments).
 History is free: anything you record dated before the business was created comes in as an
 **import**. It does not count toward the monthly events, and it uses the business's one-time
-import allowance instead (1,000 events on Solo, 10,000 on Founders or Startup once its first fee is paid,
+import allowance instead (1,000 events on Solo, 10,000 on Founders or 50,000 on Startup while that plan is active,
 cumulative). There is nothing to start or finish, and anyone in the company, or their agent, can
 record it.
 

@@ -1,6 +1,6 @@
 ---
 name: economico
-description: "Model a business in Economico: discover pricing from code, Stripe and email; find patterns and saved rights; compose plans or bespoke contracts; record evidenced economics and payments; prove the books. Use to connect or set up Economico, explore business models, create custom agreements, resume the books, turn pricing into contracts, set up vendors, record receipts or invoices, or understand Economico."
+description: "Model a business in Economico: discover pricing and costs from code, Stripe and email; reuse rights and plans; record evidenced contracts, economics and payments; prove the books. Use for setup, AgentID sign-in, agreements, resuming the books, vendor invoices, People or provider payroll."
 ---
 
 # Economico
@@ -24,9 +24,9 @@ lifecycle events are not additional activities. Use only the founder's authorize
    recommendation and reason first, through the host's question tool. Read
    [asking the founder](references/asking-the-founder.md) immediately before each round.
 4. **Money is a string of minor units.** When reporting, scale exactly once by `10^decimals`,
-   using the ledger's `decimals` from `ledgers {action: "get", ledger_id}`. For USD (2 decimals),
-   `"4900"` is $49.00; for JPY (0 decimals), `"4900"` is ¥4,900. Dates are `YYYY-MM-DD`;
-   instants are UTC with `Z`. The founder's stated business date governs recording and reports.
+   using the ledger's `decimals` from `ledgers {action: "get", ledger_id}`: `"4900"` is $49.00
+   in USD (2 decimals), ¥4,900 in JPY (0). Dates are `YYYY-MM-DD`; instants are UTC with `Z`.
+   The founder's business date governs recording and reports; record nothing dated after it.
 5. **Preserve supplied IDs exactly.** Copy source IDs into `sourceFactId` and agreement IDs into
    document `externalId`; never reorder or suffix them. Create IDs only when none were supplied.
    Store evidence with `documents.receive`; use stable `idempotency_key`s.
@@ -65,9 +65,11 @@ inline when the host renders them, otherwise as text.
 | connect an agent, log in, pick or create a business, run headless | [connect](references/connect.md) |
 | understand how Economico works, or why something was refused | [how Economico works](references/how-economico-works.md) |
 | explore business model patterns, reuse rights, combine offerings or draft a bespoke contract | [business model patterns](references/business-model-patterns.md) |
-| turn pricing (code, Stripe or a pricing page) into plans | [modeling products](references/modeling-products.md) |
+| turn pricing (code, Stripe, a pricing page) into plans, or publish | [modeling products](references/modeling-products.md) |
 | add a customer, record a signed deal, bill or collect | [customer contracts](references/customer-contracts.md) |
 | set up vendors, process receipts or invoices from email | [explore email](references/explore-email.md), [vendor contracts](references/vendor-contracts.md) |
+| People, provider payroll or named service seats | [People and payroll](references/people-and-payroll.md) |
+| review subscriptions, or record which tools and seats are used | [vendor usage](references/vendor-usage.md) |
 | record payments, reimbursements, transfers or payment corrections | [payments](references/payments.md) |
 | choose an account for a cost or a revenue line | [accounts](references/accounts.md) |
 | set the company profile, bank accounts, cards, legal identity, founders' shares or the cap table | [company setup](references/company-setup.md) |
