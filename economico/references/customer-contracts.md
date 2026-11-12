@@ -78,8 +78,13 @@ not grounds to invent a journal or declare an unapplied payment settled.
 
 ## Changes, cancellation and proof
 
-Use `contracts.amend` for evidenced prospective service-term changes, such as price or seat
-quantity. Supply the current document ID, effective instant, changed right terms and acceptance
+For a right declaring `economics.quantity`, use `contracts.change_quantity` with the new absolute
+count, expected count, change instant and service evidence. Its declared proration and decrease
+rules determine the charge or credit; an optional evidenced bill records the charge in the same
+transaction. This also applies to quantity changes at a period boundary.
+
+Use `contracts.amend` for other evidenced prospective service-term changes, such as price or a
+seat quantity without an `economics.quantity` declaration. Supply the current document ID, effective instant, changed right terms and acceptance
 evidence. Scheduled changes must land at exact billing and service boundaries; existing
 obligations, calendars, currency and consequence-bearing rights require explicit adjustment
 semantics. The new dated version preserves the same right identity and earlier prices. A changed
@@ -113,8 +118,9 @@ from its yearly price. Other older customer recipes remain historical fixtures u
 
 For a fixed recurring service, declare `recurringValue` with the monthly/yearly interval and
 start/end date term names. The report uses the same contractual price as billing, including
-static seat quantities. Do not declare observed usage as fixed MRR or invent an amount for an
-unknown price. Prove month-end MRR/ARR as well as revenue and collection; cancellation changes
+static seat quantities. For a right declaring `economics.quantity`, MRR reads the dated count in
+force at its cutoff, clamped to the declared minimum. Do not declare observed usage as fixed MRR
+or invent an amount for an unknown price. Prove month-end MRR/ARR as well as revenue and collection; cancellation changes
 later run rate while preserving earlier snapshots.
 
 For equal calendar-period recognition, set `economics.recognition.allocation: "equal_periods"`

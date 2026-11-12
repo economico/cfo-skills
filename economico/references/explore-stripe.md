@@ -81,12 +81,16 @@ apart, because each settles something different:
    Stripe balance account (Stripe is a vendor contract like any other).
 3. **The payout**: a transfer of the net from the Stripe balance account to the bank.
 
-Record them in that order, in date order: every customer receipt into the Stripe balance account
-first, then the Stripe vendor contract's fees and payouts. A payout is a `transfer_cash` effect
-on the Stripe vendor contract (`financialAccountFact` naming the Stripe balance account,
-`toFinancialAccountFact` the bank), and it is refused unless the Stripe balance already holds
-the net it moves; a contract's recordings must go forward in time, so a payout recorded before
-the receipts behind it cannot be fixed by re-dating.
+Use `payments.process` for an evidenced gross receipt and its processing fee: it records the
+receipt, bills and recognises the provider service, and settles that fee from the Stripe balance.
+It already owns that processing expense. Product fees (Billing, Invoicing, Tax, Radar) are
+separate components: match their itemized balance transactions to the adopted contract and pay
+its existing claims, following [vendor contracts](vendor-contracts.md#stripe-fees-deducted-from-the-balance).
+A monthly report or payout containing a fee already recorded creates no second expense.
+
+Record the evidenced money movements in date order, with receipts before their deductions and
+payouts. Use `payments.transfer` from the Stripe balance account to the bank for the net payout;
+it has no fee expense. A negative Stripe balance flags missing receipts or an evidenced advance.
 
 There is no shortcut that records only payouts: a payout is a net sum across many invoices, so
 recording it alone leaves every invoice open in receivables, and recording the fee against the

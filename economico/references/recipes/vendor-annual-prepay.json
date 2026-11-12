@@ -1,6 +1,6 @@
 {
   "name": "Vendor annual plan paid upfront, expensed monthly",
-  "description": "One annual insurance coverage right costs $1,020, billed separately from its bank payment and recognized $85 for each completed calendar month. After March, prepaid value is $765 and insurance expense $255.",
+  "description": "One annual insurance coverage right costs $1,020, billed separately from its bank payment and recognized $85 for each completed calendar month, each only once no plan change cuts across that month (see the January step's note). After March, prepaid value is $765 and insurance expense $255.",
   "setupAt": "2026-01-01T00:00:00Z",
   "recordedAt": "2026-04-01T00:00:00Z",
   "steps": [
@@ -274,6 +274,7 @@
     },
     {
       "key": "coverage-jan",
+      "note": "Amend first: before recording each month's recognition, read every invoice and notice for the policy and confirm no plan or coverage change is dated inside that month. If one cuts across it, get the founder's agreement and record contracts.amend from the change date first, then the recognition; a recognition recorded first blocks that amendment (vendor-contracts.md, step 8).",
       "command": "contracts.record",
       "at": "2026-01-31T23:59:59.999Z",
       "input": {

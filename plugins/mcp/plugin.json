@@ -1,0 +1,32 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "economico",
+  "version": "1.13.0",
+  "description": "The finance function for founders, run by your own agent: contracts, invoices, bills and revenue recognition in exact double-entry books on Economico.",
+  "author": {
+    "name": "Economico",
+    "email": "support@economi.co",
+    "url": "https://economi.co"
+  },
+  "homepage": "https://economi.co/agents/hermes/",
+  "repository": "https://github.com/economico/cfo-skills",
+  "license": "MIT",
+  "keywords": [
+    "economico",
+    "finance",
+    "accounting",
+    "bookkeeping",
+    "invoicing",
+    "mcp",
+    "startup"
+  ],
+  "extensions": {
+    "com.nousresearch.hermes": {
+      "servers": {
+        "economico": {
+          "trust": "untrusted"
+        }
+      }
+    }
+  }
+}

@@ -101,6 +101,26 @@ for new agreements. A recipe's `steps` run in order; `{"$ref":"step.field"}` cop
 prior result, including array paths such as `claim-read.claims.0.component`. Report `expect`
 values assert exact books, not just successful commands.
 
+## Publish a plan to the vendor catalog
+
+Only when the founder asks to share a plan or pattern publicly, so other businesses' agents can
+adopt it. Publishing is public: show the founder the bundle before publishing, and use their
+public pricing page as `pricingUrl`.
+
+1. `plan_publications {action: "preview", templateId, pricingUrl, planKey}` on an active on-sale
+   template; add `shelf: "patterns"` for a business model pattern. Show the returned `bundle`
+   and `cid`.
+2. After the founder agrees, send the returned `publish` object back unchanged with
+   `action: "publish"`. Add `domain` (and `method: "dns"`) only if the founder set up the proof,
+   and tell the founder what `proofOutcome` says: a failed check still publishes, unverified.
+3. A version is never edited. To change prices or terms, update the template, preview with
+   `supersedes` (the old `cid`) and a `summary`, and publish the new version. `withdraw` with
+   `cid` stops new adoptions of a version; adopters keep it, and a new version can supersede it.
+
+A failure says what to fix (an off-sale template, a changed preview, a connection without
+`public.manage`); fix that and retry. Only the owner, or the owner's interactive agent,
+publishes.
+
 ## Recipes
 
 Validated service examples: [monthly subscription](recipes/customer-monthly-subscription.json),

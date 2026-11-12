@@ -1,8 +1,8 @@
 # Business model patterns
 
 Business model patterns are composable pricing ideas for the company's offerings or a bespoke
-client contract. This catalog is bundled with the skill; it is not a list of records in the
-connected business. Use the business's `subjects` and `documents` reads to find saved rights and
+client contract. They come from the vendor catalog's `patterns` shelf; they are not records in
+the connected business. Use the business's `subjects` and `documents` reads to find saved rights and
 plans, then the existing activity, template and contract commands to save the agreed result.
 
 ## Find a pattern
@@ -31,11 +31,15 @@ A block can appear several times. Setup and access remain different rights even 
 fixed prices. Monthly, annual and other cadences are terms, not different pricing primitives.
 A selection or copied brief is a modeling request, never evidence of a customer agreement.
 
-For executable shapes and required facts, read the relevant recipes in
-[modeling products](modeling-products.md#recipes): monthly/annual access, seats, access plus usage,
-hours plus a milestone, or prepaid/included capacity. Adapt their definitions, never their
-example amounts, parties, dates, evidence or transactions. Percentage and spread ideas are not
-validated recipes: check the live calculation and currency semantics before promising support.
+A brief from the workspace gives each component a `catalogSource`: the catalog version's `cid`,
+entry `slug`, `planKey` and, when that version demonstrates it, an `activity`. Read the version
+with `vendor_catalog {action: "get", cid}` and take that activity as the component's executable
+shape, with the version's templates, required terms and evidence. `catalogSource` records where
+the card came from; never write it as a template or contract `vendorPlan`, which means adoption.
+A component without an `activity` (percentage and exchange spread today) has no validated shape:
+check the live calculation and currency semantics before promising support. Without a brief,
+the relevant recipes in [modeling products](modeling-products.md#recipes) show the same shapes.
+Adapt definitions, never example amounts, parties, dates, evidence or transactions.
 
 For tiered components or Stripe tiered Prices, read [Stripe tiered pricing](stripe-tiered-pricing.md)
 before mapping the schedule. Tier flat fees stay within their pricing component.
