@@ -78,7 +78,7 @@ as Markdown the founder can paste into an email, from the built-in reports:
 |---|---|---|
 | Recurring revenue | `reports run saas_metrics` with `year` and `month`, for this month and the one before | MRR and ARR, and their change on last month |
 | Revenue and spend | `reports run income_statement` with `from` the first of the month and `until` the next month's first instant as a UTC timestamp (`2026-10-01T00:00:00Z` for September) | Revenue, cost of revenue, gross margin, operating expenses, net income or loss |
-| Cash and runway | `reports run default_alive` with `period` `YYYY-MM` | Cash at month end, net burn, months of runway |
+| Cash and runway | `reports run default_alive` with `period` `YYYY-MM`, plus, for each wallet that holds tokens, `ledgers {action: "balances", ledger_id, as_of}` on each token's ledger at the same month-end cutoff (`holdings` in `accounts overview` is today's, not the month's) | Cash at month end, net burn, months of runway; when a wallet holds tokens, list them beside cash, wallet by wallet, and say cash and runway leave them out |
 | Money owed to the company | `reports run aging` with `direction` `receivable` and `as_of` the next month's first instant as a UTC timestamp (`2026-10-01T00:00:00Z` for September) | Anything overdue worth a line |
 
 Scale every amount once by the ledger's `decimals`, as [verify](verify.md) says. Compare with
