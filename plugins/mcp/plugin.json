@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "economico",
-  "version": "1.13.1",
+  "version": "1.13.2",
   "description": "The finance function for founders, run by your own agent: contracts, invoices, bills and revenue recognition in exact double-entry books on Economico.",
   "author": {
     "name": "Economico",

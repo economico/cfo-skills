@@ -81,7 +81,7 @@ omit `providerPartyId`. Retain evidenced account/network/last4; never record a f
   `receivedCurrency`. A move between two wallets in one token needs that token's first movement
   recorded first. Read what
   a wallet holds from `holdings` in `accounts overview`. Reports total a stablecoin at par in its
-  own currency (USDC in dollars, EURC in euros at the day's rate). A token without par, such as a
+  own currency (USDC in dollars; EURC in euros, and in an `indicative` total at the day's rate, as below). A token without par, such as a
   yield-bearing one like sUSDe, or one the registry does not list, shows a missing rate, not a
   guess. A provider account kept in
   dollars, such as a Stripe financial account, stays on `1410` in `USD`.
@@ -123,13 +123,19 @@ omit `providerPartyId`. Retain evidenced account/network/last4; never record a f
 - Read `reports run balances` without an explicit currency for shared `payment_accounts`
   native/indicative totals. Keep bank/wallet cash apart from card debt and related-party funding;
   report missing rates as an unavailable combined total, with every native balance accessible.
-  Tokens a wallet holds in their own ledgers are not in `payment_accounts`, in an account's
-  `balance`, `summary` or `summaries`, or in the cash and runway of `default_alive` and
-  `saas_metrics`. Read them from `holdings` in `accounts overview` and from `reports run
-  balance_sheet`, which lists each token in `other_currencies`; `indicative` totals them only
-  when every token and currency has a rate: one token without par (Ether, sUSDe) leaves the
-  combined total unavailable, so report each native amount.
-  When a wallet holds tokens, show them beside those figures and say they are not in them.
+  A stablecoin valued at par in the reported currency (USDC in dollars) is already in an
+  account's `balance`, `summary` and `summaries` (in the account's currency), the cash, burn
+  and runway of `default_alive`, `saas_metrics` and `monthly_metrics`, and the combined
+  `indicative` cash of `payment_accounts` (its native units are their own `by_currency` row):
+  never add it again. In those native figures a token without that valuation (Ether, sUSDe, a
+  euro coin in a dollar total) is left out of cash and burn and named in `excluded_token_units`;
+  read its native amount from `holdings` in `accounts overview` and show it beside the figures
+  as not included. An `indicative` block already counts a stablecoin pegged to another currency
+  at that currency's rate: never add an excluded token to it. `payment_accounts` has no
+  `excluded_token_units`: a token without par is named in `missing_rates` and leaves its
+  combined total unavailable, so report each `by_currency` row. `reports run balance_sheet`
+  lists each token in `other_currencies`; `indicative` totals them only when every token and
+  currency has a rate.
 - Checking and savings at the same bank are two accounts. One account reachable by several rails
   is one account.
 - An account has one currency, set when you register it. A company account takes the currency
