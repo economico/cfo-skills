@@ -27,7 +27,9 @@ highlights, lowlights and asks. When this connection may not publish, write the
    `YYYY-MM`. Read every block: one that answers `error` is broken, and a chart with no rows is
    drawn as "No data". Compare cash, net burn and recurring revenue with `reports run
    saas_metrics` for the same `year` and `month`: they are the same figures, so a difference
-   means the wrong month.
+   means the wrong month. Inspect `monthly_metrics.excluded_token_units` and the report's
+   `excluded_token_units`/`missing_rates`; name excluded holdings beside the figures. Par-valued
+   stablecoins in the reporting currency are included already, so do not add them twice.
 
 When the books for the month are incomplete (receipts not yet recorded, a Stripe payout
 missing), say which, and offer to record them first: an update built on partial books understates
@@ -78,7 +80,7 @@ as Markdown the founder can paste into an email, from the built-in reports:
 |---|---|---|
 | Recurring revenue | `reports run saas_metrics` with `year` and `month`, for this month and the one before | MRR and ARR, and their change on last month |
 | Revenue and spend | `reports run income_statement` with `from` the first of the month and `until` the next month's first instant as a UTC timestamp (`2026-10-01T00:00:00Z` for September) | Revenue, cost of revenue, gross margin, operating expenses, net income or loss |
-| Cash and runway | `reports run default_alive` with `period` `YYYY-MM`, plus, for each wallet that holds tokens, `ledgers {action: "balances", ledger_id, as_of}` on each token's ledger at the same month-end cutoff (`holdings` in `accounts overview` is today's, not the month's) | Cash at month end, net burn, months of runway; when a wallet holds tokens, list them beside cash, wallet by wallet, and say cash and runway leave them out |
+| Cash and runway | `reports run default_alive` with `period` `YYYY-MM`; for a token it names in `excluded_token_units`, `ledgers {action: "balances", ledger_id, as_of}` on that token's ledger at the same month-end cutoff (`holdings` in `accounts overview` is today's, not the month's) | Cash at month end, net burn, months of runway, stablecoins at par in the reporting currency included; list a token named in `excluded_token_units` beside cash, wallet by wallet, as left out of cash and burn (an `indicative` block already counts a stablecoin pegged to another currency) |
 | Money owed to the company | `reports run aging` with `direction` `receivable` and `as_of` the next month's first instant as a UTC timestamp (`2026-10-01T00:00:00Z` for September) | Anything overdue worth a line |
 
 Scale every amount once by the ledger's `decimals`, as [verify](verify.md) says. Compare with

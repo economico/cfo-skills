@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.13.2 (2026-11-13)
+
+- Wallet tokens in the figures, corrected: a stablecoin valued at par in the reported currency is in an account's `balance`, `summary` and `summaries`, the combined cash of `payment_accounts`, and the cash and runway of `default_alive`, `saas_metrics` and `monthly_metrics`, so the agent never adds it again. In those native figures any other token is left out of cash and burn, named in `excluded_token_units` and shown beside them as not included; `payment_accounts` names it in `missing_rates` instead, and an `indicative` block already counts a stablecoin pegged to another currency. 1.13.1 said all tokens were left out, which would have counted a stablecoin twice.
+
 ## 1.13.1 (2026-11-13)
 
 - A model API used for development or experiments books to `5220` AI and model inference with the research and development function, beside the API the product calls in production.

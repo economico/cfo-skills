@@ -33,9 +33,11 @@ when every rate is available. Keep segmented income statements labelled by perio
 
 `aging` preserves every native group, the undated bucket and a complete indicative total.
 `balances.payment_accounts` separates bank/wallet cash, card debt and related-party funding.
-A wallet's tokens are not in it: they appear as their own units, named by CAIP-19, in the
-balance sheet's `other_currencies`; a stablecoin's rate appears in `indicative.rates` with
-`source: "par"`, and a token without one is named in `missing_rates`.
+Its `indicative` total counts a wallet's stablecoins at par, through the peg currency's rate when
+that is not the functional currency; a token without par, or a missing peg rate, is named in
+`missing_rates` and the combined total is unavailable. On the balance sheet each token appears as
+its own unit, named by CAIP-19, in `other_currencies`, and a stablecoin's rate appears in
+`indicative.rates` with `source: "par"`.
 Card debt and an owner's advances are not company cash. Scale native amounts using returned
 ledger `decimals` when supplied, otherwise the named currency's scale; amounts remain integer
 strings until display.
