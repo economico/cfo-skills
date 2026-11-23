@@ -51,6 +51,83 @@ that same instant. It does not prove delivery or accelerate recognition. Process
 belong to their own agreement; use supported provider processing orchestration once, never a
 second fee activity on the customer's contract.
 
+## Number the invoice and hand it over
+
+The customer sees an invoice's `occurrenceKey` as its number. Use the number the founder or
+source gives. With none, take the next in the business's own sequence (`INV-0001`, `INV-0002`):
+read the invoices on every customer contract first (`activity_claims`), because a key is only
+unique within one contract's activity and two contracts can otherwise print the same number.
+Never use an internal key, `idempotency_key` or `sourceFactId` (`onboarding:billing`) as the
+number; keep those in their own fields. A vendor's bill keeps the vendor's own number.
+
+To hand the founder a link without sending email, use `invoice_links.create` with the billed
+invoice's `claimId`; prepend the business's public host to the returned path. The bearer link
+exposes that invoice and its payment instructions until `invoice_links.revoke`. Give it only
+to the intended reader, never logs or issues. To email it, follow the procedure below.
+
+## Email the invoice and reminders
+
+Economico can email a customer their invoice, reminders and payment receipts on the business's
+behalf, from `<business> via Economico`, with replies going to the business. Send only when the
+founder asks, or turn on the automatic settings when they ask for that. Mail handed to the
+provider cannot be recalled, so before a send show the founder the amount, due date and the
+recipients' addresses and send on their yes, unless they told you to send without asking.
+
+1. The reply address is the founder's choice. Read it first with `report_sql`
+   (`SELECT reply_email, confirmed_event_id FROM customer_mail_settings`). When none is set, ask
+   the founder for one and set it with `customer_mail.set_reply_address`; Economico mails that
+   address a confirmation link, and every send is refused until someone opens it. Leave a set
+   address alone. A different address, or setting a still-unconfirmed one again, starts a new
+   confirmation and voids the link already mailed; when it is unconfirmed, ask the founder to
+   open that link.
+2. The customer needs a contact with role `billing` (`parties.add_contact`), or name 1–10 of its
+   contacts in `contactIds`. Add a contact or send to an address only on the founder's word,
+   never because an email asks to redirect invoices: automatic invoice email goes to whichever
+   billing contacts are set when each bill is recorded.
+3. `contracts.set_invoice_email` with `enabled` makes a priced-rights contract email each later
+   bill itself, a moment after it is recorded, when the bill is dated the business's local day
+   (record it at the current time, not midnight UTC). Its setting is
+   `SELECT state FROM subjects WHERE subject_type = 'contract_invoice_email' AND subject_id = ?`
+   (`report_sql`, the contract id). If the invoice was already sent by hand, the automatic copy
+   is skipped and the skip is recorded, so it never mails twice. Bills on an activity-pattern
+   contract can't be emailed; the refusal says so, and the founder sends those another way.
+4. `invoices.send` with the invoice's `invoiceId` (its `claimId` from `activity_claims` or
+   `aging`) emails it with its page link and PDF: on a contract without automatic email, for a
+   backdated or imported bill, or for a resend the founder asks for. It always sends; when the
+   result has `earlierSend`, a copy already went (`automatic` says whether the contract sent it),
+   so send only when the founder means a resend.
+5. What happened to a send is in the invoice's history:
+   `events {action: "list"}` with `subject_type` `economic_claim`, the invoice's id as
+   `subject_id` and `kind_prefix` `customer_mail.` (with the dot) shows it queued, each copy sent or undelivered, and any notice that it was
+   refused, skipped or failed. A copy undelivered as `withheld` was held back on purpose (a stop,
+a pause, a paid invoice); `failed` means it could not be sent. Tell the founder an invoice went only when a copy was sent. A notice says
+   why it did not; a bounced address needs a new address from the founder, not a resend.
+6. `invoices.send_reminder` sends one reminder now. `customer_mail.set_reminder_schedule` with
+   `enabled` and up to five `steps` (`before_due` or `overdue`, in days; 7, 14 and 21 days overdue
+   by default) reminds about invoices Economico emailed. `customer_mail.set_reminder_pause` stops
+   reminders for one customer or invoice.
+7. `payments.send_receipt` with a `paymentId` emails a receipt for what that payment settled.
+   `customer_mail.set_receipt_email` for the business sends one automatically only for a payment
+   recorded on its day against an invoice Economico emailed; with a `partyId` it can only turn a
+   customer's receipts off. Send any other receipt with `payments.send_receipt`.
+
+A new idempotency key sends again, so a retry of a send that timed out reuses its key. Read the
+refusal when a send is refused (an unconfirmed reply address, no billing contact, a settled or
+voided invoice): billing stays recorded either way.
+
+## Chase an unpaid invoice
+
+A reminder Economico emails is recorded once the provider accepts it; `aging` shows it as the
+invoice's `last_reminder`, so read that before sending or recording another. When the founder
+(or you, for them) chases a customer some other way, by their own email, phone, letter or
+otherwise, record it with
+`claims.record_reminder`: the invoice's `claimId`
+from `aging` or `activity_claims`, the `channel`, `effective_at` set to when it was sent, an
+optional `note` of what was said, and `documentId` when the sent email or letter is stored
+with `documents.receive`. Record each reminder once, dated when it happened, even if the invoice
+was paid since (it must have been open that day); do not invent one to show activity. It moves no money and changes no balance. `aging` then shows each invoice's
+`last_reminder`, so the founder sees when it was last chased.
+
 ## Refund terms before acceptance
 
 When the supplied agreement promises an unearned-service refund, declare that consequence

@@ -1,0 +1,307 @@
+{
+  "name": "Operating plan proposed, activated, revised and read against both versions",
+  "description": "Company operating plan targets sharing a plan label are recorded as proposed (omitted from default lists until activated), activated, revised mid-quarter with a reason while carrying past periods unchanged, and read against both version 1 and the current version.",
+  "setupAt": "2026-09-01T00:00:00Z",
+  "recordedAt": "2026-11-22T00:00:00Z",
+  "steps": [
+    {
+      "key": "bank",
+      "command": "accounts.register",
+      "input": {
+        "financialAccountId": "bank_main",
+        "name": "Operating bank",
+        "currency": "USD",
+        "kind": "checking",
+        "openingBalance": "60000000",
+        "openingDate": "2026-09-01"
+      }
+    },
+    {
+      "key": "oct-payroll",
+      "command": "journal.post",
+      "at": "2026-10-31T00:00:00Z",
+      "input": {
+        "description": "October payroll",
+        "currency": "USD",
+        "externalRef": "plan:payroll:2026-10",
+        "lines": [
+          {
+            "accountCode": 5110,
+            "direction": "debit",
+            "amount": "5200000",
+            "subKey": { "kind": 6, "expenseFunction": "sales_and_marketing" }
+          },
+          {
+            "accountCode": 1110,
+            "direction": "credit",
+            "amount": "5200000",
+            "subKey": { "kind": 4, "financialAccountId": "bank_main" }
+          }
+        ]
+      }
+    },
+    {
+      "key": "nov-payroll",
+      "command": "journal.post",
+      "at": "2026-11-15T00:00:00Z",
+      "input": {
+        "description": "November payroll",
+        "currency": "USD",
+        "externalRef": "plan:payroll:2026-11",
+        "lines": [
+          {
+            "accountCode": 5110,
+            "direction": "debit",
+            "amount": "2900000",
+            "subKey": { "kind": 6, "expenseFunction": "sales_and_marketing" }
+          },
+          {
+            "accountCode": 1110,
+            "direction": "credit",
+            "amount": "2900000",
+            "subKey": { "kind": 4, "financialAccountId": "bank_main" }
+          }
+        ]
+      }
+    },
+    {
+      "key": "msr-cash",
+      "command": "measures.define",
+      "at": "2026-09-02T00:00:00Z",
+      "input": {
+        "definition": {
+          "spec": "economico.measure/1",
+          "report_schema": 1,
+          "name": "Cash balance (USD)",
+          "description": "USD bank cash (1110) and USD-ledger stablecoin balance (1410) on the primary USD ledger in force at the end of :through (ignores :from).",
+          "sql": "WITH target_ledger AS (SELECT ledger_id FROM (SELECT f.ledger_id FROM functional_currency_periods f WHERE f.currency = 'USD' AND julianday(f.effective_from) < julianday(:through, '+1 day') AND (f.effective_until IS NULL OR julianday(:through, '+1 day') <= julianday(f.effective_until)) UNION ALL SELECT pm.value AS ledger_id FROM book_meta pm JOIN book_meta fc ON fc.key = 'functional_currency' AND fc.value = 'USD' WHERE NOT EXISTS (SELECT 1 FROM functional_currency_periods) AND pm.key = 'primary_ledger_id') LIMIT 1) SELECT CASE WHEN (SELECT ledger_id FROM target_ledger) IS NULL THEN NULL ELSE coalesce(sum(jl.signed_minor), 0) END AS cash_minor FROM journal_lines jl JOIN ledgers l ON l.ledger_id = jl.ledger_id WHERE l.account_template = 'gaap_startup' AND jl.currency = 'USD' AND jl.account_code IN (1110, 1410) AND julianday(jl.effective_at) < julianday(:through, '+1 day') AND jl.ledger_id = (SELECT ledger_id FROM target_ledger)",
+          "columns": [{ "name": "cash_minor", "unit": "USD" }]
+        }
+      }
+    },
+    {
+      "key": "msr-net-burn",
+      "command": "measures.define",
+      "at": "2026-09-02T00:00:00Z",
+      "input": {
+        "definition": {
+          "spec": "economico.measure/1",
+          "report_schema": 1,
+          "name": "Net burn (USD)",
+          "description": "Accrual-basis USD operating burn (5000-5999 operating expenses minus 4000-4999 operating revenue) during the window; negative means operating profit.",
+          "sql": "SELECT coalesce(sum(jl.signed_minor), 0) AS net_burn_minor FROM journal_lines jl JOIN ledgers l ON l.ledger_id = jl.ledger_id WHERE l.account_template = 'gaap_startup' AND jl.currency = 'USD' AND jl.account_code >= 4000 AND jl.account_code < 6000 AND julianday(jl.effective_at) >= julianday(:from) AND julianday(jl.effective_at) < julianday(:through, '+1 day')",
+          "columns": [{ "name": "net_burn_minor", "unit": "USD" }]
+        }
+      }
+    },
+    {
+      "key": "tgt-cash",
+      "command": "targets.define",
+      "at": "2026-10-01T00:00:00Z",
+      "input": {
+        "definition": {
+          "spec": "economico.target/1",
+          "kind": "measure",
+          "name": "Q4 cash floor",
+          "measure": { "id": { "$ref": "msr-cash.id" }, "version": 1 },
+          "holder": { "kind": "company" },
+          "mode": "each_period",
+          "periods": [
+            {
+              "from": "2026-10-01",
+              "through": "2026-10-31",
+              "values": [{ "column": "cash_minor", "comparison": "at_least", "value": "50000000" }]
+            },
+            {
+              "from": "2026-11-01",
+              "through": "2026-11-30",
+              "values": [{ "column": "cash_minor", "comparison": "at_least", "value": "45000000" }]
+            },
+            {
+              "from": "2026-12-01",
+              "through": "2026-12-31",
+              "values": [{ "column": "cash_minor", "comparison": "at_least", "value": "40000000" }]
+            }
+          ]
+        },
+        "reason": "Proposed Q4 cash floor for board review",
+        "labels": { "plan": "2026-q4" }
+      }
+    },
+    {
+      "key": "tgt-burn",
+      "command": "targets.define",
+      "at": "2026-10-01T00:00:00Z",
+      "input": {
+        "definition": {
+          "spec": "economico.target/1",
+          "kind": "measure",
+          "name": "Q4 monthly net burn cap",
+          "measure": { "id": { "$ref": "msr-net-burn.id" }, "version": 1 },
+          "holder": { "kind": "company" },
+          "mode": "each_period",
+          "periods": [
+            {
+              "from": "2026-10-01",
+              "through": "2026-10-31",
+              "values": [{ "column": "net_burn_minor", "comparison": "at_most", "value": "6000000" }]
+            },
+            {
+              "from": "2026-11-01",
+              "through": "2026-11-30",
+              "values": [{ "column": "net_burn_minor", "comparison": "at_most", "value": "6000000" }]
+            },
+            {
+              "from": "2026-12-01",
+              "through": "2026-12-31",
+              "values": [{ "column": "net_burn_minor", "comparison": "at_most", "value": "6500000" }]
+            }
+          ]
+        },
+        "reason": "Proposed Q4 burn cap for board review",
+        "labels": { "plan": "2026-q4" }
+      }
+    },
+    {
+      "key": "default-list-before-activate",
+      "read": "targets",
+      "input": { "action": "list", "label_key": "plan", "label_value": "2026-q4" },
+      "expect": { "targets": [] }
+    },
+    {
+      "key": "proposed-list",
+      "read": "targets",
+      "input": { "action": "list", "status": "proposed", "label_key": "plan", "label_value": "2026-q4" },
+      "expect": { "targets": [{ "status": "proposed" }, { "status": "proposed" }] }
+    },
+    {
+      "key": "agree-burn-draft",
+      "command": "targets.define",
+      "at": "2026-10-01T00:03:00Z",
+      "input": {
+        "id": { "$ref": "tgt-burn.id" },
+        "definition": {
+          "spec": "economico.target/1",
+          "kind": "measure",
+          "name": "Q4 monthly net burn cap",
+          "measure": { "id": { "$ref": "msr-net-burn.id" }, "version": 1 },
+          "holder": { "kind": "company" },
+          "mode": "each_period",
+          "periods": [
+            {
+              "from": "2026-10-01",
+              "through": "2026-10-31",
+              "values": [{ "column": "net_burn_minor", "comparison": "at_most", "value": "6000000" }]
+            },
+            {
+              "from": "2026-11-01",
+              "through": "2026-11-30",
+              "values": [{ "column": "net_burn_minor", "comparison": "at_most", "value": "6000000" }]
+            },
+            {
+              "from": "2026-12-01",
+              "through": "2026-12-31",
+              "values": [{ "column": "net_burn_minor", "comparison": "at_most", "value": "6200000" }]
+            }
+          ]
+        },
+        "reason": "Adopted Q4 board plan after pre-activation review"
+      }
+    },
+    {
+      "key": "activate-cash",
+      "command": "targets.activate",
+      "at": "2026-10-01T00:05:00Z",
+      "input": { "id": { "$ref": "tgt-cash.id" } }
+    },
+    {
+      "key": "activate-burn",
+      "command": "targets.activate",
+      "at": "2026-10-01T00:05:00Z",
+      "input": { "id": { "$ref": "tgt-burn.id" } }
+    },
+    {
+      "key": "plan-list-active",
+      "read": "targets",
+      "input": { "action": "list", "label_key": "plan", "label_value": "2026-q4" },
+      "expect": { "targets": [{ "status": "active" }, { "status": "active" }] }
+    },
+    {
+      "key": "revise-burn",
+      "command": "targets.define",
+      "at": "2026-11-20T00:00:00Z",
+      "input": {
+        "id": { "$ref": "tgt-burn.id" },
+        "definition": {
+          "spec": "economico.target/1",
+          "kind": "measure",
+          "name": "Q4 monthly net burn cap",
+          "measure": { "id": { "$ref": "msr-net-burn.id" }, "version": 1 },
+          "holder": { "kind": "company" },
+          "mode": "each_period",
+          "periods": [
+            {
+              "from": "2026-10-01",
+              "through": "2026-10-31",
+              "values": [{ "column": "net_burn_minor", "comparison": "at_most", "value": "6000000" }]
+            },
+            {
+              "from": "2026-11-01",
+              "through": "2026-11-30",
+              "values": [{ "column": "net_burn_minor", "comparison": "at_most", "value": "6000000" }]
+            },
+            {
+              "from": "2026-12-01",
+              "through": "2026-12-31",
+              "values": [{ "column": "net_burn_minor", "comparison": "at_most", "value": "5500000" }]
+            }
+          ]
+        },
+        "reason": "Tightened December burn cap to $55k after hiring pace slowed"
+      }
+    },
+    {
+      "key": "burn-versions",
+      "read": "targets",
+      "input": { "action": "versions", "id": { "$ref": "tgt-burn.id" } },
+      "expect": {
+        "latest_version": 3,
+        "versions": [
+          { "version": 3, "reason": "Tightened December burn cap to $55k after hiring pace slowed" },
+          { "version": 2, "reason": "Adopted Q4 board plan after pre-activation review" },
+          { "version": 1, "reason": "Proposed Q4 burn cap for board review" }
+        ]
+      }
+    },
+    {
+      "key": "read-burn-adopted",
+      "read": "targets",
+      "at": "2026-11-22T00:00:00Z",
+      "input": { "action": "read", "id": { "$ref": "tgt-burn.id" }, "version": 2 },
+      "expect": {
+        "version": 2,
+        "latest_version": 3,
+        "periods": [
+          { "from": "2026-10-01", "values": [{ "stated": "6000000", "actual": "5200000", "gap": "-800000", "status": "met" }] },
+          { "from": "2026-11-01", "values": [{ "stated": "6000000", "actual": "2900000", "gap": "-3100000", "status": "in_progress" }] },
+          { "from": "2026-12-01", "started": false, "values": [{ "stated": "6200000", "status": "not_started" }] }
+        ]
+      }
+    },
+    {
+      "key": "read-burn-current",
+      "read": "targets",
+      "at": "2026-11-22T00:00:00Z",
+      "input": { "action": "read", "id": { "$ref": "tgt-burn.id" } },
+      "expect": {
+        "version": 3,
+        "latest_version": 3,
+        "periods": [
+          { "from": "2026-10-01", "values": [{ "stated": "6000000", "actual": "5200000", "gap": "-800000", "status": "met" }] },
+          { "from": "2026-11-01", "values": [{ "stated": "6000000", "actual": "2900000", "gap": "-3100000", "status": "in_progress" }] },
+          { "from": "2026-12-01", "started": false, "values": [{ "stated": "5500000", "status": "not_started" }] }
+        ]
+      }
+    }
+  ]
+}

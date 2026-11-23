@@ -135,6 +135,11 @@
           "parties": [
             "vendor"
           ],
+          "partyCategories": {
+            "vendor": [
+              "vendor"
+            ]
+          },
           "ledgers": {
             "money": {
               "classification": "gaap",

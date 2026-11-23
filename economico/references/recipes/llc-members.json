@@ -219,6 +219,14 @@
             "member-a",
             "member-b"
           ],
+          "partyCategories": {
+            "member-a": [
+              "founder"
+            ],
+            "member-b": [
+              "founder"
+            ]
+          },
           "ledgers": {
             "money": {
               "classification": "gaap",
@@ -790,6 +798,11 @@
           "parties": [
             "customer"
           ],
+          "partyCategories": {
+            "customer": [
+              "customer"
+            ]
+          },
           "ledgers": {
             "money": {
               "classification": "gaap",

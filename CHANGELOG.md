@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.18.0 (2026-11-22)
+
+- Three new starter measure recipes in the `targets` reference: won value by deal owner (a `:party` quota measure keyed on an `owner` pursuit label), burn multiple (`decimals: 2`, returning unmeasurable when nothing was won, any won deal has no value, or amounts exceed the integer safety bound), and deals won against the period before (`decimals: 2`, equal-day comparison window with calendar-month variant and `each_period` requirement); weighted open-pipeline count estimates now declare `decimals: 2` (`open_weighted`) and the skill teaches the stated-value scale rule and formatting every number by its `decimals`.
+- Four replayable target recipes under `references/recipes/` (sales quarter with quotas, operating plan lifecycle with pre-activation revision and adopted-version reads, hiring plan, and fundraise close including cap-table commitment) plus a saved `plan-vs-actual.json` custom report definition under `references/reports/`.
+- Agent workflow rules across `targets`, `business-system`, `first-session` and `verify`: single-motion fundraising and hiring closes, aligning pursuit `expectedValue` before signing, automatic counterparty roles via `partyCategories` across all contract/template recipes, month-end periods for point-in-time goals, `measures try` cover for unstarted periods, naming unsized deals with partial sized-deal totals, and a start-of-session plan-check routine leading with shortfalls.
+- `SKILL.md` routing table rows were tightened to fit the new `targets` row within the 7,280-byte `SKILL.md` budget while keeping the safety sentence verbatim.
+
+## 1.17.0 (2026-11-22)
+
+- Measures and targets: a new `targets` reference teaches named, versioned read-only SQL measures (`measures.define`, `measures` `list`/`get`/`versions`/`try`) and dated targets (`targets.define`, `targets.label`, `targets.activate`, `targets.archive`, `targets` `list`/`get`/`versions`/`read`) held by a pipeline, one person (a quota) or the company, without posting to any ledger.
+- Nine proven starter measure recipes with explicit limits: pursuits won in a pipeline and won value in a pipeline (each with a weighted open-pipeline estimate column), people in place, payroll cost, ARR, MRR, recognized revenue, cash balance and net burn. Nothing is seeded into a business's books.
+- Operating-plan recipe (targets sharing a `plan` label, comparing original vs current versions), one-table readout recipe, agent-computed pace and open-pipeline coverage formulas with stated assumptions, and the proposed-first convention (record targets as `proposed` unless the founder stated the numbers and asked to activate them).
+
+## 1.16.0 (2026-11-15)
+
+- Save pinned current report queries and explicitly retain exact displayed results using actor-bound run leases. Distinguish fresh links from private immutable citations, preserve partial outputs and never rerun an expired display behind the caller’s back.
+- Use discovered provider-neutral conversation readers and received/sent intake while keeping credentials, scheduling and provider checkpoints with the agent. Preserve partial capture, independent source permissions and honest unresolved/RFC status; no live-provider availability claim.
+- Look up available context on a known record or party with bounded progressive pages, independent source/target authority and the existing native discovery gates. Empty continuation pages and changed scope remain explicit; no general search is introduced.
+
+## 1.15.0 (2026-11-14)
+
+- Record evidence with independent capture provenance, attributed notes, selected readable renditions and atomic association corrections. Exact reads preserve both endpoint authorities and explicit partial/oversize results; no search or all-record availability claim.
+- Resolve stored record families as native or readable basic views, with canonical links that contain no bearer credentials; query and capture remain later work.
+- Read large scalar projections through explicit bounded content pages, retaining record identity and sources, with live permission checks on every page and restart after a changed revision.
+- Page recorded collections through the discovered children read, with bounded counts/bytes, opaque cursors and explicit restart after a changed revision. Oversized contact rows provide a standalone content link and continuation to following rows without truncation.
+- Distinguish known-target GET from independently authorized discovery, and require both document-relation endpoints without inventing payment or claim LIST operations.
+
+## 1.14.0 (2026-11-14)
+
+- Resolve copied Economico record links with the discovered references read. Native-backed records keep their ordinary read permissions; projection-only families are not available yet.
+
 ## 1.13.2 (2026-11-13)
 
 - Wallet tokens in the figures, corrected: a stablecoin valued at par in the reported currency is in an account's `balance`, `summary` and `summaries`, the combined cash of `payment_accounts`, and the cash and runway of `default_alive`, `saas_metrics` and `monthly_metrics`, so the agent never adds it again. In those native figures any other token is left out of cash and burn, named in `excluded_token_units` and shown beside them as not included; `payment_accounts` names it in `missing_rates` instead, and an `indicative` block already counts a stablecoin pegged to another currency. 1.13.1 said all tokens were left out, which would have counted a stablecoin twice.

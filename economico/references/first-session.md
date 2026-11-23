@@ -221,7 +221,10 @@ A founder who comes back should not be asked again what they already answered. W
 4. **Read the books for what exists**: `subjects`, `parties` and `documents` by `externalId`
    and `sourceFactId`, and extend them. Record only what is new since the last session, with the
    same idempotency keys, so a rerun replays instead of duplicating.
-5. **Update the brief** at the end: its tables where the business changed, and "For the next
+5. **Check active targets.** If the business has active targets (`targets {action: "list"}`), read
+   the plan at the start of the session, compute pace and open-pipeline coverage, and lead with
+   what is short and by how much ([checking the plan](targets.md#checking-the-plan-session-routine)).
+6. **Update the brief** at the end: its tables where the business changed, and "For the next
    session".
 
 Say in the final message what you took from the brief and what, if anything, was new.

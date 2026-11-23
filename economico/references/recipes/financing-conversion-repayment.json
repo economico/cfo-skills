@@ -99,6 +99,11 @@
           "parties": [
             "investor"
           ],
+          "partyCategories": {
+            "investor": [
+              "investor"
+            ]
+          },
           "ledgers": {
             "money": {
               "classification": "gaap",
@@ -388,6 +393,11 @@
           "parties": [
             "holder"
           ],
+          "partyCategories": {
+            "holder": [
+              "investor"
+            ]
+          },
           "ledgers": {
             "money": {
               "classification": "gaap",

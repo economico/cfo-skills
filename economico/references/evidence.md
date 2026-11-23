@@ -4,6 +4,9 @@ Every entry the model posts should be explainable by an external artifact: an ag
 receipt, an invoice, a charge, a bank line. Economico stores those artifacts immutably and links
 them to the commands they justify, so the books can be audited from the first day.
 
+For explanatory sources, references, notes, renditions and corrected associations, follow
+[record evidence](record-evidence.md). Those exact reads do not imply general search or record/party rollups.
+
 ## Store the source
 
 ```json
@@ -28,7 +31,7 @@ them to the commands they justify, so the books can be audited from the first da
 - Accepted: nonempty UTF-8 text (plain text, Markdown, an email rendered as text) or a PDF, up to
   10 MiB. The bytes ride inline in the tool call, so send anything beyond a small file over
   REST or the CLI (`--args @receive.json`, a JSON file of these arguments with the bytes
-  base64-encoded in `contentBase64`). Office formats and images are refused; convert to PDF or text first.
+  base64-encoded in `contentBase64`). Use `context_file` for opaque office, email, HTML or binary evidence within the same 10 MiB artifact limit; retention does not claim extraction or execute the file.
 - The bytes are stored exactly and addressed by hash. Sending identical bytes again returns
   `no_change` with the existing document id in `details`.
 - `externalId` is how you find it again: `documents {action: "list", kind: "source_document",

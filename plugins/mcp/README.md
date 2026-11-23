@@ -8,7 +8,7 @@ revenue recognition, plus bills and payments, in exact double-entry books.
 ## Example prompts
 
 - "Add Juniper Bio as a customer."
-- "Juniper Bio signed our order form for a $499 onboarding package. Record it and give me the invoice to send."
+- "Juniper Bio signed our order form for a $499 onboarding package. Record it and email them the invoice."
 - "Record a $120 bill from Hetzner for server hosting."
 - "Summarize this month's recorded invoices, payments and open balances."
 - "Using our recorded cash and spending history, estimate burn and runway. State the assumptions."

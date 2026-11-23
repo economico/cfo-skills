@@ -114,6 +114,11 @@
           "parties": [
             "investor"
           ],
+          "partyCategories": {
+            "investor": [
+              "investor"
+            ]
+          },
           "ledgers": {
             "money": {
               "classification": "gaap",

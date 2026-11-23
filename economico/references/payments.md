@@ -131,11 +131,19 @@ taxes and cross-currency fees are currently refused.
 - `payments.unallocate` undoes all or part of a **later** `payments.allocate` match. Name its
   allocation ID, claim components, amounts and correction evidence. Funds return to unapplied;
   no cash moves. Reapply them to the correct claims.
+- `payments.unoffset` undoes a vendor refund offset by the `offsetId` that `payments.offset`
+  returned. Its date must be on or after the offset's; both claims reopen on that date. A bill an
+  open offset settles cannot be replaced or voided until the offset is undone.
 - `payments.reverse` reverses a whole independent payment with correction evidence. It restores
   a payment's claims, or the live successor when its vendor bill was explicitly replaced;
   the original bill stays cancelled and unused excess vendor credit is consumed first. It
   also reverses funding. Consumed residual funds or reimbursed/converted funding claims
-  must first be restored by supported dependent corrections. Initial allocations made inside
+  must first be restored by supported dependent corrections. A refusal with `details.reason`
+  `payment_already_applied` (the money was applied, for example to a vendor bill) or
+  `funding_already_repaid` (the company already repaid the owner or card issuer) lists each
+  consuming entry in `consumedBy`: `payments.unallocate` the named `allocationId`, or
+  `payments.reverse` the named `paymentId`, then reverse. Another blocked claim can surface on the retry, and if an undo is itself refused, record the correction instead. A backdated reversal with later activity on the claim keeps the generic balance refusal. Tell the founder which entry
+  blocks it; if that entry is right, record a correcting payment or credit instead. Initial allocations made inside
   `payments.record` use whole reversal followed by corrected recording.
 - A real refund is a new opposite-direction payment against an evidenced refund claim, not a
   correction that erases the sale. Cancellation creates no cash movement. For an owner/card

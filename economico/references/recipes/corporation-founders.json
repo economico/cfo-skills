@@ -199,6 +199,11 @@
           "parties": [
             "incorporator"
           ],
+          "partyCategories": {
+            "incorporator": [
+              "founder"
+            ]
+          },
           "ledgers": {
             "shares": {
               "classification": "ownership",
@@ -253,6 +258,11 @@
           "parties": [
             "founder"
           ],
+          "partyCategories": {
+            "founder": [
+              "founder"
+            ]
+          },
           "ledgers": {
             "money": {
               "classification": "gaap",

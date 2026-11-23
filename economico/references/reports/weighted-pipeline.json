@@ -1,0 +1,63 @@
+{
+  "spec": "economico.report/2",
+  "report_schema": 1,
+  "title": "Weighted pipeline",
+  "description": "Open pursuits across built-in and custom pipelines: value, stage weight and weighted value, by pipeline and stage and by expected close month. Estimates only; nothing here is revenue, bookings or cash.",
+  "layout": "grid",
+  "parameters": [
+    {
+      "name": "pipeline",
+      "type": "choice",
+      "label": "Pipeline",
+      "default": "all",
+      "options": [
+        {
+          "value": "all",
+          "label": "All pipelines"
+        },
+        {
+          "value": "customer",
+          "label": "Sales"
+        },
+        {
+          "value": "vendor",
+          "label": "Purchasing"
+        },
+        {
+          "value": "financing",
+          "label": "Fundraising"
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "type": "query",
+      "title": "By stage",
+      "width": "full",
+      "caption": "Weighted value is the pursuit's value times its stage weight, rounded once per stage. Pursuits with no value yet are counted, never summed as zero.",
+      "sql": "WITH open_deals AS (SELECT o.opportunity_id, o.pipeline_key AS pipeline, o.stage, o.currency, o.expected_close_on AS expected_close, CAST(o.expected_value AS INTEGER) AS amount_minor, o.weight_bps FROM open_opportunities o WHERE :pipeline = 'all' OR o.pipeline_key = :pipeline) SELECT pipeline, stage, currency, count(*) AS deals, sum(amount_minor IS NULL) AS deals_without_value, sum(amount_minor) AS value_minor, sum((amount_minor / 10000) * weight_bps) + (sum((amount_minor % 10000) * weight_bps) + 5000) / 10000 AS weighted_minor FROM open_deals GROUP BY pipeline, stage, currency ORDER BY pipeline, CASE stage WHEN 'open' THEN 1 WHEN 'qualified' THEN 2 WHEN 'proposed' THEN 3 ELSE 4 END, stage, currency"
+    },
+    {
+      "type": "chart",
+      "title": "Weighted value by expected close",
+      "width": "half",
+      "caption": "One line per built-in pipeline: sales is money in, purchasing money out, fundraising capital. Your own pipelines are plotted together as a fourth line.",
+      "mark": "line",
+      "x": "month",
+      "y": [
+        "sales_minor",
+        "purchasing_minor",
+        "fundraising_minor",
+        "other_pipelines_minor"
+      ],
+      "sql": "WITH open_deals AS (SELECT o.pipeline_key AS pipeline, o.currency, o.expected_close_on AS expected_close, CAST(o.expected_value AS INTEGER) AS amount_minor, o.weight_bps FROM open_opportunities o WHERE o.expected_close_on IS NOT NULL AND (:pipeline = 'all' OR o.pipeline_key = :pipeline)) SELECT substr(expected_close, 1, 7) AS month, currency, coalesce(sum(CASE WHEN pipeline = 'customer' THEN (amount_minor / 10000) * weight_bps END), 0) + (coalesce(sum(CASE WHEN pipeline = 'customer' THEN (amount_minor % 10000) * weight_bps END), 0) + 5000) / 10000 AS sales_minor, coalesce(sum(CASE WHEN pipeline = 'vendor' THEN (amount_minor / 10000) * weight_bps END), 0) + (coalesce(sum(CASE WHEN pipeline = 'vendor' THEN (amount_minor % 10000) * weight_bps END), 0) + 5000) / 10000 AS purchasing_minor, coalesce(sum(CASE WHEN pipeline = 'financing' THEN (amount_minor / 10000) * weight_bps END), 0) + (coalesce(sum(CASE WHEN pipeline = 'financing' THEN (amount_minor % 10000) * weight_bps END), 0) + 5000) / 10000 AS fundraising_minor, coalesce(sum(CASE WHEN pipeline NOT IN ('customer', 'vendor', 'financing') THEN (amount_minor / 10000) * weight_bps END), 0) + (coalesce(sum(CASE WHEN pipeline NOT IN ('customer', 'vendor', 'financing') THEN (amount_minor % 10000) * weight_bps END), 0) + 5000) / 10000 AS other_pipelines_minor FROM open_deals GROUP BY month, currency ORDER BY month, currency"
+    },
+    {
+      "type": "query",
+      "title": "Open deals",
+      "width": "half",
+      "sql": "WITH open_deals AS (SELECT o.opportunity_id, json_extract(s.state, '$.name') AS deal, o.party_id, o.pipeline_key AS pipeline, o.stage, o.currency, o.expected_close_on AS expected_close, CAST(o.expected_value AS INTEGER) AS amount_minor, o.weight_bps FROM open_opportunities o CROSS JOIN subjects s ON s.subject_type = 'opportunity' AND s.subject_id = o.opportunity_id WHERE :pipeline = 'all' OR o.pipeline_key = :pipeline) SELECT o.deal, p.name AS party, o.pipeline, o.stage, o.expected_close, o.currency, o.amount_minor AS value_minor, (o.amount_minor / 10000) * o.weight_bps + ((o.amount_minor % 10000) * o.weight_bps + 5000) / 10000 AS weighted_minor FROM open_deals o LEFT JOIN parties p ON p.party_id = o.party_id ORDER BY o.currency, weighted_minor DESC, o.deal LIMIT 100"
+    }
+  ]
+}

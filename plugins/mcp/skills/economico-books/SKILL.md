@@ -14,13 +14,14 @@ recognition and payments. Ask for the source entries behind every number.
 
 ## Rules
 
-- Economico records what you tell it. It does not email invoices, move money,
-  sign agreements or file taxes.
+- Economico records what you tell it. It emails a customer's invoices, reminders
+  and receipts only when the founder asks or turns that on; it does not move
+  money, sign agreements or file taxes.
 - Prefer exact amounts and dates (UTC days as YYYY-MM-DD).
 - When estimating burn or runway, state the assumptions.
 
 ## Done when
 
 - The books show the new activity and the agent can point at the entries.
-- Any invoice or bill document is returned for the founder to send; Economico
-  does not send it.
+- An invoice is emailed to the customer only when the founder asked for it;
+  otherwise its document is returned for the founder.

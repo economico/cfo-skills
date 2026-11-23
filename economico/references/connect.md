@@ -175,8 +175,11 @@ preset, or to widen the membership.
   (`details.endsAt`) only `details.allowed` events in each billing period are allowed (the
   included events, or more in the period the cancel billed a started block); retry after
   `through` (the next period's included events) or after `endsAt`, when the business is on Solo
-  (`details.after: "solo"` for Startup). Before a batch, `business {action: "meter"}` shows the
-  same ceiling as the period's `allowed` while the cap holds. Tell the founder; the billing page
+  (`details.after: "solo"` for Founders or Startup). Before a batch, `business {action: "meter"}`
+  shows the same ceiling as the period's `allowed` while the cap holds, and where the
+  `platform_purchase` tool is offered (an owner-full grant), `platform_purchase {action:
+  "billing"}` reads the plan's end (`endsAt`, `endKind`), what the cancel billed
+  (`billedAtCancel`) and whether Keep would go through (`keepable`). Tell the founder; the billing page
   says whether the plan can be kept: once the extra events billed then are paid (for monthly Startup whose cancellation billed
   extra events, keeping it takes a new Startup agreement from the end; a first-year YC price cannot
   carry over, so that plan ends as scheduled), and a kept plan stays at its included events until

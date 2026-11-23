@@ -244,6 +244,11 @@
           "parties": [
             "customer"
           ],
+          "partyCategories": {
+            "customer": [
+              "customer"
+            ]
+          },
           "ledgers": {
             "money": {
               "classification": "gaap",
@@ -278,6 +283,11 @@
           "parties": [
             "vendor"
           ],
+          "partyCategories": {
+            "vendor": [
+              "vendor"
+            ]
+          },
           "ledgers": {
             "money": {
               "classification": "gaap",

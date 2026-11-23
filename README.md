@@ -37,7 +37,7 @@ host. Directory availability and rendering in each agent depend on that host's s
 |---|---|
 | `economico` | Connects Economico and models your business in it: reads your product's code, Stripe and email to learn what you sell, to whom, and what it costs to run, records plans, customers, vendors and receipts, and proves the books with reports. Your agent picks it up when you ask about your books. |
 | `add-customer` | `/add-customer`: add a customer with a contract on one of your plans. |
-| `send-invoice` | `/send-invoice`: bill a customer and get the invoice to send. |
+| `send-invoice` | `/send-invoice`: bill a customer and email them the invoice. |
 | `record-payment` | `/record-payment`: record a customer's payment against an invoice. |
 | `record-vendor-invoice` | `/record-vendor-invoice`: record a bill a vendor sent, with the invoice as evidence. |
 | `record-receipts` | `/record-receipts`: find vendor receipts and bills in your email and record them. |
