@@ -179,3 +179,36 @@ accepts `financialAccountId` and the same opening fields, once, while it has no 
 wallet the business holds itself never takes it. For an account
 already in use, reconcile the evidenced difference with `journal.post` instead. An unused legacy
 card recorded on cash must be archived and registered correctly on `2190` before adding its opening.
+
+
+## Watch-only wallets
+
+To follow a business's wallet, use `accounts.add_wallet` with its CAIP-10 `accountId` and a
+`name`, then `accounts.add_stablecoin` with the same `accountId` and the token's CAIP-19
+`assetId`. Wallet and token must name the same chain. The account id is also the
+`financialAccountId`; read `accounts` with `action: "wallet_monitors"` and `id` set to it
+until an evidenced opening and monitoring status appear. The initial pending status is not
+proof of a balance. Keep each token's native unit when recording movements.
+
+A `chain_support_requested` result means Economico recorded a feature suggestion and queued
+its business-message delivery. Tell the user support was requested and retain `messageId`;
+do not claim the wallet is monitored. Repeating the same chain/asset request from this business
+returns the same notice through `no_change` details without another message. The request
+shares the filing business and chain/asset, not the wallet address. Invalid CAIP identifiers
+return `validation`: correct them from the user's evidence before retrying.
+
+To bring in a monitored wallet's earlier history, first read `accounts` with
+`action: "wallet_backfill_quote"`, `monitor_id` and `from_block` (a block before the opening).
+Show the user its `explanation` and `usage`: the range, and the events the import can record
+against their plan's included events and its extra-event price, or Solo's limit. Start only
+once they agree, with `accounts.backfill_wallet_monitor` passing `monitorId`, `fromBlock` and
+the returned `quote`. If the quote is refused, read it again: the terms or range changed. A
+`warning` (in the quote, a refusal, or a `history` status of `awaiting_acceptance` while or after
+the range is read) means the import could record more than 50 events, or more than the plan has left, if
+every imported movement is classified. Show the user the projected and available events; only
+if they accept, read the quote again and repeat the request with `acceptWarning: true` and that
+quote. A `history` whose delivery failed resumes when you request the same block again; a
+`stopped` one (`too_busy`) needs a later block. The
+import runs in the background; `wallet_monitors` shows it as `history`. It keeps the opening
+and today's balance unchanged. Imported movements appear in `wallet_movements` for the user to
+classify like any other.

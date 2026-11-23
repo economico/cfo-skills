@@ -2,9 +2,19 @@
 
 After recording, prove the model with reads. Each figure you report should trace to rows in the
 business model brief, and each row to a source. `reports {action: "list"}` gives every kind's
-parameters and a runnable example; dates are `YYYY-MM-DD` or UTC instants. End a period with the
-next period's first instant as a UTC timestamp (`until`, `as_of` or `period_end`
-`2026-10-01T00:00:00Z` for September); `through` includes the instant it is given.
+parameters and a runnable example; dates are `YYYY-MM-DD` or UTC instants. For reports declaring
+`date_basis`, pass `date_basis: "business"` to interpret dates in the business's stored `timeZone`:
+`as_of: "2026-09-30"` includes that whole local day. Existing calls without the mode use UTC days.
+Exact UTC timestamps retain their instant in either mode; end a UTC period at the next period's
+first instant (`until`, `as_of` or `period_end: "2026-10-01T00:00:00Z"` for UTC September).
+`through` includes its endpoint. Omitted aging dates use the runtime clock; in business mode,
+aging uses the end of the current local day. Calendar-month metrics and provider quote dates
+retain their declared UTC calendars and do not offer business-date mode.
+
+Read the business's `timeZone` (UTC unless set) before interpreting "today"; set it through
+`business.update` when the founder supplies it. Manual future contract records are accepted
+with `state.attention.futureDate`, frozen against the local day when recorded. Check the
+record and its evidence with the founder rather than silently changing the date.
 
 ## The checks
 
@@ -23,6 +33,7 @@ next period's first instant as a UTC timestamp (`until`, `as_of` or `period_end`
 | What does each unit earn and cost? | `reports run unit_economics` with `from` and `until` | Units each customer activity was paid on, revenue per unit, and its own posted cost; unattributed cost reported apart, never allocated |
 | What is one contract's total? | `reports run contract_books` with `contract_id`, for a priced-rights contract | Its payments per account, and delivery, recognition and usage posted, from its own events |
 | What is in the pipeline? | `reports run pipeline` | Open opportunities, weighted and unweighted, by direction and currency; never revenue or cash |
+| How are we doing against plan? | `targets {action: "list"}`, then `targets {action: "read", id}` | Stated vs actual, gap and open-pipeline cover; lead with what is short and by how much ([targets](targets.md#checking-the-plan-session-routine)) |
 | What did discounts cost? | `reports run concessions` with `from_month` and `through_month` | Each offer's recognised discount on 4140 and the gross revenue of the contracts that took it, by purpose |
 | Do the wallet and the books agree? | `accounts {action: "wallet_monitors", id: financialAccountId}`, and `wallet_movements` with the same `id` | `difference` is `"0"`; if not, run `accounts.check_wallet_monitor`, read again, and never journal the difference away. Movements with `status` `unclassified`, `conflict` or `needs_canonical_review` are listed for a decision, none classified on a guess |
 | What will Economico charge? | `reports run platform_fees` with `period` (`YYYY-MM`) | A preview of the plan fee and the revenue fee; nothing accrues from it |

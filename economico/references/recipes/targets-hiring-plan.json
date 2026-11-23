@@ -1,0 +1,309 @@
+{
+  "name": "Hiring plan with hiring pipeline and people-in-place targets",
+  "description": "Custom hiring pipeline settled by people.record_arrangement alongside people.set_membership for headcount. Tracks both cumulative hires won in the pipeline (with weighted open-pipeline estimate) and point-in-time people in place.",
+  "setupAt": "2026-09-01T00:00:00Z",
+  "recordedAt": "2026-11-22T00:00:00Z",
+  "steps": [
+    {
+      "key": "founder",
+      "command": "parties.create",
+      "input": { "partyId": "pty_founder", "name": "Maya Chen", "categories": ["founder"] }
+    },
+    {
+      "key": "member-founder",
+      "command": "people.set_membership",
+      "input": {
+        "membershipId": "mem_founder",
+        "partyId": "pty_founder",
+        "from": "2026-09-01",
+        "sourceFactId": "hiring:member:founder",
+        "evidence": [{ "kind": "other", "ref": "incorporation:founder" }]
+      }
+    },
+    {
+      "key": "hiring-pipeline",
+      "command": "pipelines.define",
+      "input": {
+        "pipelineKey": "hiring",
+        "name": "Hiring",
+        "description": "Open roles and candidates",
+        "settlementKinds": ["people_arrangement"],
+        "stages": [
+          { "key": "sourced", "name": "Sourced", "weightBps": 1000 },
+          { "key": "interview", "name": "Interview", "weightBps": 4000 },
+          { "key": "offer", "name": "Offer", "weightBps": 8000 }
+        ]
+      }
+    },
+    {
+      "key": "msr-won-count",
+      "command": "measures.define",
+      "at": "2026-09-02T00:00:00Z",
+      "input": {
+        "definition": {
+          "spec": "economico.measure/1",
+          "report_schema": 1,
+          "name": "Pursuits won in a pipeline",
+          "description": "Count of pursuits won in a pipeline during the window, with a weighted open-pipeline count estimate to two decimal places.",
+          "sql": "SELECT (SELECT count(*) FROM opportunities o JOIN events e ON e.event_id = o.won_event_id WHERE o.pipeline_key = :pipeline AND o.status = 'won' AND julianday(e.effective_at) >= julianday(:from) AND julianday(e.effective_at) < julianday(:through, '+1 day')) AS won, (SELECT (coalesce(sum(o.weight_bps), 0) + 50) / 100 FROM open_opportunities o WHERE o.pipeline_key = :pipeline AND o.expected_close_on BETWEEN :from AND :through) AS open_weighted",
+          "columns": [
+            { "name": "won", "unit": "number" },
+            { "name": "open_weighted", "unit": "number", "decimals": 2, "estimate_for": "won" }
+          ]
+        }
+      }
+    },
+    {
+      "key": "msr-people",
+      "command": "measures.define",
+      "at": "2026-09-02T00:00:00Z",
+      "input": {
+        "definition": {
+          "spec": "economico.measure/1",
+          "report_schema": 1,
+          "name": "People in place",
+          "description": "Active team memberships on the books at the end of :through (ignores :from).",
+          "sql": "SELECT count(DISTINCT r.party_id) AS people FROM people_records r WHERE r.kind = 'membership' AND r.current = 1 AND r.valid_from < r.valid_through AND julianday(r.valid_from) < julianday(:through, '+1 day') AND julianday(r.valid_through) >= julianday(:through, '+1 day')",
+          "columns": [{ "name": "people", "unit": "number" }]
+        }
+      }
+    },
+    {
+      "key": "can-dev",
+      "command": "parties.create",
+      "at": "2026-09-22T00:00:00Z",
+      "input": { "partyId": "can_dev", "name": "Dev Patel" }
+    },
+    {
+      "key": "opp-dev",
+      "command": "opportunities.open",
+      "at": "2026-09-22T00:00:00Z",
+      "input": {
+        "opportunityKey": "hire:dev",
+        "name": "Senior engineer — Dev Patel",
+        "partyId": "can_dev",
+        "pipelineKey": "hiring",
+        "kind": "new",
+        "currency": "USD",
+        "expectedValue": null,
+        "expectedCloseOn": "2026-10-20",
+        "stage": "interview",
+        "labels": { "role": "Senior engineer" }
+      }
+    },
+    {
+      "key": "stage-dev-offer",
+      "command": "opportunities.stage",
+      "at": "2026-10-06T00:00:00Z",
+      "input": {
+        "opportunityId": { "$ref": "opp-dev.id" },
+        "expectedRevision": { "$ref": "opp-dev.revision" },
+        "stage": "offer"
+      }
+    },
+    {
+      "key": "hire-dev-arrangement",
+      "command": "people.record_arrangement",
+      "at": "2026-10-14T00:00:00Z",
+      "input": {
+        "arrangementId": "arr_dev",
+        "personPartyId": "can_dev",
+        "kind": "employee",
+        "from": "2026-11-02",
+        "sourceFactId": "hiring:offer:dev",
+        "evidence": [{ "kind": "other", "ref": "signed-offer:dev" }]
+      }
+    },
+    {
+      "key": "hire-dev-membership",
+      "command": "people.set_membership",
+      "at": "2026-10-14T00:00:00Z",
+      "input": {
+        "membershipId": "mem_dev",
+        "partyId": "can_dev",
+        "from": "2026-11-02",
+        "sourceFactId": "hiring:member:dev",
+        "evidence": [{ "kind": "other", "ref": "signed-offer:dev" }]
+      }
+    },
+    {
+      "key": "dev-party-check",
+      "read": "parties",
+      "input": { "action": "get", "id": "can_dev" },
+      "expect": { "categories": [] }
+    },
+    {
+      "key": "can-eve",
+      "command": "parties.create",
+      "at": "2026-10-12T00:00:00Z",
+      "input": { "partyId": "can_eve", "name": "Eve Moreau" }
+    },
+    {
+      "key": "opp-eve",
+      "command": "opportunities.open",
+      "at": "2026-10-12T00:00:00Z",
+      "input": {
+        "opportunityKey": "hire:eve",
+        "name": "Product designer — Eve Moreau",
+        "partyId": "can_eve",
+        "pipelineKey": "hiring",
+        "kind": "new",
+        "currency": "USD",
+        "expectedValue": null,
+        "expectedCloseOn": "2026-11-30",
+        "stage": "offer",
+        "labels": { "role": "Product designer" }
+      }
+    },
+    {
+      "key": "eve-party-check",
+      "read": "parties",
+      "input": { "action": "get", "id": "can_eve" },
+      "expect": { "categories": [] }
+    },
+    {
+      "key": "can-finn",
+      "command": "parties.create",
+      "at": "2026-10-15T00:00:00Z",
+      "input": { "partyId": "can_finn", "name": "Finn Aalto" }
+    },
+    {
+      "key": "opp-finn",
+      "command": "opportunities.open",
+      "at": "2026-10-15T00:00:00Z",
+      "input": {
+        "opportunityKey": "hire:finn",
+        "name": "Senior engineer — Finn Aalto",
+        "partyId": "can_finn",
+        "pipelineKey": "hiring",
+        "kind": "new",
+        "currency": "USD",
+        "expectedValue": null,
+        "expectedCloseOn": "2026-11-15",
+        "stage": "interview",
+        "labels": { "role": "Senior engineer" }
+      }
+    },
+    {
+      "key": "lose-finn",
+      "command": "opportunities.lose",
+      "at": "2026-11-06T00:00:00Z",
+      "input": {
+        "opportunityId": { "$ref": "opp-finn.id" },
+        "expectedRevision": { "$ref": "opp-finn.revision" },
+        "reason": "Accepted another offer"
+      }
+    },
+    {
+      "key": "finn-party-check",
+      "read": "parties",
+      "input": { "action": "get", "id": "can_finn" },
+      "expect": { "categories": [] }
+    },
+    {
+      "key": "tgt-hires",
+      "command": "targets.define",
+      "at": "2026-10-01T00:00:00Z",
+      "input": {
+        "definition": {
+          "spec": "economico.target/1",
+          "kind": "measure",
+          "name": "Q4 hires",
+          "measure": { "id": { "$ref": "msr-won-count.id" }, "version": 1 },
+          "holder": { "kind": "pipeline", "pipeline": "hiring" },
+          "mode": "to_date",
+          "periods": [
+            {
+              "from": "2026-10-01",
+              "through": "2026-10-31",
+              "values": [{ "column": "won", "comparison": "at_least", "value": "1" }]
+            },
+            {
+              "from": "2026-11-01",
+              "through": "2026-11-30",
+              "values": [{ "column": "won", "comparison": "at_least", "value": "2" }]
+            }
+          ]
+        },
+        "reason": "Hiring plan: two hires by end of November",
+        "status": "active",
+        "labels": { "plan": "2026-q4" }
+      }
+    },
+    {
+      "key": "tgt-headcount",
+      "command": "targets.define",
+      "at": "2026-10-01T00:00:00Z",
+      "input": {
+        "definition": {
+          "spec": "economico.target/1",
+          "kind": "measure",
+          "name": "People in place",
+          "measure": { "id": { "$ref": "msr-people.id" }, "version": 1 },
+          "holder": { "kind": "company" },
+          "mode": "each_period",
+          "periods": [
+            {
+              "from": "2026-10-01",
+              "through": "2026-10-31",
+              "values": [{ "column": "people", "comparison": "at_least", "value": "1" }]
+            },
+            {
+              "from": "2026-11-01",
+              "through": "2026-11-30",
+              "values": [{ "column": "people", "comparison": "at_least", "value": "2" }]
+            }
+          ]
+        },
+        "reason": "Two people in place once Dev starts November 2",
+        "status": "active",
+        "labels": { "plan": "2026-q4" }
+      }
+    },
+    {
+      "key": "read-hires",
+      "read": "targets",
+      "at": "2026-11-22T00:00:00Z",
+      "input": { "action": "read", "id": { "$ref": "tgt-hires.id" } },
+      "expect": {
+        "periods": [
+          {
+            "from": "2026-10-01",
+            "values": [{ "column": "won", "stated": "1", "actual": "1", "gap": "0", "status": "met" }]
+          },
+          {
+            "from": "2026-11-01",
+            "values": [
+              {
+                "column": "won",
+                "stated": "2",
+                "actual": "1",
+                "gap": "-1",
+                "status": "in_progress",
+                "estimate": { "column": "open_weighted", "decimals": 2, "ok": true, "value": "80" }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "read-headcount",
+      "read": "targets",
+      "at": "2026-11-22T00:00:00Z",
+      "input": { "action": "read", "id": { "$ref": "tgt-headcount.id" } },
+      "expect": {
+        "periods": [
+          {
+            "from": "2026-10-01",
+            "values": [{ "column": "people", "stated": "1", "actual": "1", "gap": "0", "status": "met" }]
+          },
+          {
+            "from": "2026-11-01",
+            "values": [{ "column": "people", "stated": "2", "actual": "2", "gap": "0", "status": "in_progress" }]
+          }
+        ]
+      }
+    }
+  ]
+}

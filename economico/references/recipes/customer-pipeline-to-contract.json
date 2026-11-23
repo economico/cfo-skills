@@ -1,0 +1,462 @@
+{
+  "name": "Customer pipeline from prospect to won contract, a lost deal and an expansion",
+  "description": "Two prospects are parties with no category before anything is signed, one with a billing contact; the template's partyCategories makes the won one a customer when its contract is accepted, and the lost one stays uncategorised. Two opportunities carry estimates that never post: one is proposed, linked to its draft contract and won by the contract's acceptance; the other is lost with a reason. The pipeline report counts an unknown value as unknown, never zero. The won sprint is delivered, earned and billed like any fixed-price right, and an expansion opportunity for a follow-on retainer names the won contract as its predecessor.",
+  "setupAt": "2026-01-05T00:00:00Z",
+  "recordedAt": "2026-04-01T00:00:00Z",
+  "steps": [
+    {
+      "key": "proposal",
+      "command": "documents.receive",
+      "input": {
+        "kind": "source_document",
+        "contentBase64": "SGFyYm9ybGluZSBMYWJzIC0gcG9zaXRpb25pbmcgc3ByaW50IHByb3Bvc2FsClNjb3BlOiB0d28td2VlayBwb3NpdGlvbmluZyBzcHJpbnQsIGZpeGVkIGZlZSBVU0QgNyw1MDAsIGludm9pY2VkIG9uIGFjY2VwdGFuY2Ugb2YgdGhlIGZpbmFsIHJlYWRvdXQuClNlbnQgMjAyNi0wMS0yMCB0byBmaW5hbmNlQGhhcmJvcmxpbmUuZXhhbXBsZTsgc2lnbmVkIGJ5IHRoZSBDT08gb24gMjAyNi0wMi0wMi4K",
+        "externalId": "proposal:harbor:positioning-sprint"
+      }
+    },
+    {
+      "key": "prospect",
+      "command": "parties.create",
+      "input": {
+        "partyId": "cus_harbor",
+        "name": "Harborline Labs"
+      }
+    },
+    {
+      "key": "billing-contact",
+      "command": "parties.add_contact",
+      "input": {
+        "contactId": "contact_harbor_finance",
+        "partyId": "cus_harbor",
+        "name": "Harborline finance",
+        "email": "finance@harborline.example",
+        "role": "billing"
+      }
+    },
+    {
+      "key": "second-prospect",
+      "command": "parties.create",
+      "input": {
+        "partyId": "cus_quarry",
+        "name": "Quarry Robotics"
+      }
+    },
+    {
+      "key": "sprint-opportunity",
+      "command": "opportunities.open",
+      "input": {
+        "opportunityKey": "harbor:positioning-sprint",
+        "name": "Harborline positioning sprint",
+        "partyId": "cus_harbor",
+        "cohort": "customer",
+        "kind": "new",
+        "currency": "USD",
+        "expectedValue": "750000",
+        "expectedCloseOn": "2026-02-15",
+        "stage": "qualified"
+      },
+      "expect": {
+        "revision": 1
+      }
+    },
+    {
+      "key": "unsized-opportunity",
+      "command": "opportunities.open",
+      "input": {
+        "opportunityKey": "quarry:advisory",
+        "name": "Quarry advisory engagement",
+        "partyId": "cus_quarry",
+        "cohort": "customer",
+        "kind": "new",
+        "currency": "USD",
+        "expectedValue": null
+      }
+    },
+    {
+      "key": "pipeline-open",
+      "report": true,
+      "input": {
+        "kind": "pipeline"
+      },
+      "expect": {
+        "cohorts": [
+          {
+            "cohort": "customer",
+            "currency": "USD",
+            "knownExpectedValue": "750000",
+            "knownWeightedValue": "375000",
+            "unknownValueCount": 1
+          }
+        ]
+      }
+    },
+    {
+      "key": "proposed",
+      "command": "opportunities.stage",
+      "at": "2026-01-20T00:00:00Z",
+      "input": {
+        "opportunityId": {
+          "$ref": "sprint-opportunity.id"
+        },
+        "expectedRevision": {
+          "$ref": "sprint-opportunity.revision"
+        },
+        "stage": "proposed"
+      }
+    },
+    {
+      "key": "sprint-right",
+      "command": "activities.create",
+      "input": {
+        "definition": {
+          "model": "priced-rights-v1",
+          "name": "Positioning sprint",
+          "terms": {
+            "amount": {
+              "type": "integer",
+              "unit": "USD",
+              "default": "750000"
+            },
+            "currency": {
+              "type": "text",
+              "default": "USD"
+            }
+          },
+          "facts": {},
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "price": {
+            "treatment": "priced",
+            "calculation": {
+              "type": "fixed",
+              "amount": "term:amount"
+            },
+            "currencyTerm": "currency"
+          },
+          "economics": {
+            "kind": "service",
+            "direction": "provide",
+            "billing": {
+              "timing": "arrears"
+            },
+            "recognition": {
+              "timing": "delivery"
+            },
+            "classification": {
+              "monetaryLedger": "money",
+              "revenueCategory": "consulting"
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "draft",
+      "command": "contracts.create",
+      "at": "2026-01-20T00:00:00Z",
+      "input": {
+        "definition": {
+          "name": "Harborline positioning sprint",
+          "parties": [
+            "customer"
+          ],
+          "ledgers": {
+            "money": {
+              "classification": "gaap",
+              "unitKind": "currency",
+              "unitCode": "USD",
+              "decimals": 2,
+              "accountTemplate": "gaap_startup"
+            }
+          },
+          "activities": [
+            {
+              "key": "sprint",
+              "activityDocumentId": {
+                "$ref": "sprint-right.documentId"
+              },
+              "partyRole": "customer",
+              "ledgers": {
+                "money": "money"
+              }
+            }
+          ],
+          "model": "priced-rights-v1",
+          "partyCategories": {
+            "customer": [
+              "customer"
+            ]
+          }
+        },
+        "parties": {
+          "customer": "cus_harbor"
+        },
+        "ledgerBindings": {
+          "money": "led_00000000000000000000000840"
+        },
+        "sourceDocumentIds": [
+          {
+            "$ref": "proposal.documentId"
+          }
+        ]
+      }
+    },
+    {
+      "key": "link",
+      "command": "opportunities.link",
+      "at": "2026-01-20T00:00:00Z",
+      "input": {
+        "opportunityId": {
+          "$ref": "sprint-opportunity.id"
+        },
+        "expectedRevision": {
+          "$ref": "proposed.revision"
+        },
+        "contractId": {
+          "$ref": "draft.id"
+        },
+        "contractDocumentId": {
+          "$ref": "draft.documentId"
+        }
+      }
+    },
+    {
+      "key": "still-open",
+      "read": "subjects",
+      "input": {
+        "action": "get",
+        "type": "opportunity",
+        "id": {
+          "$ref": "sprint-opportunity.id"
+        }
+      },
+      "expect": {
+        "status": "open",
+        "state": {
+          "stage": "proposed"
+        }
+      }
+    },
+    {
+      "key": "accept",
+      "command": "contracts.accept",
+      "at": "2026-02-02T00:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "draft.id"
+        },
+        "sourceFactId": "proposal:harbor:positioning-sprint:signed",
+        "effectiveAt": "2026-02-02T00:00:00Z",
+        "evidence": {
+          "acceptance": [
+            {
+              "kind": "signed_doc",
+              "ref": {
+                "$ref": "proposal.documentId"
+              }
+            }
+          ]
+        },
+        "expectedStatus": "draft",
+        "expectedDocumentId": {
+          "$ref": "draft.documentId"
+        }
+      }
+    },
+    {
+      "key": "won",
+      "read": "subjects",
+      "input": {
+        "action": "get",
+        "type": "opportunity",
+        "id": {
+          "$ref": "sprint-opportunity.id"
+        }
+      },
+      "expect": {
+        "status": "won"
+      }
+    },
+    {
+      "key": "now-a-customer",
+      "read": "parties",
+      "input": {
+        "action": "get",
+        "id": "cus_harbor"
+      },
+      "expect": {
+        "categories": [
+          "customer"
+        ]
+      }
+    },
+    {
+      "key": "lost",
+      "command": "opportunities.lose",
+      "at": "2026-02-10T00:00:00Z",
+      "input": {
+        "opportunityId": {
+          "$ref": "unsized-opportunity.id"
+        },
+        "expectedRevision": {
+          "$ref": "unsized-opportunity.revision"
+        },
+        "reason": "Chose an in-house team"
+      }
+    },
+    {
+      "key": "still-a-prospect",
+      "read": "parties",
+      "input": {
+        "action": "get",
+        "id": "cus_quarry"
+      },
+      "expect": {
+        "categories": []
+      }
+    },
+    {
+      "key": "pipeline-closed",
+      "report": true,
+      "input": {
+        "kind": "pipeline"
+      },
+      "expect": {
+        "cohorts": []
+      }
+    },
+    {
+      "key": "delivered",
+      "command": "contracts.record",
+      "at": "2026-02-16T17:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "draft.id"
+        },
+        "activityKey": "sprint",
+        "obligationKey": "positioning-sprint",
+        "occurrenceKey": "sprint-delivered",
+        "sourceFactId": "harbor:readout:accepted",
+        "effectiveAt": "2026-02-16T17:00:00Z",
+        "facts": {},
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "harbor:readout:accepted"
+            }
+          ]
+        },
+        "phase": "delivery"
+      }
+    },
+    {
+      "key": "earned",
+      "command": "contracts.record",
+      "at": "2026-02-16T17:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "draft.id"
+        },
+        "activityKey": "sprint",
+        "obligationKey": "positioning-sprint",
+        "occurrenceKey": "sprint-earned",
+        "sourceFactId": "harbor:readout:earned",
+        "effectiveAt": "2026-02-16T17:00:00Z",
+        "facts": {},
+        "evidence": {
+          "service": [
+            {
+              "kind": "other",
+              "ref": "harbor:readout:accepted"
+            }
+          ]
+        },
+        "phase": "recognition"
+      }
+    },
+    {
+      "key": "billed",
+      "command": "contracts.record",
+      "at": "2026-02-16T17:00:00Z",
+      "input": {
+        "contractId": {
+          "$ref": "draft.id"
+        },
+        "activityKey": "sprint",
+        "obligationKey": "positioning-sprint",
+        "occurrenceKey": "sprint-billed",
+        "sourceFactId": "invoice:harbor:2026-001",
+        "effectiveAt": "2026-02-16T17:00:00Z",
+        "facts": {},
+        "evidence": {
+          "billing": [
+            {
+              "kind": "other",
+              "ref": "invoice:harbor:2026-001"
+            }
+          ]
+        },
+        "phase": "billing",
+        "dueDate": "2026-03-18"
+      }
+    },
+    {
+      "key": "february",
+      "report": true,
+      "input": {
+        "kind": "income_statement",
+        "currency": "USD",
+        "from": "2026-02-01",
+        "until": "2026-03-01T00:00:00Z"
+      },
+      "expect": {
+        "revenue": {
+          "total": "750000"
+        }
+      }
+    },
+    {
+      "key": "expansion",
+      "command": "opportunities.open",
+      "at": "2026-03-01T00:00:00Z",
+      "input": {
+        "opportunityKey": "harbor:follow-on-retainer",
+        "name": "Harborline follow-on retainer",
+        "partyId": "cus_harbor",
+        "cohort": "customer",
+        "kind": "expansion",
+        "currency": "USD",
+        "expectedValue": "1200000",
+        "expectedCloseOn": "2026-04-30",
+        "predecessorContractId": {
+          "$ref": "draft.id"
+        }
+      }
+    },
+    {
+      "key": "pipeline-expansion",
+      "report": true,
+      "input": {
+        "kind": "pipeline"
+      },
+      "expect": {
+        "cohorts": [
+          {
+            "cohort": "customer",
+            "currency": "USD",
+            "knownExpectedValue": "1200000",
+            "knownWeightedValue": "120000",
+            "unknownValueCount": 0
+          }
+        ]
+      }
+    }
+  ]
+}

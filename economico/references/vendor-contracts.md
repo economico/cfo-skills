@@ -646,7 +646,7 @@ measured-usage contract or write `contracts.record` with occurrence keys
 vendor invoice ID in `source.reference`. Use that ID as `sourceFactId` for a single recording;
 when one invoice spans contracts or includes an ordinary bill, give each reconciliation its own
 source fact while keeping the same original `source.reference`. Preserve the vendor's distinct
-line keys and mark lines recorded on another contract `handledElsewhere`. Read the returned
+line keys and mark lines recorded on another contract `handledElsewhere`. On a voided contract, reconcile on the contract that replaced it; a discarded or rejected contract takes no usage. Read the returned
 unestimated/unmatched lines and differences.
 
 For named seats, use the dated People roster and scoped holder mappings in

@@ -208,6 +208,11 @@
           "parties": [
             "owner"
           ],
+          "partyCategories": {
+            "owner": [
+              "founder"
+            ]
+          },
           "ledgers": {
             "money": {
               "classification": "gaap",
@@ -690,6 +695,11 @@
           "parties": [
             "vendor"
           ],
+          "partyCategories": {
+            "vendor": [
+              "vendor"
+            ]
+          },
           "ledgers": {
             "money": {
               "classification": "gaap",

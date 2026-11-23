@@ -125,6 +125,11 @@
           "parties": [
             "customer"
           ],
+          "partyCategories": {
+            "customer": [
+              "customer"
+            ]
+          },
           "ledgers": {
             "money": {
               "classification": "gaap",

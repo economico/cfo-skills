@@ -110,6 +110,11 @@
           "parties": [
             "member"
           ],
+          "partyCategories": {
+            "member": [
+              "founder"
+            ]
+          },
           "ledgers": {
             "money": {
               "classification": "gaap",

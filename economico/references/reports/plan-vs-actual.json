@@ -1,0 +1,122 @@
+{
+  "spec": "economico.report/2",
+  "report_schema": 1,
+  "title": "Plan vs actual",
+  "description": "Active operating-plan targets from target_period_values beside live actuals computed with the matching starter measure queries. Each block filters to the exact measure_id and measure_version it implements, and each version parameter is fixed at publication (min, max and default equal) so a viewer cannot point a block's SQL at another version; a period counts as started from its first day (UTC); targets read remains authoritative.",
+  "layout": "grid",
+  "parameters": [
+    {
+      "name": "plan",
+      "type": "choice",
+      "label": "Operating plan",
+      "default": "all",
+      "options": [
+        {
+          "value": "all",
+          "label": "All active plans"
+        }
+      ]
+    },
+    {
+      "name": "sales_target_id",
+      "type": "choice",
+      "label": "Sales chart target",
+      "default": "tgt_sales_won_usd",
+      "options": [
+        {
+          "value": "tgt_sales_won_usd",
+          "label": "Sales won target"
+        }
+      ]
+    },
+    {
+      "name": "won_value_measure_id",
+      "type": "choice",
+      "label": "Won value measure",
+      "default": "msr_won_value_usd",
+      "options": [
+        {
+          "value": "msr_won_value_usd",
+          "label": "Won value in a pipeline (USD)"
+        }
+      ]
+    },
+    {
+      "name": "won_value_measure_version",
+      "type": "integer",
+      "label": "Won value measure version",
+      "min": 1,
+      "max": 1,
+      "default": 1
+    },
+    {
+      "name": "cash_measure_id",
+      "type": "choice",
+      "label": "Cash balance measure",
+      "default": "msr_cash_usd",
+      "options": [
+        {
+          "value": "msr_cash_usd",
+          "label": "Cash balance (USD)"
+        }
+      ]
+    },
+    {
+      "name": "cash_measure_version",
+      "type": "integer",
+      "label": "Cash balance measure version",
+      "min": 1,
+      "max": 1,
+      "default": 1
+    },
+    {
+      "name": "net_burn_measure_id",
+      "type": "choice",
+      "label": "Net burn measure",
+      "default": "msr_net_burn_usd",
+      "options": [
+        {
+          "value": "msr_net_burn_usd",
+          "label": "Net burn (USD)"
+        }
+      ]
+    },
+    {
+      "name": "net_burn_measure_version",
+      "type": "integer",
+      "label": "Net burn measure version",
+      "min": 1,
+      "max": 1,
+      "default": 1
+    }
+  ],
+  "blocks": [
+    {
+      "type": "query",
+      "title": "Pipeline won value vs plan (USD)",
+      "width": "full",
+      "caption": "Matches Won value in a pipeline (USD) at its pinned version. Open weighted is an estimate, never actual. Periods not yet started show only the stated value.",
+      "sql": "WITH scoped AS (SELECT t.id AS target_id, t.name AS target, t.holder_id AS pipeline, t.mode, pv.period_index, pv.period_from, pv.period_through, CASE WHEN t.mode = 'to_date' THEN (SELECT min(pv0.period_from) FROM target_period_values pv0 WHERE pv0.target_id = t.id) ELSE pv.period_from END AS window_from, pv.comparison, pv.unit AS currency, CASE WHEN pv.value_minor BETWEEN -9007199254740991 AND 9007199254740991 THEN pv.value_minor END AS stated_minor, pv.period_from <= date('now') AS started FROM targets t JOIN target_period_values pv ON pv.target_id = t.id WHERE t.status = 'active' AND t.holder_kind = 'pipeline' AND t.measure_id = :won_value_measure_id AND t.measure_version = :won_value_measure_version AND pv.column_name = 'won_minor' AND pv.unit = 'USD' AND (:plan = 'all' OR EXISTS (SELECT 1 FROM target_labels tl WHERE tl.target_id = t.id AND tl.label_key = 'plan' AND tl.label_value = :plan))), evaluated AS (SELECT s.*, CASE WHEN s.started THEN (SELECT CASE WHEN count(*) = 0 THEN 0 WHEN count(*) > count(o.expected_value_minor) THEN NULL ELSE sum(o.expected_value_minor) END FROM opportunities o JOIN events e ON e.event_id = o.won_event_id WHERE o.pipeline_key = s.pipeline AND o.status = 'won' AND o.currency = 'USD' AND julianday(e.effective_at) >= julianday(s.window_from) AND julianday(e.effective_at) < julianday(s.period_through, '+1 day')) END AS actual_minor, CASE WHEN s.started THEN (SELECT CASE WHEN count(*) = 0 THEN 0 WHEN count(*) > count(o.expected_value) OR max(length(o.expected_value)) > 18 THEN NULL ELSE sum((CAST(o.expected_value AS INTEGER) / 10000) * o.weight_bps) + (sum((CAST(o.expected_value AS INTEGER) % 10000) * o.weight_bps) + 5000) / 10000 END FROM open_opportunities o WHERE o.pipeline_key = s.pipeline AND o.currency = 'USD' AND o.expected_close_on BETWEEN s.window_from AND s.period_through) END AS open_weighted_minor FROM scoped s) SELECT target, pipeline, period_from, period_through, comparison, currency, stated_minor, actual_minor, CASE WHEN actual_minor IS NULL OR stated_minor IS NULL THEN NULL ELSE actual_minor - stated_minor END AS gap_minor, open_weighted_minor FROM evaluated ORDER BY target, target_id, period_index"
+    },
+    {
+      "type": "chart",
+      "title": "Sales won vs stated (USD)",
+      "width": "half",
+      "caption": "Stated vs actual won value by period for one sales or customer pipeline target. Periods not yet started show only the stated line.",
+      "mark": "line",
+      "x": "period_through",
+      "y": [
+        "stated_minor",
+        "actual_minor"
+      ],
+      "sql": "WITH scoped AS (SELECT t.id AS target_id, t.holder_id AS pipeline, pv.period_index, pv.period_through, CASE WHEN t.mode = 'to_date' THEN (SELECT min(pv0.period_from) FROM target_period_values pv0 WHERE pv0.target_id = t.id) ELSE pv.period_from END AS window_from, pv.unit AS currency, CASE WHEN pv.value_minor BETWEEN -9007199254740991 AND 9007199254740991 THEN pv.value_minor END AS stated_minor, pv.period_from <= date('now') AS started FROM targets t JOIN target_period_values pv ON pv.target_id = t.id WHERE t.status = 'active' AND t.id = :sales_target_id AND t.holder_kind = 'pipeline' AND t.holder_id IN ('sales', 'customer') AND t.measure_id = :won_value_measure_id AND t.measure_version = :won_value_measure_version AND pv.column_name = 'won_minor' AND pv.unit = 'USD' AND (:plan = 'all' OR EXISTS (SELECT 1 FROM target_labels tl WHERE tl.target_id = t.id AND tl.label_key = 'plan' AND tl.label_value = :plan))) SELECT s.period_through, s.currency, s.stated_minor, CASE WHEN s.started THEN (SELECT CASE WHEN count(*) = 0 THEN 0 WHEN count(*) > count(o.expected_value_minor) THEN NULL ELSE sum(o.expected_value_minor) END FROM opportunities o JOIN events e ON e.event_id = o.won_event_id WHERE o.pipeline_key = s.pipeline AND o.status = 'won' AND o.currency = 'USD' AND julianday(e.effective_at) >= julianday(s.window_from) AND julianday(e.effective_at) < julianday(s.period_through, '+1 day')) END AS actual_minor FROM scoped s ORDER BY s.period_index"
+    },
+    {
+      "type": "query",
+      "title": "Cash & net burn vs plan (USD)",
+      "width": "half",
+      "caption": "Matches Cash balance (USD) and Net burn (USD) at their pinned versions on primary USD gaap_startup ledgers. Periods not yet started show only the stated value.",
+      "sql": "WITH scoped AS (SELECT t.id AS target_id, t.name AS target, pv.period_index, pv.period_from, pv.period_through, CASE WHEN t.mode = 'to_date' THEN (SELECT min(pv0.period_from) FROM target_period_values pv0 WHERE pv0.target_id = t.id) ELSE pv.period_from END AS window_from, pv.column_name, pv.comparison, pv.unit AS currency, CASE WHEN pv.value_minor BETWEEN -9007199254740991 AND 9007199254740991 THEN pv.value_minor END AS stated_minor, pv.period_from <= date('now') AS started FROM targets t JOIN target_period_values pv ON pv.target_id = t.id WHERE t.status = 'active' AND t.holder_kind = 'company' AND pv.unit = 'USD' AND ((pv.column_name = 'cash_minor' AND t.measure_id = :cash_measure_id AND t.measure_version = :cash_measure_version) OR (pv.column_name = 'net_burn_minor' AND t.measure_id = :net_burn_measure_id AND t.measure_version = :net_burn_measure_version)) AND (:plan = 'all' OR EXISTS (SELECT 1 FROM target_labels tl WHERE tl.target_id = t.id AND tl.label_key = 'plan' AND tl.label_value = :plan))), evaluated AS (SELECT s.*, CASE WHEN NOT s.started THEN NULL WHEN s.column_name = 'cash_minor' THEN (WITH target_ledger AS (SELECT ledger_id FROM (SELECT f.ledger_id FROM functional_currency_periods f WHERE f.currency = 'USD' AND julianday(f.effective_from) < julianday(s.period_through, '+1 day') AND (f.effective_until IS NULL OR julianday(s.period_through, '+1 day') <= julianday(f.effective_until)) UNION ALL SELECT pm.value AS ledger_id FROM book_meta pm JOIN book_meta fc ON fc.key = 'functional_currency' AND fc.value = 'USD' WHERE NOT EXISTS (SELECT 1 FROM functional_currency_periods) AND pm.key = 'primary_ledger_id') LIMIT 1) SELECT CASE WHEN (SELECT ledger_id FROM target_ledger) IS NULL THEN NULL ELSE coalesce(sum(jl.signed_minor), 0) END FROM journal_lines jl JOIN ledgers l ON l.ledger_id = jl.ledger_id WHERE l.account_template = 'gaap_startup' AND jl.currency = 'USD' AND jl.account_code IN (1110, 1410) AND julianday(jl.effective_at) < julianday(s.period_through, '+1 day') AND jl.ledger_id = (SELECT ledger_id FROM target_ledger)) ELSE (SELECT coalesce(sum(jl.signed_minor), 0) FROM journal_lines jl JOIN ledgers l ON l.ledger_id = jl.ledger_id WHERE l.account_template = 'gaap_startup' AND jl.currency = 'USD' AND jl.account_code >= 4000 AND jl.account_code < 6000 AND julianday(jl.effective_at) >= julianday(s.window_from) AND julianday(jl.effective_at) < julianday(s.period_through, '+1 day')) END AS actual_minor FROM scoped s) SELECT target, column_name, period_from, period_through, comparison, currency, stated_minor, actual_minor, CASE WHEN actual_minor IS NULL OR stated_minor IS NULL THEN NULL ELSE actual_minor - stated_minor END AS gap_minor FROM evaluated ORDER BY target, target_id, period_index"
+    }
+  ]
+}
