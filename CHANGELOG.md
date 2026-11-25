@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.18.2 (2026-11-25)
+
+- Corrected the listing's safety statement in the Claude, Codex and Cursor manifests and the Hermes catalog README: only when asked, Economico emails a customer's invoices, reminders and receipts and pays for an Economico plan; it does not otherwise move money, sign agreements or file taxes. The earlier wording said it does not send invoices or move money, which the invoice-email tools and plan payment contradict.
+- Re-encoded the `receivables.png` and `saas.png` screenshots losslessly (identical pixels) so their compressed bytes no longer contain text a scanner reads as a download-and-run command.
+
 ## 1.18.1 (2026-11-24)
 
 - Removed `disable-model-invocation: true` from all six task skills (`add-customer`, `investor-update`, `record-payment`, `record-receipts`, `record-vendor-invoice`, `send-invoice`) and `allow_implicit_invocation: false` from their `agents/openai.yaml` manifests so agents can invoke them normally alongside slash commands.
