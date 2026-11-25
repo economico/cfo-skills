@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.18.1 (2026-11-24)
+
+- Removed `disable-model-invocation: true` from all six task skills (`add-customer`, `investor-update`, `record-payment`, `record-receipts`, `record-vendor-invoice`, `send-invoice`) and `allow_implicit_invocation: false` from their `agents/openai.yaml` manifests so agents can invoke them normally alongside slash commands.
+- Updated `references/connect.md` for business creation across any non-sanctioned ISO 3166-1 country, country-specific legal forms (including ISO 20275 ELF codes), and active ISO 4217 currencies.
+
 ## 1.18.0 (2026-11-22)
 
 - Three new starter measure recipes in the `targets` reference: won value by deal owner (a `:party` quota measure keyed on an `owner` pursuit label), burn multiple (`decimals: 2`, returning unmeasurable when nothing was won, any won deal has no value, or amounts exceed the integer safety bound), and deals won against the period before (`decimals: 2`, equal-day comparison window with calendar-month variant and `each_period` requirement); weighted open-pipeline count estimates now declare `decimals: 2` (`open_weighted`) and the skill teaches the stated-value scale rule and formatting every number by its `decimals`.
