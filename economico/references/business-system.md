@@ -200,4 +200,5 @@ Say which of these the founder's request touches, then keep that part in their w
   records; approved time and accepted work enter the books as delivery evidence.
 - There are no budgets, approval workflows or bad-debt write-offs.
 - Economico emails invoices, reminders and receipts on the business's behalf when the founder asks
-  or turns it on; it never moves money or signs anything.
+  or turns it on; apart from accepting and paying for an Economico plan the founder asks for, it
+  never moves money or signs anything.
