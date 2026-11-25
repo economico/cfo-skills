@@ -43,8 +43,8 @@ host. Directory availability and rendering in each agent depend on that host's s
 | `record-receipts` | `/record-receipts`: find vendor receipts and bills in your email and record them. |
 | `investor-update` | `/investor-update`: build this month's investor update from the books, as a report to send by link. |
 
-The slash-command skills are shortcuts you type. Each hands your request to the `economico`
-skill, so install them together.
+The task skills work as slash-command shortcuts or when your agent picks them up. Each hands your
+request to the `economico` skill, so install them together.
 
 ## Install
 

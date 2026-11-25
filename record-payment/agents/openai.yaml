@@ -1,5 +1,3 @@
 interface:
   display_name: "Record payment"
   short_description: "Record a payment a customer made against an invoice in Economico."
-policy:
-  allow_implicit_invocation: false

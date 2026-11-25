@@ -120,12 +120,13 @@ without paying again; a return obligation needs support recovery.
    under "For the next session" and it is listed, that is this repository's books: use it
    without asking.
 2. If the founder has none, the business is created in the browser during sign-in: the form asks
-   for the name, where it is incorporated, the legal form, functional currency and fiscal year
-   end. The CLI can prefill it: `economico login --country US` (or `SG`, `CA`, `GB`,
-   `--legal-form`, `--currency`, `--fiscal-year-end MM-DD`). A founder who has not incorporated
-   picks the legal form `project`; it can incorporate in place later. Get the functional currency
-   right here: it can be corrected only while the book is empty, and a move to another economy
-   later is a new business.
+   for the name, where it is incorporated (any non-sanctioned ISO 3166-1 country), the
+   country-specific legal form (slug or ISO 20275 ELF code), active ISO 4217 functional currency
+   and fiscal year end. The CLI can prefill it: `economico login --country US` (or `DE`, `JP`,
+   `BR`, `SG`, `CA`, `GB`, `--legal-form`, `--currency`, `--fiscal-year-end MM-DD`). A founder who
+   has not incorporated picks the legal form `project`; it can incorporate in place later. Get the
+   functional currency right here: it can be corrected only while the book is empty, and a move to
+   another economy later is a new business.
 3. To rehearse, create a second business named for what it is ("Acme sandbox") and approve it
    for this connection. There is no scenario or sandbox mode inside a business: a rehearsal is a
    separate business, and it costs nothing.
