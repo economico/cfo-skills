@@ -24,10 +24,10 @@ Free for a single founder on Solo; no card required.
 - Every tool call goes to `https://economi.co/mcp` (Economico). The server uses
   OAuth with dynamic client registration; tokens are scoped to the business you
   approve.
-- Economico records evidence the agent provides. Only when asked, it emails a
-  customer's invoices, reminders and receipts, and pays for an Economico plan.
-  It does not otherwise move money, sign agreements, file taxes, or read your
-  bank or codebase on its own. Code, Stripe and email access require separate authorization in
+- Economico records evidence the agent provides. Only when you ask or turn it
+  on, it emails a customer's invoices, reminders and receipts, and accepts and
+  pays for an Economico plan. It does not otherwise move money, sign agreements,
+  file taxes, or read your bank or codebase on its own. Code, Stripe and email access require separate authorization in
   your agent if you use those tools.
 - Burn and runway depend on the records and assumptions supplied.
 - Privacy: https://economi.co/privacy/

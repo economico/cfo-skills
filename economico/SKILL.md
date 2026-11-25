@@ -81,7 +81,7 @@ Show [the founder views](references/show-the-founder.md) in phases 4–6: inline
 
 ## What is not available today
 
-No standing Stripe sync, Economico-run email listener or bank feed: gather with your own access.
-No planning scenarios or forecast overlays; no stock options; no tax returns or filings.
-Economico never moves money or signs anything; it records what happened elsewhere and emails
-customers only when asked.
+No standing Stripe sync, Economico email listener or bank feed; use your own access.
+No planning scenarios, forecast overlays, stock options, tax returns or filings.
+Economico moves money or signs only for its own plan the founder buys; it records what
+happened elsewhere and emails customers only when asked.

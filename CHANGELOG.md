@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.18.3 (2026-11-25)
+
+- Aligned the `economico` skill (`SKILL.md`, `references/business-system.md`) and the Hermes `economico-books` skill with the listing: apart from accepting and paying for an Economico plan the founder asks for, Economico never moves money or signs anything.
+- The listing's safety statement now reads "only when you ask or turn it on", covering automatic invoice delivery, reminders and receipts the founder switches on.
+- Re-encoded `saas.png` again (identical pixels) to remove one more command-like byte run.
+
 ## 1.18.2 (2026-11-25)
 
 - Corrected the listing's safety statement in the Claude, Codex and Cursor manifests and the Hermes catalog README: only when asked, Economico emails a customer's invoices, reminders and receipts and pays for an Economico plan; it does not otherwise move money, sign agreements or file taxes. The earlier wording said it does not send invoices or move money, which the invoice-email tools and plan payment contradict.

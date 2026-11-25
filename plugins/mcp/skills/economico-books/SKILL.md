@@ -15,8 +15,9 @@ recognition and payments. Ask for the source entries behind every number.
 ## Rules
 
 - Economico records what you tell it. It emails a customer's invoices, reminders
-  and receipts only when the founder asks or turns that on; it does not move
-  money, sign agreements or file taxes.
+  and receipts only when the founder asks or turns that on. Apart from accepting
+  and paying for an Economico plan the founder asks for, it does not move money,
+  sign agreements or file taxes.
 - Prefer exact amounts and dates (UTC days as YYYY-MM-DD).
 - When estimating burn or runway, state the assumptions.
 
