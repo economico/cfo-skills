@@ -59,7 +59,7 @@ mangled a `•` or an em dash.
 | Money moved | `evidence.payment: [{ "kind": "stripe_object", "ref": "ch_…" }]` or `{ "kind": "other", "ref": "<doc id or bank line>" }` |
 | The recording's own source | the envelope's `source_document_id` on `contracts.record` |
 
-Evidence kinds are `signed_doc`, `stripe_object`, `chain_tx`, `x402_receipt`, `tap_message` and
+Evidence kinds are `signed_doc`, `stripe_object`, `chain_tx`, `tap_message` and
 `other`. Use the most specific that is true; a `ref` can be a document id, a provider object id,
 a transaction hash or a URL.
 

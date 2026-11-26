@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.1 (2026-11-26)
+
+- Simplified plan-billing instructions in `economico/references/connect.md` to saved-card and browser billing flows, and removed machine-payment protocol wording from the skill pack and changelog.
+
 ## 2.0.0 (2026-11-26)
 
 - Split the monolithic `economico` skill into 11 focused, action-oriented business-function skills (`economico`, `manage-sales`, `product-economics`, `integrate-product`, `manage-vendors`, `hiring`, `manage-people`, `fundraise`, `setup-company`, `plan-and-track`, and self-contained `investor-update`) alongside the 5 preserved slash-command shortcuts (`add-customer`, `send-invoice`, `record-payment`, `record-receipts`, `record-vendor-invoice`), served uniformly via Skills over MCP (`/mcp`) and this plugin.
@@ -68,7 +72,7 @@
 - Tokens in the figures: a wallet's tokens are not in `payment_accounts`, an account's `balance` or `summary`, or the cash and runway of `default_alive` and `saas_metrics`; the agent reads them from `holdings` and the balance sheet and says so, in the investor update too. A new verify row checks each wallet's holdings.
 - Paying and getting paid in tokens: `payments.record` names the token by CAIP-19 with `amount` in its smallest unit, and settles a dollar claim with `cashAmount`. Buying tokens from the bank is a `payments.transfer` with the token as `receivedCurrency`; a move between two wallets in one token needs that token's first movement recorded first.
 - Watched Tempo wallets: each token is its own monitor at the same address; a payment recorded by hand takes the movement's chain reference as `sourceFactId`, with the chain transaction and block proof as evidence, so the monitor shows it as recorded and never counts it twice.
-- Paying Economico by MPP or x402: `prepare` takes `method` and `fundingAccountId`, the account in these books that pays each invoice (a USD account, or a company Tempo token wallet); until it is given, `status` shows `funding.status: "required"`, and it can be corrected until the payment is booked.
+- Paying Economico plan invoices: `prepare` takes `fundingAccountId`, the account in these books that pays each invoice; until it is given, `status` shows `funding.status: "required"`, and it can be corrected until the payment is booked.
 - The skill's routing table sends wallet questions to company setup.
 - Payment routes and endpoints: `payment_routes quote` takes `direction`, `amount_minor`, `assets`, `rails`, `max_eta_seconds` and `optimize`, and never lists a self-held wallet; a counterparty's instruction is registered with `partyId`, with per-method `etaSeconds` and amount limits. Stablecoins are valued at par in their own currency (EURC in euros), and a token without par shows a missing rate.
 - A free trial the business started is set up as one vendor contract from the trial's start, at its post-trial price with unscheduled billing, so nothing is billed during the trial; the first bill is recorded when the vendor issues it.
