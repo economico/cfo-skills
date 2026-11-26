@@ -1,0 +1,3 @@
+interface:
+  display_name: "Fundraise"
+  short_description: "Track fundraising pipelines and close SAFEs, notes and rounds in Economico."

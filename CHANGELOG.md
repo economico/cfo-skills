@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0 (2026-11-26)
+
+- Split the monolithic `economico` skill into 11 focused, action-oriented business-function skills (`economico`, `manage-sales`, `product-economics`, `integrate-product`, `manage-vendors`, `hiring`, `manage-people`, `fundraise`, `setup-company`, `plan-and-track`, and self-contained `investor-update`) alongside the 5 preserved slash-command shortcuts (`add-customer`, `send-invoice`, `record-payment`, `record-receipts`, `record-vendor-invoice`), served uniformly via Skills over MCP (`/mcp`) and this plugin.
+- Moved shared primitives (`pipelines` and `conversation-intake`, alongside `payments`, `accounts`, `evidence`, `verify`, and `show-the-founder`) into `economico` core so business-function skills reuse them without duplication, and split GitHub Actions and Stripe balance-fee runbooks into dedicated references under `manage-vendors`.
+- Moved the 32 replayable JSON command recipes and 2 starter report templates out of the skill directories so agents fetch them on demand through MCP `catalog {action: "recipes"|"recipe"}`, keeping every skill well under Claude Code's 400 KB per-skill and 100 KB per-file scanned-skill limits.
+
 ## 1.18.4 (2026-11-25)
 
 - Removed image file names from this changelog's entries for 1.18.2 and 1.18.3.

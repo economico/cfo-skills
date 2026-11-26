@@ -48,8 +48,8 @@ spawning background agents or scheduling follow-ups.
 | Source | Reference | You come back with |
 |---|---|---|
 | The codebase | [explore-codebase](explore-codebase.md) | What the product does, who pays, the plans and limits enforced in code, the usage the product meters, the billing integration, the services it runs on |
-| Stripe | [explore-stripe](explore-stripe.md) | Products, prices, active subscriptions and customers, invoices and payouts, fees |
-| Email | [explore-email](explore-email.md) | Vendors, what each charges and how it is paid, receipts and invoices with their Message-IDs, signed customer agreements |
+| Stripe | [explore-stripe](../../manage-sales/references/explore-stripe.md) | Products, prices, active subscriptions and customers, invoices and payouts, fees |
+| Email | [explore-email](../../manage-vendors/references/explore-email.md) | Vendors, what each charges and how it is paid, receipts and invoices with their Message-IDs, signed customer agreements |
 
 Also read `business {action: "get"}` and `subjects {action: "list", type: "contract"}`: a business
 that already has contracts is extended, never duplicated. Every business starts with one contract
@@ -131,12 +131,12 @@ session replays instead of duplicating.
 
 1. **Company basics.** Profile description and URL; the legal form and jurisdiction when
    `business get` does not have them yet, evidenced by the formation document; financial accounts
-   for each real bank account, card and wallet. See [company setup](company-setup.md).
+   for each real bank account, card and wallet. See [company setup](../../setup-company/references/company-setup.md).
 2. **Ownership.** Establish the actual owners and units from formation documents or the founder,
    never from cash received. Discover supported priced ownership rights and evidenced
    authorization/subscription/vesting or conversion consequences. The ownership recipe links
    returned by `business get` use priced rights and separate payments. Record unsupported ownership
-   families and missing quantities as explicit gaps. See [company setup](company-setup.md#ownership).
+   families and missing quantities as explicit gaps. See [company setup](../../setup-company/references/company-setup.md#ownership).
 3. **Parties.** One per customer, vendor and founder. Stable ids from the source: `cus_<stripe id
    or slug>`, `ven_<domain slug>`, `founder_<name>`.
 4. **Source documents.** Every order form, terms page, receipt and invoice you will cite, with
@@ -144,7 +144,7 @@ session replays instead of duplicating.
 5. **Rights and templates.** Save the source-backed price book with `templates.create`,
    including prelaunch plans with `definition.plan: "off_sale"`. Read each saved template back and match its returned
    ID, price and sale status to the brief before proceeding. Reuse a template across equivalent
-   agreements. Follow [modeling guidance](modeling-products.md#recipes) for the command shape;
+   agreements. Follow [modeling guidance](../../product-economics/references/modeling-products.md#recipes) for the command shape;
    name rights by what the party receives and separate billing, recognition and payment.
 6. **Contracts.** Bind each real agreement at its actual start date, with source documents and
    its party roles. Accept through `contracts.accept` with evidence. A wrongly dated unused
@@ -154,7 +154,7 @@ session replays instead of duplicating.
    independent [payments](payments.md), not payment activities. Verify recorded phases instead
    of assuming a timer has run. Supported historical claims and claims carried through currency
    succession use the payment guide's explicit identities and amounts. Preserve and report
-   unsupported facts rather than re-recording existing history. See [customer contracts](customer-contracts.md).
+   unsupported facts rather than re-recording existing history. See [customer contracts](../../manage-sales/references/customer-contracts.md).
 
 
 Once the contracts are recorded, show them in a message: one table, not one view per command
@@ -223,7 +223,7 @@ A founder who comes back should not be asked again what they already answered. W
    same idempotency keys, so a rerun replays instead of duplicating.
 5. **Check active targets.** If the business has active targets (`targets {action: "list"}`), read
    the plan at the start of the session, compute pace and open-pipeline coverage, and lead with
-   what is short and by how much ([checking the plan](targets.md#checking-the-plan-session-routine)).
+   what is short and by how much ([checking the plan](../../plan-and-track/references/targets.md#checking-the-plan-session-routine)).
 6. **Update the brief** at the end: its tables where the business changed, and "For the next
    session".
 

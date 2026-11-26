@@ -19,27 +19,27 @@ an aggregate party balance for claim identity.
 - Company bank/wallet: settles the claim against that account's cash.
 - Company card: settles the vendor claim and creates an attributable claim owed to its issuer.
   Register the evidenced issuer as `providerPartyId`. When its institution is unknown, use
-  the disclosed account-scoped issuer role in [financial accounts](company-setup.md#financial-accounts);
+  the disclosed account-scoped issuer role in [financial accounts](../../setup-company/references/company-setup.md#financial-accounts);
   omitting the party cannot create an attributable card-funding claim.
 - Personal card/account: settles the vendor claim and creates an attributable owner claim.
   Register `ownerPartyId`; never add that owner to the vendor agreement just to describe payment.
   It is registered in the company's currency even when the card settles in another: the owner
   claim is the bill's amount, and the owner bears their card's conversion
-  ([company setup](company-setup.md#financial-accounts)). For a bill in another currency, state
+  ([company setup](../../setup-company/references/company-setup.md#financial-accounts)). For a bill in another currency, state
   the payment (or the paid receipt's `payment`) in the bill's currency and amount, without
   `cashAmount`: it is recorded in the company's currency at the bill's booking rate, and the
   founder is owed that; the result's `currency` and `amount` say what was recorded, so report
-  those. Never use the card statement's amount. See
-  [founder card, foreign bill](recipes/founder-card-foreign-bill.json).
+  those. Never use the card statement's amount. Fetch `founder-card-foreign-bill`
+  (`catalog {action: "recipe", name: "founder-card-foreign-bill"}`).
   A vendor's refund of such a bill is stated the same way, in the bill's currency with
-  `refundsFundingClaim`, and reduces what the founder is owed at the same rate. See
-  [founder card, foreign refund](recipes/founder-card-foreign-refund.json).
+  `refundsFundingClaim`, and reduces what the founder is owed at the same rate. Fetch
+  `founder-card-foreign-refund` (`catalog {action: "recipe", name: "founder-card-foreign-refund"}`).
 - Reimbursement/card-statement payment: use the company bank to settle the returned funding
   claim IDs/components. The counterparty is now the owner/issuer. No second expense is recorded.
 
 An owner cash contribution first establishes an investment claim under an evidenced
 `capital_contribution` exercise; its bank deposit is an independent incoming payment.
-See [cash contributions](company-setup.md#cash-contributions-without-new-units). Converting an
+See [cash contributions](../../setup-company/references/company-setup.md#cash-contributions-without-new-units). Converting an
 existing owner claim to equity instead uses an evidenced `convert_claim` exercise, without
 cash. Reimbursement pays the owner claim. Do not silently change one into another.
 
@@ -55,7 +55,7 @@ moves no cash. Owner/card advances also retain a separate owner/issuer funding c
 the unapplied portion. Keep the returned funding claim ID and component for reimbursement;
 it belongs to the payment, without an invented vendor agreement. Matching later attributes
 the original funding to the matched service but never creates another reimbursement claim.
-See [founder payment before the bill](recipes/founder-payment-before-bill.json).
+Fetch `founder-payment-before-bill` (`catalog {action: "recipe", name: "founder-payment-before-bill"}`).
 
 `payments.transfer` records a movement between two identified company bank/wallet accounts. It
 creates no invoice or service. Every amount lives only in the ledger of its own currency. For an
@@ -81,7 +81,7 @@ another currency: a customer paying a USD 79.00 invoice with 79 USDC on Base sta
 `"79000000"`, and the allocation `amount` `"7900"` with `cashAmount` `"79000000"`. Paying a
 vendor's bill in tokens is the same with `direction: "out"`. Evidence it with
 `{ "kind": "chain_tx", "ref": "<transaction hash>" }`; on a watched Tempo wallet use the
-evidence pair in [company setup](company-setup.md) instead.
+evidence pair in [company setup](../../setup-company/references/company-setup.md) instead.
 
 An optional [market-rate sanity check](indicative-currency.md#optional-payment-price-check)
 compares two independently evidenced executed amounts. It supplies neither amount and never
@@ -150,8 +150,8 @@ taxes and cross-currency fees are currently refused.
   refund, set `refundsFundingClaim` to its original funding claim, use the same account,
   and fully allocate one evidenced refund claim (or the original unapplied advance).
   The returned `recoverableClaim`, when present, is money the reimbursed owner/issuer now
-  owes the company. Record its return to the company bank separately. Follow the executable
-  [refund after reimbursement](recipes/founder-refund-after-reimbursement.json) example.
+  owes the company. Record its return to the company bank separately. Fetch the
+  `founder-refund-after-reimbursement` recipe (`catalog {action: "recipe", name: "founder-refund-after-reimbursement"}`).
   The refund cannot exceed original funding or offset unrelated debts. Reverse dependent
   refunds before their original payment or later-match corrections, and collections before
   their refund. For an advance later matched to a bill, the refund is limited to what was

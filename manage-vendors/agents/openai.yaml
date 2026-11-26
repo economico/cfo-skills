@@ -1,0 +1,3 @@
+interface:
+  display_name: "Manage vendors"
+  short_description: "Run vendor purchasing, adopt plans, record email receipts and track tool usage."

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Manage sales"
+  short_description: "Run sales pipelines, customer contracts, invoicing and Stripe collections."

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Setup company"
+  short_description: "Set up legal entity, incorporation, accounts, cards, wallets and cap table."

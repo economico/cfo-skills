@@ -33,7 +33,7 @@ record and its evidence with the founder rather than silently changing the date.
 | What does each unit earn and cost? | `reports run unit_economics` with `from` and `until` | Units each customer activity was paid on, revenue per unit, and its own posted cost; unattributed cost reported apart, never allocated |
 | What is one contract's total? | `reports run contract_books` with `contract_id`, for a priced-rights contract | Its payments per account, and delivery, recognition and usage posted, from its own events |
 | What is in the pipeline? | `reports run pipeline` | Open opportunities, weighted and unweighted, by direction and currency; never revenue or cash |
-| How are we doing against plan? | `targets {action: "list"}`, then `targets {action: "read", id}` | Stated vs actual, gap and open-pipeline cover; lead with what is short and by how much ([targets](targets.md#checking-the-plan-session-routine)) |
+| How are we doing against plan? | `targets {action: "list"}`, then `targets {action: "read", id}` | Stated vs actual, gap and open-pipeline cover; lead with what is short and by how much ([targets](../../plan-and-track/references/targets.md#checking-the-plan-session-routine)) |
 | What did discounts cost? | `reports run concessions` with `from_month` and `through_month` | Each offer's recognised discount on 4140 and the gross revenue of the contracts that took it, by purpose |
 | Do the wallet and the books agree? | `accounts {action: "wallet_monitors", id: financialAccountId}`, and `wallet_movements` with the same `id` | `difference` is `"0"`; if not, run `accounts.check_wallet_monitor`, read again, and never journal the difference away. Movements with `status` `unclassified`, `conflict` or `needs_canonical_review` are listed for a decision, none classified on a guess |
 | What will Economico charge? | `reports run platform_fees` with `period` (`YYYY-MM`) | A preview of the plan fee and the revenue fee; nothing accrues from it |
@@ -128,7 +128,7 @@ month or date.
    block of the preview and show it to the founder.
 3. With the founder's agreement, publish with `report_definitions.publish`. Then offer
    `report_definitions.pin`, which shows it to every member in the workspace, and a link to
-   send, as in [investor update](investor-update.md).
+   send, as in [investor update](../../investor-update/SKILL.md).
 
 **Opening a saved report again.** `reports {action: "definitions"}` lists the business's
 reports; `reports {action: "run_definition", id, params}` runs one, with `params` naming its
