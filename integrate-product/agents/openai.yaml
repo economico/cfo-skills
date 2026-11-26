@@ -1,0 +1,3 @@
+interface:
+  display_name: "Integrate product"
+  short_description: "Wire a product backend to Economico over REST or MCP for sign-ups and usage."

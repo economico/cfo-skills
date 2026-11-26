@@ -1,6 +1,6 @@
 ---
 name: economico
-description: "Model a business in Economico: discover pricing and costs from code, Stripe and email; reuse rights and plans; record evidenced contracts, economics and payments; prove the books. Use for setup, AgentID sign-in, agreements, resuming the books, vendor invoices, People or provider payroll."
+description: "Set up, connect, model a whole business and run the books in Economico: first-session discovery into a full business model; resume sessions; explain how Economico works (accrual accounting, prepaid plans, recognition, payments, refusals); verify and show the books."
 ---
 
 # Economico
@@ -15,7 +15,7 @@ are not extra activities. Use only the founder's authorized source access.
 1. **Never touch a real business to experiment.** Rehearse on a disposable business. Before the
    first write, say which business slug you are writing to and why.
 2. **Describe before you execute.** `catalog {action: "describe", name}` is the schema of record.
-   Recipes give known-good shapes; the live schema wins.
+   Fetch recipes via `catalog` (`recipe`); schema wins.
 3. **Propose, then record.** Discovery produces a written business model the founder reviews.
    Nothing that posts money is recorded until they agree, unless they told you to proceed.
    For setup, ask scope before discovery; the next question round is after the brief is written,
@@ -48,36 +48,34 @@ standing answers and gaps, then resume [a later session](references/first-sessio
 |---|---|---|---|
 | 1 | Connect and settle scope | A verified target; scope choices resolved before source reads | [connect](references/connect.md), [scope](references/first-session.md#0-agree-the-scope-one-round-of-questions), [questions](references/asking-the-founder.md) |
 | 2 | Understand the machine | The model you map the business onto | [how Economico works](references/how-economico-works.md) |
-| 3 | Discover | Notes on product, pricing, customers, costs, entity | [codebase](references/explore-codebase.md), [Stripe](references/explore-stripe.md), [email](references/explore-email.md) |
+| 3 | Discover | Notes on product, pricing, customers, costs, entity | [codebase](references/explore-codebase.md), [Stripe](../manage-sales/references/explore-stripe.md), [email](../manage-vendors/references/explore-email.md) |
 | 4 | Propose | `business-model.md`, passing `model_preview`, then founder review of price book and costs | [first session](references/first-session.md), [brief template](references/business-model-brief.md) |
-| 5 | Record | Legal form and owners (a cap table even for a sole owner), parties, accounts, templates, contracts, activity, evidence; contracts as one table | [products](references/modeling-products.md), [customers](references/customer-contracts.md), [vendors](references/vendor-contracts.md), [evidence](references/evidence.md), [accounts](references/accounts.md), [payments](references/payments.md), [company](references/company-setup.md) |
-| 6 | Prove | A final message opening with views of the price book, contracts, income statement, balance sheet and cap table, then a summary | [verify](references/verify.md) |
+| 5 | Record | Legal form and owners, parties, accounts, templates, contracts, activity, evidence | [product-economics](../product-economics/SKILL.md), [manage-sales](../manage-sales/SKILL.md), [manage-vendors](../manage-vendors/SKILL.md), [setup-company](../setup-company/SKILL.md), [evidence](references/evidence.md), [accounts](references/accounts.md), [payments](references/payments.md) |
+| 6 | Prove | Final message opening with views of the price book, contracts, statements and cap table | [verify](references/verify.md) |
 
 Show [the founder views](references/show-the-founder.md) in phases 4–6: inline if supported, otherwise as text.
 
-## When the request is narrower
+## Specialist skills and shared references
 
 | The founder asks to… | Go to |
 |---|---|
 | connect an agent, log in, pick or create a business, run headless | [connect](references/connect.md) |
 | how Economico works, or why something was refused | [how Economico works](references/how-economico-works.md) |
-| business model patterns, reuse rights, combine offerings or bespoke contracts | [business model patterns](references/business-model-patterns.md) |
-| turn pricing (code, Stripe, pricing page) into plans, or publish | [modeling products](references/modeling-products.md) |
-| run sales and delivery, track deals, build views | [business system](references/business-system.md) |
-| measures, targets, quotas or plans | [targets](references/targets.md) |
-| add a customer, record a deal, bill, email invoices or collect | [customer contracts](references/customer-contracts.md) |
-| set up vendors, process receipts or invoices from email | [explore email](references/explore-email.md), [vendor contracts](references/vendor-contracts.md) |
-| People, provider payroll or named service seats | [People and payroll](references/people-and-payroll.md) |
-| review subscriptions, or record tool and seat use | [vendor usage](references/vendor-usage.md) |
+| design product pricing, reusable plans, patterns or unit economics | [product-economics](../product-economics/SKILL.md) |
+| integrate a product backend over REST or MCP (sign-ups, contracts, usage) | [integrate-product](../integrate-product/SKILL.md) |
+| track sales deals, add customers, bill, email invoices or reconcile Stripe | [manage-sales](../manage-sales/SKILL.md) |
+| evaluate vendors, adopt plans, process email receipts, bills or tool usage | [manage-vendors](../manage-vendors/SKILL.md) |
+| run a hiring pipeline, track candidates and close accepted offers | [hiring](../hiring/SKILL.md) |
+| manage People arrangements, provider payroll runs or named service seats | [manage-people](../manage-people/SKILL.md) |
+| run a fundraise pipeline, close SAFEs, notes or priced rounds | [fundraise](../fundraise/SKILL.md) |
+| set up company profile, legal entity, cap table, bank accounts, cards or wallets | [setup-company](../setup-company/SKILL.md) |
+| set goals, KPIs, OKRs, V2MOMs, quotas, operating plans or custom views | [plan-and-track](../plan-and-track/SKILL.md) |
+| write and publish a monthly investor update | [investor-update](../investor-update/SKILL.md) |
 | record payments, reimbursements, transfers or corrections | [payments](references/payments.md) |
 | choose the account for a cost or revenue line | [accounts](references/accounts.md) |
-| company profile, accounts, cards, wallets, legal identity or cap table | [company setup](references/company-setup.md) |
-| capture conversations | [intake](references/conversation-intake.md) |
+| manage shared pipeline mechanics or capture conversations | [pipelines](references/pipelines.md), [intake](references/conversation-intake.md) |
 | resolve links, page collections or find record/party context | [links](references/record-links.md), [evidence](references/record-evidence.md) |
-| import existing books | [import](references/import.md) |
-| check the books after a change | [verify](references/verify.md) |
-| see a statement, contracts or who owes what | [show the founder](references/show-the-founder.md) |
-| write an investor update | [investor update](references/investor-update.md) |
+| import existing books, check the books or show a statement | [import](references/import.md), [verify](references/verify.md), [show the founder](references/show-the-founder.md) |
 
 ## What is not available today
 

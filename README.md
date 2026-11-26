@@ -35,16 +35,25 @@ host. Directory availability and rendering in each agent depend on that host's s
 
 | Skill | What it does |
 |---|---|
-| `economico` | Connects Economico and models your business in it: reads your product's code, Stripe and email to learn what you sell, to whom, and what it costs to run, records plans, customers, vendors and receipts, and proves the books with reports. Your agent picks it up when you ask about your books. |
-| `add-customer` | `/add-customer`: add a customer with a contract on one of your plans. |
-| `send-invoice` | `/send-invoice`: bill a customer and email them the invoice. |
-| `record-payment` | `/record-payment`: record a customer's payment against an invoice. |
-| `record-vendor-invoice` | `/record-vendor-invoice`: record a bill a vendor sent, with the invoice as evidence. |
-| `record-receipts` | `/record-receipts`: find vendor receipts and bills in your email and record them. |
-| `investor-update` | `/investor-update`: build this month's investor update from the books, as a report to send by link. |
+| `economico` | Core foundation: connects Economico, runs first and later sessions, verifies and shows the books, and holds shared references (`payments`, `accounts`, `evidence`, `verify`, `pipelines`, `conversation-intake`). |
+| `manage-sales` | Sales pipeline, customer offers and contracts, billing, invoicing, reminders, collections and Stripe payouts. |
+| `product-economics` | Founder-facing pricing plans, reusable rights, patterns, tiered pricing, vendor-catalog publishing and unit economics. |
+| `integrate-product` | Developer-facing backend integration over REST or MCP for sign-ups, contracts, plan changes and live usage. |
+| `manage-vendors` | Purchasing pipeline, adopting or modelling vendor agreements, email receipts, vendor bills, subscriptions and usage. |
+| `hiring` | Hiring pipeline, candidate tracking and closing accepted offers in one motion with People arrangements and headcount membership. |
+| `manage-people` | People arrangements (employees, EOR, PEO, contractors), provider payroll runs, funding, returns, corrections and named seats. |
+| `fundraise` | Fundraising pipeline, closing SAFEs, convertible notes and priced rounds, funding commitments, conversions and wires. |
+| `setup-company` | Company profile, legal entity and incorporation, bank accounts, cards, wallets, founder equity, cap table and LLC/project capital accounts. |
+| `plan-and-track` | Goals, KPIs, OKRs, V2MOMs, measures, quotas, operating plans, plan-vs-actual and custom business views. |
+| `investor-update` | `/investor-update`: build and publish this month's investor update from the books as a frozen link or Markdown draft. |
+| `add-customer` | `/add-customer`: shortcut to add a customer with a contract on one of your plans. |
+| `send-invoice` | `/send-invoice`: shortcut to bill a customer and email them the invoice. |
+| `record-payment` | `/record-payment`: shortcut to record a customer's payment against an invoice. |
+| `record-vendor-invoice` | `/record-vendor-invoice`: shortcut to record a bill a vendor sent, with the invoice as evidence. |
+| `record-receipts` | `/record-receipts`: shortcut to find vendor receipts and bills in your email and record them. |
 
-The task skills work as slash-command shortcuts or when your agent picks them up. Each hands your
-request to the `economico` skill, so install them together.
+The action skills and task shortcuts work both over MCP (Skills over MCP) and when installed from
+this plugin, sharing the core `economico` foundations.
 
 ## Install
 

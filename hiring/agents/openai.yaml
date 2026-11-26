@@ -1,0 +1,3 @@
+interface:
+  display_name: "Hiring"
+  short_description: "Track hiring pipelines, candidates and close accepted hires in Economico."

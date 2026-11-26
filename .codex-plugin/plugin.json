@@ -1,6 +1,6 @@
 {
   "name": "economico",
-  "version": "1.18.4",
+  "version": "2.0.0",
   "description": "Economico is the agentic finance function for ambitious founders who want the financial rigor of a company with a finance department, without hiring one.",
   "author": {
     "name": "Economico",
@@ -27,8 +27,17 @@
   ],
   "skills": [
     "./economico",
-    "./add-customer",
+    "./fundraise",
+    "./hiring",
+    "./integrate-product",
     "./investor-update",
+    "./manage-people",
+    "./manage-sales",
+    "./manage-vendors",
+    "./plan-and-track",
+    "./product-economics",
+    "./setup-company",
+    "./add-customer",
     "./record-payment",
     "./record-receipts",
     "./record-vendor-invoice",

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Manage people"
+  short_description: "Record People arrangements, provider payroll runs, funding and named seats."

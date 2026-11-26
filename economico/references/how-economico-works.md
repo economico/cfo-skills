@@ -115,7 +115,7 @@ noncommercial claim identities, original/outstanding amounts and their current c
 `ledgers {action: "footprint", party_id}` shows the counterparty's actual postings, including
 unapplied funds. Read the live report schema; reports do not all accept the same parameters.
 
-For evidenced financing, distributions and draws, follow [company setup](company-setup.md).
+For evidenced financing, distributions and draws, follow [company setup](../../setup-company/references/company-setup.md).
 For currency succession, valued settlement, owner/card advances and refunds after
 reimbursement, follow [payments](payments.md). These supported paths do not imply every
 admitted economic shape is executable: keep unsupported facts and questions visible.
