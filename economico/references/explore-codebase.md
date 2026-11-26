@@ -18,7 +18,7 @@ brief, a command or a document.
 | When is a customer "active"? | webhook handlers | `customer.subscription.created`, `invoice.paid`, `checkout.session.completed`, `trial` |
 | What does it run on? | infra config, deploy scripts, env examples | `wrangler.toml`, `vercel.json`, `fly.toml`, `render.yaml`, `Dockerfile`, `terraform/`, `serverless.yml`, `.env.example` |
 | Which paid APIs does it call? | dependencies, clients | `package.json`, `requirements.txt`, `go.mod`: `openai`, `@anthropic-ai/sdk`, `resend`, `postmark`, `twilio`, `algolia`, `pinecone`, `sentry`, `posthog` |
-| Is there anything unusual? | | marketplace fees, revenue share, referral payouts, grants, crypto payments (`x402`, `usdc`) |
+| Is there anything unusual? | | marketplace fees, revenue share, referral payouts, grants, stablecoin payments (`usdc`) |
 
 `.env.example` (never `.env`) is the fastest vendor inventory: every `*_API_KEY` names a service
 someone pays for. Dependencies name the rest.
